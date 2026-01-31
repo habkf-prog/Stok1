@@ -166,9 +166,25 @@ table, thead, tbody, tr, td, th{overflow:visible}
 .renewHint{opacity:.7;margin-top:8px;font-size:.9em}
 
 </style>
+
+<!-- Firebase Auth -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCTFWu05DqfkiSN_0vGSb6CpAwGJ5lMoC0",
+  authDomain: "stok-ef86f.firebaseapp.com",
+  projectId: "stok-ef86f",
+  storageBucket: "stok-ef86f.firebasestorage.app",
+  messagingSenderId: "845285269041",
+  appId: "1:845285269041:web:4bdb61a61aa114d600ff10"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+</script>
+
 </head>
 <body>
-<div id="app">
 <div class="container">
   <div class="header">
     <div>
@@ -183,7 +199,12 @@ table, thead, tbody, tr, td, th{overflow:visible}
 </div>
   </div>
 
-  
+  <div class="card" id="loginCard">
+    <div class="row">
+      <input class="input" id="user" placeholder="اسم المستخدم (admin / staff / viewer)" autocomplete="username">
+      <input class="input" id="pass" type="password" placeholder="كلمة المرور" autocomplete="current-password">
+      <button class="btn primary" onclick="login()">🔐 دخول</button>
+    </div>
     <p class="muted" style="margin:10px 0 0" id="lockMsg"></p>
 
     <hr>
@@ -1728,47 +1749,49 @@ function confirmRenew(){
   </div>
 </div>
 
-</div>
 
 <!-- Firebase Login Overlay -->
-<div id="firebaseLogin" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99999;align-items:center;justify-content:center">
-  <div style="width:360px;background:#111a2e;padding:20px;border-radius:16px;color:#fff">
-    <h3 style="text-align:center">تسجيل الدخول</h3>
-    <input id="fbEmail" type="email" placeholder="Email" style="width:100%;padding:10px;margin:8px 0;border-radius:8px">
-    <input id="fbPass" type="password" placeholder="Password" style="width:100%;padding:10px;margin:8px 0;border-radius:8px">
-    <button onclick="fbLogin()" style="width:100%;padding:10px;border-radius:8px;background:#4caf50;color:#fff">دخول</button>
-    <p id="fbMsg" style="color:#ffb4b4;text-align:center"></p>
+<div id="firebaseLogin" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;align-items:center;justify-content:center">
+  <div style="width:380px;max-width:95vw;background:#0f172a;padding:20px;border-radius:16px;color:#fff">
+    <h3 style="text-align:center;margin-bottom:12px">تسجيل الدخول</h3>
+    <input id="fbEmail" type="email" placeholder="Email" style="width:100%;padding:10px;margin:8px 0;border-radius:10px">
+    <input id="fbPass" type="password" placeholder="Password" style="width:100%;padding:10px;margin:8px 0;border-radius:10px">
+    <button onclick="fbLogin()" style="width:100%;padding:10px;border-radius:10px;background:#3b82f6;color:#fff">دخول</button>
+    <p id="fbMsg" style="color:#fca5a5;text-align:center;margin-top:8px"></p>
   </div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyCTFWu05DqfkiSN_0vGSb6CpAwGJ5lMoC0",
-  authDomain: "stok-ef86f.firebaseapp.com",
-  projectId: "stok-ef86f",
-  storageBucket: "stok-ef86f.firebasestorage.app",
-  messagingSenderId: "845285269041",
-  appId: "1:845285269041:web:4bdb61a61aa114d600ff10"
-};
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-
+// Firebase login
 function fbLogin(){
-  const e = fbEmail.value.trim();
-  const p = fbPass.value.trim();
-  auth.signInWithEmailAndPassword(e,p).catch(err=>fbMsg.textContent=err.message);
+  const e = document.getElementById("fbEmail").value.trim();
+  const p = document.getElementById("fbPass").value.trim();
+  document.getElementById("fbMsg").textContent = "جاري التحقق...";
+  auth.signInWithEmailAndPassword(e,p)
+    .catch(err=>{
+      document.getElementById("fbMsg").textContent = err.message;
+    });
 }
 
-auth.onAuthStateChanged(user=>{
-  if(user){
-    document.getElementById("firebaseLogin").style.display="none";
-    document.getElementById("app").style.display="block";
-  }else{
-    document.getElementById("app").style.display="none";
-    document.getElementById("firebaseLogin").style.display="flex";
-  }
+// 🔥 Override any local login logic completely
+document.addEventListener("DOMContentLoaded", ()=>{
+  const loginCard = document.getElementById("loginCard");
+  if(loginCard) loginCard.remove(); // remove local login UI
+
+  auth.onAuthStateChanged(user=>{
+    if(user){
+      // force admin
+      window.currentUser = { username: user.email, role: "admin" };
+      window.currentRole = "admin";
+      window.isLoggedIn = true;
+
+      document.getElementById("firebaseLogin").style.display="none";
+      document.body.style.display="";
+    }else{
+      document.body.style.display="none";
+      document.getElementById("firebaseLogin").style.display="flex";
+    }
+  });
 });
 </script>
 

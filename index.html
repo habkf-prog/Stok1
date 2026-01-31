@@ -165,11 +165,10 @@ table, thead, tbody, tr, td, th{overflow:visible}
 }
 .renewHint{opacity:.7;margin-top:8px;font-size:.9em}
 
-
-#app{display:none}
 </style>
 </head>
 <body>
+<div id="app">
 <div class="container">
   <div class="header">
     <div>
@@ -184,12 +183,7 @@ table, thead, tbody, tr, td, th{overflow:visible}
 </div>
   </div>
 
-  <div class="card" id="loginCard">
-    <div class="row">
-      <input class="input" id="user" placeholder="اسم المستخدم (admin / staff / viewer)" autocomplete="username">
-      <input class="input" id="pass" type="password" placeholder="كلمة المرور" autocomplete="current-password">
-      <button class="btn primary" onclick="login()">🔐 دخول</button>
-    </div>
+  
     <p class="muted" style="margin:10px 0 0" id="lockMsg"></p>
 
     <hr>
@@ -1734,124 +1728,49 @@ function confirmRenew(){
   </div>
 </div>
 
+</div>
 
-<!-- ================= Firebase Login (Email/Password) ================= -->
-<div id="loginBack" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:99999;align-items:center;justify-content:center;padding:16px">
-  <div style="width:min(420px,96vw);background:#0f172a;border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:18px;color:#e5e7eb">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <strong>تسجيل الدخول</strong>
-    </div>
-
-    <div style="display:grid;gap:10px">
-      <input id="loginEmail" type="email" placeholder="Email"
-        style="padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.25);color:#fff;outline:none">
-
-      <input id="loginPass" type="password" placeholder="Password"
-        style="padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.25);color:#fff;outline:none">
-
-      <button id="btnLogin" type="button"
-        style="padding:10px;border-radius:12px;border:0;background:#3b82f6;color:white;cursor:pointer">
-        دخول
-      </button>
-
-      <button id="btnCreate" type="button"
-        style="padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:transparent;color:white;cursor:pointer">
-        إنشاء حساب (مرة واحدة)
-      </button>
-
-      <div id="loginMsg" style="color:#fca5a5;font-size:13px;min-height:18px"></div>
-    </div>
+<!-- Firebase Login Overlay -->
+<div id="firebaseLogin" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99999;align-items:center;justify-content:center">
+  <div style="width:360px;background:#111a2e;padding:20px;border-radius:16px;color:#fff">
+    <h3 style="text-align:center">تسجيل الدخول</h3>
+    <input id="fbEmail" type="email" placeholder="Email" style="width:100%;padding:10px;margin:8px 0;border-radius:8px">
+    <input id="fbPass" type="password" placeholder="Password" style="width:100%;padding:10px;margin:8px 0;border-radius:8px">
+    <button onclick="fbLogin()" style="width:100%;padding:10px;border-radius:8px;background:#4caf50;color:#fff">دخول</button>
+    <p id="fbMsg" style="color:#ffb4b4;text-align:center"></p>
   </div>
 </div>
 
-<button id="btnLogout" class="btn secondary" type="button"
-  style="display:none;position:fixed;bottom:14px;left:14px;z-index:9999">
-  تسجيل خروج
-</button>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCTFWu05DqfkiSN_0vGSb6CpAwGJ5lMoC0",
+  authDomain: "stok-ef86f.firebaseapp.com",
+  projectId: "stok-ef86f",
+  storageBucket: "stok-ef86f.firebasestorage.app",
+  messagingSenderId: "845285269041",
+  appId: "1:845285269041:web:4bdb61a61aa114d600ff10"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
 
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-  import {
-    getAuth,
-    onAuthStateChanged,
-    signInWithEmailAndPassword,
-    createUserWithEmailAndPassword,
-    signOut
-  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+function fbLogin(){
+  const e = fbEmail.value.trim();
+  const p = fbPass.value.trim();
+  auth.signInWithEmailAndPassword(e,p).catch(err=>fbMsg.textContent=err.message);
+}
 
-  // إعدادات مشروعك (كما أرسلتها)
-  const firebaseConfig = {
-    apiKey: "AIzaSyCTFWu05DqfkiSN_0vGSb6CpAwGJ5lMoC0",
-    authDomain: "stok-ef86f.firebaseapp.com",
-    projectId: "stok-ef86f",
-    storageBucket: "stok-ef86f.firebasestorage.app",
-    messagingSenderId: "845285269041",
-    appId: "1:845285269041:web:4bdb61a61aa114d600ff10",
-    measurementId: "G-EBF3TC1QWT"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-
-  const loginBack = document.getElementById("loginBack");
-  const emailEl = document.getElementById("loginEmail");
-  const passEl = document.getElementById("loginPass");
-  const msgEl = document.getElementById("loginMsg");
-  const btnLogin = document.getElementById("btnLogin");
-  const btnCreate = document.getElementById("btnCreate");
-  const btnLogout = document.getElementById("btnLogout");
-
-  function showLogin(show){
-    loginBack.style.display = show ? "flex" : "none";
-    msgEl.textContent = "";
+auth.onAuthStateChanged(user=>{
+  if(user){
+    document.getElementById("firebaseLogin").style.display="none";
+    document.getElementById("app").style.display="block";
+  }else{
+    document.getElementById("app").style.display="none";
+    document.getElementById("firebaseLogin").style.display="flex";
   }
-
-  function friendlyErr(e){
-    const code = (e && e.code) ? e.code : "";
-    if(code.includes("auth/invalid-credential")) return "بيانات الدخول غير صحيحة.";
-    if(code.includes("auth/user-not-found")) return "الحساب غير موجود.";
-    if(code.includes("auth/wrong-password")) return "كلمة المرور غير صحيحة.";
-    if(code.includes("auth/email-already-in-use")) return "هذا البريد مسجل مسبقًا.";
-    if(code.includes("auth/weak-password")) return "كلمة المرور ضعيفة.";
-    if(code.includes("auth/invalid-email")) return "البريد غير صالح.";
-    if(code.includes("auth/network-request-failed")) return "تحقق من اتصال الإنترنت.";
-    return "حدث خطأ. تحقق من إعدادات Firebase والإنترنت.";
-  }
-
-  onAuthStateChanged(auth, (user) => {
-    const appDiv = document.getElementById("app");
-    if(user){
-      showLogin(false);
-      btnLogout.style.display = "block";
-      if(appDiv) appDiv.style.display = "";
-    }else{
-      btnLogout.style.display = "none";
-      if(appDiv) appDiv.style.display = "none";
-      showLogin(true);
-    }
-  });
-
-  btnLogin.addEventListener("click", async () => {
-    try{
-      await signInWithEmailAndPassword(auth, emailEl.value.trim(), passEl.value);
-    }catch(e){
-      msgEl.textContent = friendlyErr(e);
-    }
-  });
-
-  btnCreate.addEventListener("click", async () => {
-    try{
-      await createUserWithEmailAndPassword(auth, emailEl.value.trim(), passEl.value);
-    }catch(e){
-      msgEl.textContent = friendlyErr(e);
-    }
-  });
-
-  btnLogout.addEventListener("click", async () => {
-    await signOut(auth);
-  });
+});
 </script>
-<!-- ================================================================ -->
 
 </body>
 </html>

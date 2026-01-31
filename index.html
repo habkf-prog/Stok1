@@ -165,24 +165,9 @@ table, thead, tbody, tr, td, th{overflow:visible}
 }
 .renewHint{opacity:.7;margin-top:8px;font-size:.9em}
 
+
+#app{display:none}
 </style>
-
-<!-- Firebase Auth -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyCTFWu05DqfkiSN_0vGSb6CpAwGJ5lMoC0",
-  authDomain: "stok-ef86f.firebaseapp.com",
-  projectId: "stok-ef86f",
-  storageBucket: "stok-ef86f.firebasestorage.app",
-  messagingSenderId: "845285269041",
-  appId: "1:845285269041:web:4bdb61a61aa114d600ff10"
-};
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-</script>
-
 </head>
 <body>
 <div class="container">
@@ -199,7 +184,7 @@ const auth = firebase.auth();
 </div>
   </div>
 
-  <div class="card" id="loginCard">
+  <div class="card" id="loginCard" style="display:none">
     <div class="row">
       <input class="input" id="user" placeholder="اسم المستخدم (admin / staff / viewer)" autocomplete="username">
       <input class="input" id="pass" type="password" placeholder="كلمة المرور" autocomplete="current-password">
@@ -508,6 +493,9 @@ const auth = firebase.auth();
 </div>
 
 
+<script>
+window.__USE_FIREBASE_AUTH = true;
+</script>
 <script>
 const KEY="subs_data_allinone_v1";
 const LOG_KEY="subs_log_allinone_v1";
@@ -1201,7 +1189,7 @@ function getCurrency(){
   const custom=document.getElementById("customCurrency");
   if(!sel||!custom) return;
   sel.addEventListener("change",()=>{custom.style.display=(sel.value==="custom")?"inline-block":"none";});
-})();
+}
 function money(n){
   const x=Number(n||0);
   const cur=getCurrency();
@@ -1446,7 +1434,7 @@ function maybeRemindBackup(){
   }
 }
 
-(function boot(){
+function bootLocal(){
   updateSyncBadge();
   if(getRole()){
     bootAuthed();
@@ -1750,50 +1738,136 @@ function confirmRenew(){
 </div>
 
 
-<!-- Firebase Login Overlay -->
-<div id="firebaseLogin" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;align-items:center;justify-content:center">
-  <div style="width:380px;max-width:95vw;background:#0f172a;padding:20px;border-radius:16px;color:#fff">
-    <h3 style="text-align:center;margin-bottom:12px">تسجيل الدخول</h3>
-    <input id="fbEmail" type="email" placeholder="Email" style="width:100%;padding:10px;margin:8px 0;border-radius:10px">
-    <input id="fbPass" type="password" placeholder="Password" style="width:100%;padding:10px;margin:8px 0;border-radius:10px">
-    <button onclick="fbLogin()" style="width:100%;padding:10px;border-radius:10px;background:#3b82f6;color:#fff">دخول</button>
-    <p id="fbMsg" style="color:#fca5a5;text-align:center;margin-top:8px"></p>
+<!-- ================= Firebase Login (Email/Password) ================= -->
+<div id="loginBack" style="display:flex;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:99999;align-items:center;justify-content:center;padding:16px">
+  <div style="width:min(420px,96vw);background:#0f172a;border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:18px;color:#e5e7eb">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <strong>تسجيل الدخول</strong>
+    </div>
+
+    <div style="display:grid;gap:10px">
+      <input id="loginEmail" type="email" placeholder="Email"
+        style="padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.25);color:#fff;outline:none">
+
+      <input id="loginPass" type="password" placeholder="Password"
+        style="padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.25);color:#fff;outline:none">
+
+      <button id="btnLogin" type="button"
+        style="padding:10px;border-radius:12px;border:0;background:#3b82f6;color:white;cursor:pointer">
+        دخول
+      </button>
+
+      <button id="btnCreate" type="button"
+        style="padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:transparent;color:white;cursor:pointer">
+        إنشاء حساب (مرة واحدة)
+      </button>
+
+      <div id="loginMsg" style="color:#fca5a5;font-size:13px;min-height:18px">جاري التحميل...</div>
+    </div>
   </div>
 </div>
 
+<button id="btnLogout" class="btn secondary" type="button"
+  style="display:none;position:fixed;bottom:14px;left:14px;z-index:9999">
+  تسجيل خروج
+</button>
+
+
+<!-- Firebase (compat) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script>
-// Firebase login
-function fbLogin(){
-  const e = document.getElementById("fbEmail").value.trim();
-  const p = document.getElementById("fbPass").value.trim();
-  document.getElementById("fbMsg").textContent = "جاري التحقق...";
-  auth.signInWithEmailAndPassword(e,p)
-    .catch(err=>{
-      document.getElementById("fbMsg").textContent = err.message;
-    });
-}
+  // إعدادات مشروعك
+  const firebaseConfig = {
+    apiKey: "AIzaSyCTFWu05DqfkiSN_0vGSb6CpAwGJ5lMoC0",
+    authDomain: "stok-ef86f.firebaseapp.com",
+    projectId: "stok-ef86f",
+    storageBucket: "stok-ef86f.firebasestorage.app",
+    messagingSenderId: "845285269041",
+    appId: "1:845285269041:web:4bdb61a61aa114d600ff10",
+    measurementId: "G-EBF3TC1QWT"
+  };
 
-// 🔥 Override any local login logic completely
-document.addEventListener("DOMContentLoaded", ()=>{
-  const loginCard = document.getElementById("loginCard");
-  if(loginCard) loginCard.remove(); // remove local login UI
+  // init once
+  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
 
-  auth.onAuthStateChanged(user=>{
+  const loginBack = document.getElementById("loginBack");
+  const emailEl = document.getElementById("loginEmail");
+  const passEl = document.getElementById("loginPass");
+  const msgEl = document.getElementById("loginMsg");
+  const btnLogin = document.getElementById("btnLogin");
+  const btnCreate = document.getElementById("btnCreate");
+  const btnLogout = document.getElementById("btnLogout");
+
+  function showLogin(show){
+    loginBack.style.display = show ? "flex" : "none";
+    if(show && !msgEl.textContent) msgEl.textContent = "";
+  }
+
+  function friendlyErr(e){
+    const code = (e && e.code) ? e.code : "";
+    if(code.includes("auth/invalid-credential")) return "بيانات الدخول غير صحيحة.";
+    if(code.includes("auth/user-not-found")) return "الحساب غير موجود.";
+    if(code.includes("auth/wrong-password")) return "كلمة المرور غير صحيحة.";
+    if(code.includes("auth/email-already-in-use")) return "هذا البريد مسجل مسبقًا.";
+    if(code.includes("auth/weak-password")) return "كلمة المرور ضعيفة.";
+    if(code.includes("auth/invalid-email")) return "البريد غير صالح.";
+    if(code.includes("auth/network-request-failed")) return "تحقق من اتصال الإنترنت.";
+    return (e && e.message) ? e.message : "حدث خطأ.";
+  }
+
+  // Auth guard (Firebase only) + bypass local login (admin)
+  auth.onAuthStateChanged((user) => {
+    const appDiv = document.getElementById("app");
+    const loginCard = document.getElementById("loginCard");
     if(user){
-      // force admin
-      window.currentUser = { username: user.email, role: "admin" };
-      window.currentRole = "admin";
-      window.isLoggedIn = true;
+      showLogin(false);
+      btnLogout.style.display = "block";
+      if(loginCard) loginCard.style.display = "none";
 
-      document.getElementById("firebaseLogin").style.display="none";
-      document.body.style.display="";
+      try{ sessionStorage.setItem("role","admin"); }catch(e){}
+      if(appDiv) appDiv.style.display = "block";
+
+      if(!window.__firebaseBooted){
+        window.__firebaseBooted = true;
+        try{ if(typeof bootAuthed === "function") bootAuthed(); }catch(e){}
+      }
     }else{
-      document.body.style.display="none";
-      document.getElementById("firebaseLogin").style.display="flex";
+      window.__firebaseBooted = false;
+      btnLogout.style.display = "none";
+      if(appDiv) appDiv.style.display = "none";
+      if(loginCard) loginCard.style.display = "none";
+      try{ sessionStorage.removeItem("role"); }catch(e){}
+      msgEl.textContent = "";
+      showLogin(true);
     }
   });
-});
+
+  btnLogin.addEventListener("click", async () => {
+    try{
+      msgEl.textContent = "جاري التحقق...";
+      await auth.signInWithEmailAndPassword(emailEl.value.trim(), passEl.value);
+    }catch(e){
+      msgEl.textContent = friendlyErr(e);
+    }
+  });
+
+  btnCreate.addEventListener("click", async () => {
+    try{
+      msgEl.textContent = "جاري إنشاء الحساب...";
+      await auth.createUserWithEmailAndPassword(emailEl.value.trim(), passEl.value);
+    }catch(e){
+      msgEl.textContent = friendlyErr(e);
+    }
+  });
+
+  btnLogout.addEventListener("click", async () => {
+    await auth.signOut();
+  });
 </script>
+<!-- ================================================================ -->
+
 
 </body>
 </html>

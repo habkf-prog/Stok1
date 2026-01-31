@@ -1443,7 +1443,7 @@ function bootLocal(){
     const ready=users.every(u=>u.passHash && u.passHash.length>10);
     lockMsg.textContent=ready?"سجّل دخولك.":"لا يوجد إعداد كلمات مرور بعد. افتح (إعداد أول مرة) واحفظ الإعداد.";
   }
-})();
+}
 
 function toggleChartSwitch(show){
   const w=document.getElementById("chartWrap");
@@ -1498,7 +1498,7 @@ function toggleChartSwitch(show){
     };
   }
   window.addEventListener("load", ()=>{ toggleChartSwitch(false); });
-})();
+}
 
 
 // Close actions dropdown after choosing an option
@@ -1656,6 +1656,30 @@ function confirmRenew(){
   try{ render && render(); }catch(e){}
 }
 
+
+function shareBackup(){
+  // مشاركة ملف backup.json عبر واجهة المشاركة إن وُجدت
+  try{
+    const payload={exportedAt:new Date().toISOString(),data:load(),log:loadLog()};
+    const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json;charset=utf-8"});
+    const file=new File([blob],"backup.json",{type:"application/json"});
+    if(navigator.share){
+      navigator.share({files:[file], title:"Backup", text:"backup.json"});
+    }else{
+      // fallback: تنزيل
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement("a");
+      a.href=url;a.download="backup.json";
+      document.body.appendChild(a);a.click();a.remove();
+      URL.revokeObjectURL(url);
+    }
+    localStorage.setItem(LAST_SYNC_KEY, JSON.stringify({type:"backup", t:Date.now()}));
+    updateSyncBadge();
+  }catch(e){
+    alert("تعذر مشاركة النسخة الاحتياطية");
+  }
+}
+
 </script>
 
 <div class="modalBack" id="syncMenuBack" onclick="closeSyncMenu(event)">
@@ -1792,6 +1816,80 @@ function confirmRenew(){
   if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
 
+  // ===== Allowlist (تقييد الدخول على إيميلات محددة) =====
+  // يتم تخزين القائمة محليًا على نفس الجهاز (LocalStorage)
+  const ALLOW_KEY = "firebase_allowed_emails_v1";
+  function normEmail(x){ return String(x||"").trim().toLowerCase(); }
+  function getAllowed(){
+    try{ const v = JSON.parse(localStorage.getItem(ALLOW_KEY)); return Array.isArray(v)? v: []; }
+    catch(e){ return []; }
+  }
+  function setAllowed(arr){ localStorage.setItem(ALLOW_KEY, JSON.stringify(arr)); }
+  function isAllowedEmail(email){
+    const list = getAllowed().map(normEmail).filter(Boolean);
+    if(!list.length) return true; // فارغة = السماح للجميع
+    return list.includes(normEmail(email));
+  }
+
+  // واجهة الإدارة
+  window.refreshAllowedUI = function(){
+    const ul = document.getElementById("allowedList");
+    if(!ul) return;
+    ul.innerHTML = "";
+    const arr = getAllowed().map(normEmail).filter(Boolean);
+    if(!arr.length){
+      const li = document.createElement("li");
+      li.textContent = "لا يوجد أي إيميل مضاف (السماح للجميع).";
+      ul.appendChild(li);
+      return;
+    }
+    arr.forEach((em, i)=>{
+      const li = document.createElement("li");
+      li.style.margin = "6px 0";
+      li.textContent = em + " ";
+      const b = document.createElement("button");
+      b.type = "button";
+      b.textContent = "حذف";
+      b.style.marginInlineStart = "8px";
+      b.style.padding = "4px 10px";
+      b.style.borderRadius = "10px";
+      b.style.border = "1px solid rgba(255,255,255,.15)";
+      b.style.background = "transparent";
+      b.style.color = "#fff";
+      b.style.cursor = "pointer";
+      b.onclick = ()=>{
+        const a = getAllowed().map(normEmail).filter(Boolean);
+        a.splice(i,1);
+        setAllowed(a);
+        refreshAllowedUI();
+      };
+      li.appendChild(b);
+      ul.appendChild(li);
+    });
+  }
+
+  window.openAllowlist = function(){
+    refreshAllowedUI();
+    const m = document.getElementById("allowlistModal");
+    if(m) m.style.display = "flex";
+  }
+  window.closeAllowlist = function(){
+    const m = document.getElementById("allowlistModal");
+    if(m) m.style.display = "none";
+  }
+  window.addAllowedEmail = function(){
+    const inp = document.getElementById("newAllowedEmail");
+    if(!inp) return;
+    const em = normEmail(inp.value);
+    if(!em) return;
+    const a = getAllowed().map(normEmail).filter(Boolean);
+    if(!a.includes(em)) a.push(em);
+    setAllowed(a);
+    inp.value = "";
+    refreshAllowedUI();
+  }
+
+
   const loginBack = document.getElementById("loginBack");
   const emailEl = document.getElementById("loginEmail");
   const passEl = document.getElementById("loginPass");
@@ -1819,9 +1917,19 @@ function confirmRenew(){
 
   // Auth guard (Firebase only) + bypass local login (admin)
   auth.onAuthStateChanged((user) => {
+    // 🔒 تقييد الدخول حسب القائمة
+    if(user && !isAllowedEmail(user.email)){
+      try{ msgEl.textContent = "هذا الحساب غير مسموح له بالدخول."; }catch(e){}
+      auth.signOut();
+      showLogin(true);
+      return;
+    }
+
     const appDiv = document.getElementById("app");
     const loginCard = document.getElementById("loginCard");
     if(user){
+      const btnAllow = document.getElementById("btnAllowlist");
+      if(btnAllow){ btnAllow.style.display = "block"; btnAllow.onclick = openAllowlist; }
       showLogin(false);
       btnLogout.style.display = "block";
       if(loginCard) loginCard.style.display = "none";
@@ -1834,6 +1942,8 @@ function confirmRenew(){
         try{ if(typeof bootAuthed === "function") bootAuthed(); }catch(e){}
       }
     }else{
+      const btnAllow = document.getElementById("btnAllowlist");
+      if(btnAllow) btnAllow.style.display = "none";
       window.__firebaseBooted = false;
       btnLogout.style.display = "none";
       if(appDiv) appDiv.style.display = "none";
@@ -1868,6 +1978,32 @@ function confirmRenew(){
 </script>
 <!-- ================================================================ -->
 
+
+
+<!-- ===== Allowlist UI (إيميلات مسموح لها) ===== -->
+<div id="allowlistModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99990;align-items:center;justify-content:center;padding:14px">
+  <div style="width:min(520px,96vw);background:#0f172a;color:#fff;padding:16px;border-radius:16px;border:1px solid rgba(255,255,255,.12)">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+      <h3 style="margin:0;font-size:18px">الإيميلات المسموح لها</h3>
+      <button type="button" onclick="closeAllowlist()" style="border:0;background:transparent;color:#fff;font-size:18px;cursor:pointer">✕</button>
+    </div>
+    <p style="opacity:.85;margin:8px 0 12px;font-size:13px">إذا كانت القائمة فارغة: يسمح للجميع. عند إضافة أول إيميل: يصبح الدخول مقيدًا.</p>
+
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <input id="newAllowedEmail" type="email" placeholder="email@example.com"
+        style="flex:1;min-width:220px;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.25);color:#fff;outline:none">
+      <button type="button" onclick="addAllowedEmail()"
+        style="padding:10px 14px;border-radius:10px;background:#22c55e;color:#08111f;border:0;cursor:pointer">إضافة</button>
+    </div>
+
+    <ul id="allowedList" style="margin:12px 0 0;padding-left:18px;max-height:240px;overflow:auto"></ul>
+  </div>
+</div>
+
+<button id="btnAllowlist" type="button"
+  style="position:fixed;bottom:14px;right:14px;z-index:9999;display:none;padding:10px 14px;border-radius:12px;background:#0ea5e9;color:#08111f;border:0;cursor:pointer">
+  إدارة الإيميلات
+</button>
 
 </body>
 </html>

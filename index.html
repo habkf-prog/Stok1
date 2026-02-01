@@ -1,2009 +1,895 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8">
-<title>لوحة إدارة الاشتراكات</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<style>
-:root{--bg:#07101f;--card:rgba(255,255,255,.06);--card2:rgba(255,255,255,.04);--line:rgba(255,255,255,.10);--text:#eaf0ff;--muted:#9fb0d0;--accent:#4da3ff;--good:#2fe39a;--bad:#ff6b6b;--warn:#ffcf5a;--shadow:0 14px 40px rgba(0,0,0,.35);--radius:18px}
-*{box-sizing:border-box}
-body{margin:0;padding:14px;font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial;color:var(--text);background:radial-gradient(900px 600px at 15% 0%, rgba(77,163,255,.18), transparent 60%),radial-gradient(700px 500px at 90% 15%, rgba(47,227,154,.12), transparent 55%),var(--bg);overflow-x:hidden}
-.container{max-width:1120px;margin:0 auto;overflow-x:hidden}
-.header{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:6px 0 14px}
-h1{margin:0;font-size:20px}
-.sub{margin:6px 0 0;color:var(--muted);font-size:13px}
-.card{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin-bottom:14px}
-.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.right{margin-right:auto}
-.input,.select,.textarea{width:100%;padding:12px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.20);color:var(--text);outline:none;font-size:14px}
-.textarea{min-height:90px;resize:vertical}
-.input::placeholder,.textarea::placeholder{color:rgba(234,240,255,.55)}
-.input:focus,.select:focus,.textarea:focus{border-color:rgba(77,163,255,.55);box-shadow:0 0 0 3px rgba(77,163,255,.18)}
-.btn{padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.07);color:var(--text);cursor:pointer;font-size:14px;transition:.15s;display:inline-flex;gap:8px;align-items:center;user-select:none}
-.btn:hover{background:rgba(255,255,255,.10)}
-.btn:active{transform:translateY(1px)}
-.btn.primary{border-color:rgba(77,163,255,.45);background:rgba(77,163,255,.16)}
-.btn.danger{border-color:rgba(255,107,107,.45);background:rgba(255,107,107,.14)}
-.btn.ghost{background:transparent}
-.badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:12px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);white-space:nowrap}
-.dot{width:7px;height:7px;border-radius:50%}
-.ok .dot{background:var(--good)}.bad .dot{background:var(--bad)}.warn .dot{background:var(--warn)}
-.modalGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
-.full{grid-column:1 / -1}
-.tableWrap{max-width:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-x;border-radius:14px;border:1px solid rgba(255,255,255,.10)}
-table{width:100%;min-width:1100px;border-collapse:separate;border-spacing:0}
-th,td{padding:12px 10px;border-bottom:1px solid rgba(255,255,255,.08);text-align:right;font-size:13px;vertical-align:top}
-th{position:sticky;top:0;background:rgba(10,18,35,.85);backdrop-filter:blur(8px);color:var(--muted);z-index:1}
-tr:hover td{background:rgba(255,255,255,.03)}
-.muted{color:var(--muted);font-size:12px}
-.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
-.kpi{padding:12px;border-radius:16px;border:1px solid rgba(255,255,255,.10);background:rgba(0,0,0,.18)}
-.kpi .t{color:var(--muted);font-size:12px}
-.kpi .v{font-size:18px;margin-top:6px}
-.modalBack{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:14px;z-index:999}
-.modal{width:min(760px,100%);background:linear-gradient(180deg,rgba(18,28,51,.98),rgba(18,28,51,.90));border:1px solid rgba(255,255,255,.12);border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.45);padding:14px}
-.modalHeader{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-bottom:10px}
-.modalHeader h3{margin:0;font-size:16px}
-hr{border:0;border-top:1px solid rgba(255,255,255,.10);margin:10px 0}
-.actions{position:relative;display:inline-block}
-.menu{position:absolute;inset-inline-end:0;min-width:210px;background:rgba(18,28,51,.98);border:1px solid rgba(255,255,255,.12);border-radius:14px;box-shadow:0 18px 60px rgba(0,0,0,.45);padding:6px;display:none;z-index:50}
-.menu.down{top:44px}.menu.up{bottom:44px}.menu.open{display:block}
-.menu button{width:100%;justify-content:flex-start;padding:10px 12px;border-radius:12px;border:0;background:transparent;color:var(--text);cursor:pointer;display:flex;gap:10px;align-items:center;font-size:14px;text-align:right}
-.menu button:hover{background:rgba(255,255,255,.08)}
-.menu .dangerItem{color:#ffd0d0}
-.menu .sep{height:1px;background:rgba(255,255,255,.10);margin:6px 4px}
-@media (max-width:860px){.kpis{grid-template-columns:repeat(2,1fr)}.grid3{grid-template-columns:1fr}}
-@media (max-width:720px){body{padding:10px}.grid2{grid-template-columns:1fr}}
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>إدارة الاشتراكات</title>
+  <style>
+    :root{
+      --bg:#0b1220; --card:#0f172a; --muted:#94a3b8; --txt:#e5e7eb;
+      --line:rgba(255,255,255,.12); --pri:#3b82f6; --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444;
+      --r:16px;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:linear-gradient(180deg,#07101d, #0b1220 40%, #0b1220);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial}
+    a{color:inherit}
+    .wrap{max-width:1100px;margin:0 auto;padding:18px}
+    .topbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:14px}
+    .brand{display:flex;gap:10px;align-items:center}
+    .logo{width:38px;height:38px;border-radius:12px;background:rgba(59,130,246,.18);display:grid;place-items:center;border:1px solid var(--line)}
+    .title{font-size:18px;font-weight:700}
+    .sub{font-size:12px;color:var(--muted);margin-top:2px}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .btn{border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--txt);padding:9px 12px;border-radius:12px;cursor:pointer}
+    .btn:hover{background:rgba(255,255,255,.09)}
+    .btn.pri{background:rgba(59,130,246,.95);border-color:rgba(59,130,246,.95)}
+    .btn.pri:hover{filter:brightness(1.05)}
+    .btn.ok{background:rgba(34,197,94,.92);border-color:rgba(34,197,94,.92);color:#08111f}
+    .btn.bad{background:rgba(239,68,68,.92);border-color:rgba(239,68,68,.92)}
+    .btn.ghost{background:transparent}
+    .card{background:rgba(15,23,42,.72);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:12px}
+    @media (max-width:900px){.grid{grid-template-columns:1fr}}
+    .field{display:flex;flex-direction:column;gap:6px}
+    label{font-size:12px;color:var(--muted)}
+    input,select,textarea{width:100%;padding:10px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.28);color:var(--txt);outline:none}
+    textarea{min-height:40px;resize:vertical}
+    .row{display:flex;gap:10px;flex-wrap:wrap}
+    .row > *{flex:1;min-width:160px}
+    .hr{height:1px;background:var(--line);margin:12px 0}
+    .kpis{display:flex;gap:10px;flex-wrap:wrap}
+    .kpi{flex:1;min-width:200px}
+    .kpi .num{font-size:20px;font-weight:800}
+    .kpi .lbl{font-size:12px;color:var(--muted)}
+    .badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.05);font-size:12px;color:var(--muted)}
+    .dot{width:8px;height:8px;border-radius:50%}
+    .dot.ok{background:var(--ok)} .dot.warn{background:var(--warn)} .dot.bad{background:var(--bad)}
+    .tableWrap{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:rgba(15,23,42,.55)}
+    .scrollX{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    table{width:100%;border-collapse:collapse;min-width:980px}
+    th,td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,.08);text-align:right;vertical-align:middle}
+    th{font-size:12px;color:var(--muted);background:rgba(255,255,255,.04);position:sticky;top:0;z-index:1}
+    td{font-size:13px}
+    .pill{padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.12);font-size:12px;color:var(--muted);display:inline-block}
+    .tBtns{display:flex;gap:6px;justify-content:flex-start}
+    .mini{padding:6px 10px;border-radius:10px;font-size:12px}
+    .muted{color:var(--muted)}
+    .right{margin-inline-start:auto}
 
-.toggleWrap{display:inline-flex;align-items:center;gap:10px;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);font-size:12px;color:var(--muted)}
-.switch{position:relative;width:44px;height:24px;display:inline-block}
-.switch input{opacity:0;width:0;height:0}
-.slider{position:absolute;cursor:pointer;inset:0;border-radius:999px;border:1px solid rgba(255,255,255,.16);background:rgba(0,0,0,.22);transition:.15s}
-.slider:before{content:"";position:absolute;height:18px;width:18px;right:3px;top:2px;border-radius:50%;background:rgba(255,255,255,.75);transition:.15s}
-.switch input:checked + .slider{background:rgba(47,227,154,.16);border-color:rgba(47,227,154,.35)}
-.switch input:checked + .slider:before{transform:translateX(-20px);background:rgba(255,255,255,.9)}
+    /* Modal */
+    .back{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;padding:14px}
+    .modal{width:min(560px,96vw);background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px}
+    .modalHeader{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .modalHeader h3{margin:0;font-size:16px}
+    .x{background:transparent;border:0;color:var(--txt);font-size:20px;cursor:pointer}
 
-#syncMenuBtn{display:none}
-
-/* --- Chart collapse (show only when Monthly Income opened) --- */
-#chartWrap{display:none !important;margin-top:10px}
-#incomeChart{max-height:240px;width:100% !important}
-
-
-/* --- Chart stability fix --- */
-#chartWrap{min-height:260px}
-#incomeChart{height:240px !important; max-height:240px}
-
-
-/* --- Chart toggle switch --- */
-#chartWrap{display:none !important; min-height:260px; margin-top:8px}
-#incomeChart{height:240px !important; max-height:240px; width:100% !important}
-.switch{position:relative;display:inline-block;width:46px;height:24px;flex:0 0 auto}
-.switch input{opacity:0;width:0;height:0}
-.slider{position:absolute;cursor:pointer;inset:0;background:rgba(255,255,255,.25);border-radius:24px;transition:.25s}
-.slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background:white;border-radius:50%;transition:.25s}
-.switch input:checked + .slider{background:rgba(76,175,80,.9)}
-.switch input:checked + .slider:before{transform:translateX(22px)}
-
-
-/* --- Actions menu (details-based, mobile reliable) --- */
-.actionsDetails{position:relative;display:inline-block}
-.actionsDetails summary{cursor:pointer;list-style:none}
-.actionsDetails summary::-webkit-details-marker{display:none}
-.menuDetails{
-  position:absolute;
-  inset-inline-end:0;
-  min-width:210px;
-  background:rgba(18,28,51,.98);
-  border:1px solid rgba(255,255,255,.12);
-  border-radius:14px;
-  box-shadow:0 18px 60px rgba(0,0,0,.45);
-  padding:6px;
-  z-index:80;
-  display:none;
-}
-.actionsDetails[open] .menuDetails{display:block}
-.menuDetails button{
-  width:100%;
-  text-align:start;
-  padding:10px 10px;
-  background:transparent;
-  border:0;
-  color:#e8eefc;
-  border-radius:10px;
-  cursor:pointer;
-}
-.menuDetails button:hover{background:rgba(255,255,255,.08)}
-.menuDetails .sep{height:1px;background:rgba(255,255,255,.10);margin:6px 0}
-
-
-/* --- Fix: actions menu not fully visible inside scrollers --- */
-.tableWrap{overflow-x:auto; overflow-y:visible !important; padding-bottom:180px;}
-.actionsDetails{z-index:200;}
-.menuDetails{
-  max-height:260px;
-  overflow:auto;
-}
-
-
-table, thead, tbody, tr, td, th{overflow:visible}
-
-
-/* --- Center actions modal to avoid clipping --- */
-#actionsModalBack{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.55);z-index:9999;padding:16px}
-#actionsModalBack .modal{width:min(420px, 96vw);max-height:85vh;overflow:auto}
-.modalGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.btn.danger{background:rgba(244,67,54,.95)}
-
-
-/* --- Renew options UI in actions modal --- */
-.renewBox{margin-top:12px;padding:10px;border:1px solid rgba(255,255,255,.10);border-radius:14px;background:rgba(255,255,255,.03)}
-.renewTitle{font-weight:700;margin-bottom:10px}
-.renewChips{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
-.chip{
-  border:1px solid rgba(255,255,255,.14);
-  background:rgba(255,255,255,.06);
-  color:#e8eefc;
-  padding:8px 12px;
-  border-radius:999px;
-  cursor:pointer;
-  touch-action:manipulation;
-}
-.chip.active{background:rgba(59,130,246,.25);border-color:rgba(59,130,246,.55)}
-.renewManual{margin-top:8px}
-.renewLabel{display:block;opacity:.85;margin-bottom:6px}
-.renewRow{display:flex;gap:10px;align-items:center}
-.renewInput{
-  flex:1;
-  padding:10px 12px;
-  border-radius:12px;
-  border:1px solid rgba(255,255,255,.14);
-  background:rgba(0,0,0,.15);
-  color:#e8eefc;
-  outline:none;
-}
-.renewHint{opacity:.7;margin-top:8px;font-size:.9em}
-
-
-#app{display:none}
-</style>
+    /* Firebase login overlay */
+    #loginBack{display:flex;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:14px}
+    #loginCard{width:min(420px,96vw);background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px}
+    #loginCard h2{margin:0 0 6px;font-size:18px;text-align:center}
+    #loginCard p{margin:0 0 10px;color:var(--muted);font-size:12px;text-align:center}
+    #loginMsg{min-height:18px;color:#fca5a5;font-size:13px;text-align:center}
+  </style>
 </head>
 <body>
-<div class="container">
-  <div class="header">
-    <div>
-      <h1>لوحة إدارة الاشتراكات</h1>
-      <p class="sub">ملف واحد — إعداد كلمات المرور داخل الصفحة + تغيير كلمة المرور من داخل اللوحة + Backup/Restore</p>
-    </div>
-    <div class="row">
-      <span class="badge" id="roleTag" style="display:none"><span class="dot"></span> الدور: -</span>
-      <button class="btn" id="lockBtn" style="display:none" onclick="lockNow()">🔒 قفل</button>
-      <button class="btn" id="logoutBtn" style="display:none" onclick="logout()">🚪 خروج</button>
-    <button class="btn primary" id="syncMenuBtn" onclick="openSyncMenu()">☁️ المزامنة</button>
-</div>
-  </div>
-
-  <div class="card" id="loginCard" style="display:none">
-    <div class="row">
-      <input class="input" id="user" placeholder="اسم المستخدم (admin / staff / viewer)" autocomplete="username">
-      <input class="input" id="pass" type="password" placeholder="كلمة المرور" autocomplete="current-password">
-      <button class="btn primary" onclick="login()">🔐 دخول</button>
-    </div>
-    <p class="muted" style="margin:10px 0 0" id="lockMsg"></p>
-
-    <hr>
-    <div class="row" style="justify-content:space-between">
-      <div>
-        <div style="font-size:14px">⚙️ إعداد أول مرة (بدون تعديل الملف)</div>
-        <div class="muted">سيتم حفظ Hash داخل المتصفح</div>
+  <!-- Firebase Login -->
+  <div id="loginBack">
+    <div id="loginCard">
+      <h2>تسجيل الدخول</h2>
+      <p>دخول Firebase فقط</p>
+      <div class="field">
+        <label>البريد الإلكتروني</label>
+        <input id="loginEmail" type="email" placeholder="email@example.com" autocomplete="username" />
       </div>
-      <button class="btn" onclick="toggleSetup()">فتح/إغلاق</button>
-    </div>
-
-    <div id="setupBox" style="display:none; margin-top:10px">
-      <div class="grid3">
-        <input class="input" id="s_admin" type="password" placeholder="كلمة مرور admin (مطلوبة)">
-        <input class="input" id="s_staff" type="password" placeholder="كلمة مرور staff (اختياري)">
-        <input class="input" id="s_viewer" type="password" placeholder="كلمة مرور viewer (اختياري)">
+      <div class="field" style="margin-top:10px">
+        <label>كلمة المرور</label>
+        <input id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password" />
       </div>
-      <div class="row" style="margin-top:10px">
-        <button class="btn primary" onclick="saveSetup()">💾 حفظ الإعداد</button>
-        <button class="btn danger" onclick="resetSetup()">🧹 حذف الإعداد</button>
-        <span class="muted">إذا تركت staff/viewer فارغين → نفس كلمة admin</span>
+      <div class="row" style="margin-top:12px">
+        <button class="btn pri" id="btnLogin" type="button">دخول</button>
+        <button class="btn" id="btnCreate" type="button" title="اختياري">إنشاء حساب</button>
       </div>
-      <p class="muted" style="margin-top:8px">نصيحة: بعد الإعداد، سجل دخول admin ثم اعمل Backup.</p>
+      <div id="loginMsg"></div>
     </div>
-
-    <hr>
-    <p class="muted">
-      ⚠️ على بعض أجهزة أندرويد قد لا يكون حفظ البيانات ثابتًا مع <b>file://</b>.
-      استخدم زر <b>Backup</b> داخل اللوحة لتفادي ضياع البيانات.
-    </p>
   </div>
 
   <div id="app" style="display:none">
-    <div class="card">
-      <div class="kpis">
-        <div class="kpi"><div class="t">إجمالي</div><div class="v" id="k_all">0</div></div>
-        <div class="kpi"><div class="t">نشط</div><div class="v" id="k_active">0</div></div>
-        <div class="kpi"><div class="t">قارب ينتهي (≤ 7 أيام)</div><div class="v" id="k_near">0</div></div>
-        <div class="kpi"><div class="t">منتهي</div><div class="v" id="k_expired">0</div></div>
+    <div class="wrap">
+      <div class="topbar">
+        <div class="brand">
+          <div class="logo">📦</div>
+          <div>
+            <div class="title">لوحة إدارة الاشتراكات</div>
+            <div class="sub">ملف واحد • LocalStorage • GitHub Pages</div>
+          </div>
+        </div>
+        <div class="actions">
+          <span class="badge" id="userBadge"><span class="dot ok"></span><span class="muted">—</span></span>
+          <button class="btn" id="btnImportCSV" type="button">استيراد CSV</button>
+          <button class="btn" id="btnExportCSV" type="button">تصدير CSV</button>
+          <button class="btn" id="btnBackup" type="button">Backup JSON</button>
+          <button class="btn" id="btnRestore" type="button">Restore JSON</button>
+          <button class="btn bad" id="btnLogout" type="button">خروج</button>
+        </div>
       </div>
 
-      <div class="grid3">
-        <input class="input" id="search" placeholder="🔎 بحث (بالاسم/الإيميل/الخطة/ملاحظات)..." oninput="render()">
-        <select class="select" id="filterStatus" onchange="render()">
-          <option value="all">فلترة: الكل</option>
-          <option value="active">نشط</option>
-          <option value="near">قارب ينتهي</option>
-          <option value="expired">منتهي</option>
-        </select>
-        <select class="select" id="sort" onchange="render()">
-          <option value="newest">ترتيب: الأحدث إضافة</option>
-          <option value="oldest">الأقدم إضافة</option>
-          <option value="end_asc">الأقرب انتهاءً</option>
-          <option value="end_desc">الأبعد انتهاءً</option>
-          <option value="name_asc">الاسم (أ-ي)</option>
-          <option value="name_desc">الاسم (ي-أ)</option>
-          <option value="email_asc">الإيميل (A-Z)</option>
-          <option value="email_desc">الإيميل (Z-A)</option>
-        </select>
+      <div class="grid">
+        <div class="card">
+          <div class="row">
+            <div class="field">
+              <label>البريد الإلكتروني</label>
+              <input id="fEmail" type="email" placeholder="customer@email.com">
+            </div>
+            <div class="field">
+              <label>اسم العميل</label>
+              <input id="fName" type="text" placeholder="اسم العميل">
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:10px">
+            <div class="field">
+              <label>تاريخ التسجيل</label>
+              <input id="fStart" type="date">
+            </div>
+            <div class="field">
+              <label>مدة الاشتراك</label>
+              <select id="fDur">
+                <option value="1">1 شهر</option>
+                <option value="3" selected>3 أشهر</option>
+                <option value="6">6 أشهر</option>
+                <option value="12">12 شهر</option>
+                <option value="custom">يدوي…</option>
+              </select>
+            </div>
+            <div class="field" id="fDurCustomWrap" style="display:none">
+              <label>عدد الأشهر (يدوي)</label>
+              <input id="fDurCustom" type="number" min="1" step="1" value="3">
+            </div>
+          </div>
+
+          <div class="row" style="margin-top:10px">
+            <div class="field">
+              <label>نوع الخطة</label>
+              <select id="fPlan">
+                <option value="Basic">Basic</option>
+                <option value="Pro" selected>Pro</option>
+                <option value="Premium">Premium</option>
+                <option value="Other">أخرى…</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>السعر</label>
+              <input id="fPrice" type="number" min="0" step="0.01" placeholder="0">
+            </div>
+            <div class="field">
+              <label>التجديد</label>
+              <select id="fRenew">
+                <option value="manual" selected>يدوي</option>
+                <option value="auto">تلقائي</option>
+                <option value="stop">إيقاف</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field" style="margin-top:10px">
+            <label>ملاحظات</label>
+            <textarea id="fNotes" placeholder="..."></textarea>
+          </div>
+
+          <div class="row" style="margin-top:12px">
+            <button class="btn ok" id="btnAdd" type="button">➕ إضافة اشتراك</button>
+            <button class="btn" id="btnClearForm" type="button">مسح</button>
+            <span class="right muted" id="saveHint">يتم الحفظ تلقائيًا</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="kpis">
+            <div class="kpi card">
+              <div class="num" id="kTotal">0</div>
+              <div class="lbl">عدد الاشتراكات</div>
+            </div>
+            <div class="kpi card">
+              <div class="num" id="kActive">0</div>
+              <div class="lbl">نشط الآن</div>
+            </div>
+            <div class="kpi card">
+              <div class="num" id="kMonthIncome">0</div>
+              <div class="lbl">الدخل الشهري (تقديري)</div>
+            </div>
+          </div>
+          <div class="hr"></div>
+          <div class="field">
+            <label>بحث سريع</label>
+            <input id="q" type="text" placeholder="اكتب بريد/اسم/خطة...">
+          </div>
+          <div class="row" style="margin-top:10px">
+            <div class="field">
+              <label>فلتر</label>
+              <select id="filter">
+                <option value="all" selected>الكل</option>
+                <option value="active">نشط</option>
+                <option value="expired">منتهي</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>ترتيب</label>
+              <select id="sort">
+                <option value="endAsc" selected>الأقرب انتهاءً</option>
+                <option value="endDesc">الأبعد انتهاءً</option>
+                <option value="priceDesc">السعر (أعلى)</option>
+                <option value="priceAsc">السعر (أقل)</option>
+                <option value="nameAsc">الاسم A→Z</option>
+              </select>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <hr>
+      <div class="card" style="margin-top:12px">
+        <div class="tableWrap">
+          <div class="scrollX" id="emailsTableScroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>الحالة</th>
+                  <th>البريد</th>
+                  <th>العميل</th>
+                  <th>الخطة</th>
+                  <th>السعر</th>
+                  <th>التسجيل</th>
+                  <th>المدة</th>
+                  <th>الانتهاء</th>
+                  <th>التجديد</th>
+                  <th>ملاحظات</th>
+                  <th>إجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
 
+      <div class="muted" style="margin-top:10px;font-size:12px">
+        نصيحة: افتح الرابط مع <span class="pill">?v=رقم</span> بعد كل تحديث لتجنب الكاش في الهاتف.
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions Modal -->
+  <div class="back" id="actionsBack">
+    <div class="modal">
+      <div class="modalHeader">
+        <h3 id="actionsTitle">إجراءات</h3>
+        <button class="x" onclick="closeActions()" type="button">✕</button>
+      </div>
+      <div class="hr"></div>
       <div class="row">
-        <button class="btn primary" id="addBtn" onclick="openAdd()">➕ إضافة اشتراك</button>
-        <button class="btn" id="exportBtn" onclick="exportCSV()">⬇️ تصدير CSV</button>
-
-        <label class="btn" id="importBtn" style="cursor:pointer">
-          ⬆️ استيراد CSV
-          <input type="file" accept="text/csv,application/vnd.ms-excel,application/csv,.csv" style="display:none" onchange="importCSV(event)">
-        </label>
-
-        
-        
-        
-        
-        
-        <span class="toggleWrap" title="تنبيه إذا مرّ يوم بدون Backup/Restore">
-          <span>تنبيه النسخ اليومي</span>
-          <label class="switch">
-            <input type="checkbox" id="autoBackupToggle">
-            <span class="slider"></span>
-          </label>
-        </span>
-
-        <span class="badge" id="syncBadge" title="آخر Backup/Restore" style="margin-inline-start:6px"><span class="dot"></span><span id="syncText">آخر مزامنة: -</span></span>
-
-        <label class="btn" style="cursor:pointer">
-          📥 Restore
-          <input type="file" accept=".json" style="display:none" onchange="restoreJSON(event)">
-        </label>
-
-        <button class="btn" onclick="openPwModal()">🔑 تغيير كلمة المرور</button>
-
-        <select class="select" id="renewMode" style="max-width:260px" title="طريقة التجديد">
-          <option value="end" selected>التجديد: من تاريخ الانتهاء</option>
-          <option value="today">التجديد: من اليوم</option>
-        </select>
-
-        <span class="right"></span>
-        <button class="btn danger" id="clearBtn" onclick="clearAll()">🗑️ مسح الكل</button>
+        <button class="btn pri" id="btnEditRow" type="button">تعديل</button>
+        <button class="btn bad" id="btnDeleteRow" type="button">حذف</button>
       </div>
-      <p class="muted" style="margin:10px 0 0">صيغة CSV: name,email,plan,price,start,months,notes</p>
-      <p class="muted" style="margin:6px 0 0">💡 للمزامنة بين الأجهزة بدون قاعدة بيانات: اضغط <b>مشاركة Backup</b> واختر Google Drive/Dropbox/Telegram، ثم على الجهاز الآخر اضغط <b>Restore</b> واختر نفس الملف.</p>
-    </div>
-
-    <div class="card" id="incomeCard">
-      <div class="row" style="justify-content:space-between; align-items:center">
-        <div>
-          <div style="font-size:16px; margin-bottom:6px">💰 حساب الدخل الشهري</div>
-          <div class="muted">اختر الشهر وطريقة الحساب</div>
-        </div>
-        <div class="badge"><span class="dot"></span><span id="incomeRoleNote">تقارير شهرية</span></div>
+      <div class="row" style="margin-top:8px">
+        <button class="btn" id="btnCopyEmail" type="button">نسخ البريد</button>
+        <button class="btn" id="btnRenew3" type="button">تجديد 3 أشهر</button>
+        <button class="btn" id="btnRenew6" type="button">تجديد 6 أشهر</button>
       </div>
-
-      <div class="grid3" style="margin-top:10px">
-        <input class="input" id="incomeMonth" type="month">
-        <select class="select" id="incomeMode" onchange="calcMonthlyIncome()">
-          <option value="start" selected>حسب تاريخ التسجيل (بدأت هذا الشهر)</option>
-          <option value="spread">موزّع على أشهر الاشتراك (السعر/المدة)</option>
-          <option value="payments">حسب الدفعات/التجديدات (سجل العمليات)</option>
-        </select>
-        <select class="select" id="currency" onchange="calcMonthlyIncome()">
-          <option value="DZD" selected>DZD</option>
-          <option value="USD">USD</option>
-          <option value="EUR">EUR</option>
-          <option value="custom">عملة مخصصة...</option>
-        </select>
-      </div>
-
-      <div class="row" style="margin-top:10px">
-        <input class="input" id="customCurrency" placeholder="اكتب رمز العملة (مثال: MAD)" style="display:none; max-width:260px">
-        <button class="btn primary" onclick="calcMonthlyIncome()">🧮 احسب</button>
-      </div>
-
-      <div class="kpis" style="margin-top:12px">
-        <div class="kpi">
-          <div class="t">إجمالي الدخل للشهر</div>
-          <div class="v" id="incomeTotal">0</div>
-          <div class="muted" id="incomeHint" style="margin-top:6px"></div>
-        </div>
-        <div class="kpi"><div class="t">عدد</div><div class="v" id="incomeCount">0</div></div>
-        <div class="kpi"><div class="t">متوسط</div><div class="v" id="incomeAvg">0</div></div>
-        <div class="kpi"><div class="t">أعلى خطة</div><div class="v" id="incomeTopPlan">-</div></div>
-      </div>
-
-      <div class="tableWrap" style="margin-top:12px">
-        <table style="min-width:700px">
-          <thead><tr><th>الخطة</th><th>عدد</th><th>الدخل</th></tr></thead>
-          <tbody id="incomePlanRows"></tbody>
-        </table>
-      </div>
-
-      <div class="card" style="margin-top:12px; padding:12px">
-        <div class="row" style="justify-content:space-between">
-          <div style="font-size:14px">📈 الدخل آخر 6 أشهر</div>
-          <div class="muted" id="chartHint"></div>
-        </div>
-        
-<div class="row" style="margin:10px 0; align-items:center; gap:10px">
-  <label class="switch">
-    <input type="checkbox" id="chartToggle" onchange="toggleChartSwitch(this.checked)">
-    <span class="slider"></span>
-  </label>
-  <span class="muted">إظهار الخط البياني</span>
-</div>
-
-<div id="chartWrap" style="display:none"><canvas id="incomeChart" height="90" style="width:100%; margin-top:10px"></canvas></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="tableWrap">
-        <table>
-          <thead>
-            <tr>
-              <th>العميل</th><th>الإيميل</th><th>الخطة</th><th>السعر</th>
-              <th>تاريخ التسجيل</th><th>الانتهاء</th><th>المتبقي</th><th>الحالة</th><th>ملاحظات</th><th>إجراء</th>
-            </tr>
-          </thead>
-          <tbody id="rows"></tbody>
-        </table>
-      </div>
-      <p class="muted" id="stats" style="margin:10px 0 0"></p>
     </div>
   </div>
-</div>
 
-<div class="modalBack" id="modalBack" onclick="closeModal(event)">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modalHeader">
-      <h3 id="modalTitle">إضافة / تعديل</h3>
-      <button class="btn ghost" onclick="closeModal()">✖</button>
-    </div>
+  <!-- Hidden file inputs -->
+  <input id="fileCSV" type="file" accept=".csv,text/csv" style="display:none">
+  <input id="fileJSON" type="file" accept="application/json,.json" style="display:none">
 
-    <div class="modalGrid">
-      <input class="input" id="m_name" placeholder="اسم العميل">
-      <input class="input" id="m_email" placeholder="البريد الإلكتروني">
-      <input class="input" id="m_plan" placeholder="نوع الخطة">
-      <input class="input" id="m_price" type="number" placeholder="السعر">
-      <input class="input" id="m_start" type="date">
-      <input class="input" id="m_months" type="number" min="1" placeholder="المدة بالأشهر">
-      <textarea class="textarea full" id="m_notes" placeholder="ملاحظات"></textarea>
-    </div>
-
-    <div class="row" style="margin-top:10px">
-      <button class="btn primary" id="saveBtn" onclick="saveModal()">💾 حفظ</button>
-      <button class="btn" onclick="closeModal()">إلغاء</button>
-      <span class="right"></span>
-      <button class="btn danger" id="deleteBtn" onclick="deleteFromModal()" style="display:none">🗑️ حذف</button>
-    </div>
-
-    <p class="muted" style="margin:10px 0 0" id="preview"></p>
-  </div>
-</div>
-
-<div class="modalBack" id="pwBack" onclick="closePwModal(event)">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modalHeader">
-      <h3>🔑 تغيير كلمة المرور</h3>
-      <button class="btn ghost" onclick="closePwModal()">✖</button>
-    </div>
-
-    <div class="modalGrid">
-      <input class="input" id="pw_current" type="password" placeholder="كلمة المرور الحالية">
-      <select class="select" id="pw_target">
-        <option value="self">تغيير لحسابي فقط</option>
-        <option value="all">تغيير لكل الحسابات (admin/staff/viewer)</option>
-      </select>
-
-      <input class="input" id="pw_new" type="password" placeholder="كلمة المرور الجديدة">
-      <input class="input" id="pw_new2" type="password" placeholder="تأكيد كلمة المرور الجديدة">
-    </div>
-
-    <p class="muted" style="margin:10px 0 0">
-      إذا اخترت “لكل الحسابات”، سيتم وضع نفس كلمة المرور للجميع.
-    </p>
-
-    <div class="row" style="margin-top:12px">
-      <button class="btn primary" onclick="saveNewPassword()">💾 حفظ</button>
-      <button class="btn" onclick="closePwModal()">إلغاء</button>
-    </div>
-  </div>
-</div>
-
-
-<div class="modalBack" id="syncHelpBack" onclick="closeSyncHelp(event)">
-  <div class="modal" onclick="event.stopPropagation()">
-    <div class="modalHeader">
-      <h3>❓ دليل المزامنة (Google Drive / Dropbox / Telegram)</h3>
-      <button class="btn ghost" onclick="closeSyncHelp()">✖</button>
-    </div>
-
-    <div class="card" style="margin:0; padding:12px">
-      <div class="muted" style="line-height:1.9">
-        <b>الفكرة:</b> لا توجد مزامنة تلقائية بدون سيرفر. لكن تقدر تعملها بسهولة عبر ملف واحد اسمه <b>backup.json</b>.
-        <br>✅ بعد أي تعديل على جهاز: <b>💾 Backup</b> أو <b>📤 مشاركة Backup</b>
-        <br>✅ قبل استعمال جهاز آخر: <b>📥 Restore</b> واختر نفس الملف
-      </div>
-      <hr>
-
-      <div class="modalGrid">
-        <div class="card" style="margin:0; padding:12px">
-          <div style="font-size:14px; margin-bottom:6px">☁️ Google Drive</div>
-          <div class="muted" style="line-height:1.9">
-            1) اضغط <b>📤 مشاركة Backup</b> واختر <b>Drive</b> واحفظه داخل مجلد ثابت (مثال: Subscriptions-App).<br>
-            2) على الجهاز الثاني: حمّل <b>backup.json</b> من Drive ثم اضغط <b>📥 Restore</b>.
-          </div>
-        </div>
-
-        <div class="card" style="margin:0; padding:12px">
-          <div style="font-size:14px; margin-bottom:6px">☁️ Dropbox</div>
-          <div class="muted" style="line-height:1.9">
-            1) اضغط <b>📤 مشاركة Backup</b> واختر <b>Dropbox</b> واحفظ الملف بنفس الاسم.<br>
-            2) على الجهاز الثاني: حمّل <b>backup.json</b> من Dropbox ثم <b>📥 Restore</b>.
-          </div>
-        </div>
-      </div>
-
-      <div class="card" style="margin-top:10px; padding:12px">
-        <div style="font-size:14px; margin-bottom:6px">✈️ Telegram (Saved Messages)</div>
-        <div class="muted" style="line-height:1.9">
-          1) بعد Backup، أرسل <b>backup.json</b> إلى <b>Saved Messages</b>.<br>
-          2) على أي جهاز: حمّل آخر ملف ثم اعمل <b>Restore</b>.
-        </div>
-      </div>
-
-      <div class="card" style="margin-top:10px; padding:12px">
-        <div style="font-size:14px; margin-bottom:6px">⚠️ ملاحظة مهمة</div>
-        <div class="muted" style="line-height:1.9">
-          تجنّب التعديل على جهازين في نفس الوقت بدون Backup بينهما، لأن آخر ملف سيغلب.
-        </div>
-      </div>
-    </div>
-
-    <div class="row" style="margin-top:10px">
-      
-      <button class="btn" onclick="closeSyncHelp()">إغلاق</button>
-    </div>
-  </div>
-</div>
-
-
-<script>
-window.__USE_FIREBASE_AUTH = true;
-</script>
-<script>
-const KEY="subs_data_allinone_v1";
-const LOG_KEY="subs_log_allinone_v1";
-const CONFIG_KEY="subs_users_config_allinone_v1";
-const AUTO_BACKUP_KEY="subs_auto_backup_reminder_v1";
-
-const LAST_SYNC_KEY="subs_last_sync_allinone_v1";
-
-async function sha256Base64(text){
-  const enc=new TextEncoder().encode(text);
-  const buf=await crypto.subtle.digest("SHA-256",enc);
-  const bytes=new Uint8Array(buf);
-  let bin="";bytes.forEach(b=>bin+=String.fromCharCode(b));
-  return btoa(bin);
-}
-
-const DEFAULT_USERS=[
-  {username:"admin",role:"admin",passHash:""},
-  {username:"staff",role:"staff",passHash:""},
-  {username:"viewer",role:"viewer",passHash:""}
-];
-function loadUsers(){
-  try{
-    const cfg=JSON.parse(localStorage.getItem(CONFIG_KEY)||"null");
-    if(cfg&&Array.isArray(cfg)&&cfg.every(x=>x.username&&x.passHash&&x.role)) return cfg;
-  }catch{}
-  return DEFAULT_USERS;
-}
-function saveUsers(cfg){localStorage.setItem(CONFIG_KEY,JSON.stringify(cfg));}
-function toggleSetup(){
-  const box=document.getElementById("setupBox");
-  box.style.display=(box.style.display==="none"?"block":"none");
-}
-async function saveSetup(){
-  const adminP=(document.getElementById("s_admin").value||"").trim();
-  const staffP=(document.getElementById("s_staff").value||"").trim()||adminP;
-  const viewerP=(document.getElementById("s_viewer").value||"").trim()||adminP;
-  if(!adminP){alert("اكتب كلمة مرور admin على الأقل");return;}
-  const cfg=[
-    {username:"admin",role:"admin",passHash:await sha256Base64(adminP)},
-    {username:"staff",role:"staff",passHash:await sha256Base64(staffP)},
-    {username:"viewer",role:"viewer",passHash:await sha256Base64(viewerP)}
-  ];
-  saveUsers(cfg);
-  alert("تم حفظ الإعداد ✅ الآن سجل دخولك");
-}
-function resetSetup(){localStorage.removeItem(CONFIG_KEY);alert("تم حذف الإعداد. يمكنك إعادة الإعداد من جديد.");}
-
-function getRole(){return sessionStorage.getItem("role")||null;}
-function setRole(role){sessionStorage.setItem("role",role);}
-function logout(){
-  setSyncBtnVisible(false);sessionStorage.removeItem("role");location.reload();}
-function lockNow(){logout();}
-function canEdit(){const r=getRole();return r==="admin"||r==="staff";}
-function canDelete(){return getRole()==="admin";}
-function canImportClear(){return getRole()==="admin";}
-
-let failCount=0,lockUntil=0;
-let autoLogoutTimer=null;
-function scheduleAutoLogout(){
-  if(autoLogoutTimer) clearTimeout(autoLogoutTimer);
-  autoLogoutTimer=setTimeout(()=>logout(),15*60*1000);
-}
-
-async function login(){
-  if(Date.now()<lockUntil){
-    const sec=Math.ceil((lockUntil-Date.now())/1000);
-    lockMsg.textContent=`تم قفل تسجيل الدخول مؤقتاً. حاول بعد ${sec} ثانية.`;
-    return;
-  } else lockMsg.textContent="";
-
-  const u=(user.value||"").trim();
-  const p=(pass.value||"").trim();
-  const USERS=loadUsers();
-  const found=USERS.find(x=>x.username===u);
-
-  if(!found||!found.passHash){
-    lockMsg.textContent="لا يوجد إعداد كلمات مرور. افتح (إعداد أول مرة) واحفظ الإعداد.";
-    return;
-  }
-  const h=await sha256Base64(p);
-  if(h!==found.passHash){onBadLogin();return;}
-
-  failCount=0;lockUntil=0;lockMsg.textContent="";
-  setRole(found.role);
-  bootAuthed();
-}
-function onBadLogin(){
-  failCount++;
-  if(failCount>=5){
-    lockUntil=Date.now()+30000;
-    failCount=0;
-    lockMsg.textContent="محاولات كثيرة. تم قفل الدخول 30 ثانية.";
-  } else lockMsg.textContent="بيانات الدخول غير صحيحة.";
-}
-
-function applyRoleUI(){
-  const role=getRole()||"viewer";
-  roleTag.innerHTML=`<span class="dot"></span> الدور: ${role}`;
-  roleTag.classList.remove("ok","warn","bad");
-  if(role==="admin") roleTag.classList.add("ok");
-  else if(role==="staff") roleTag.classList.add("warn");
-  else roleTag.classList.add("bad");
-
-  addBtn.style.display=canEdit()?"inline-flex":"none";
-  saveBtn.style.display=canEdit()?"inline-flex":"none";
-  importBtn.style.display=canImportClear()?"inline-flex":"none";
-  clearBtn.style.display=canImportClear()?"inline-flex":"none";
-  exportBtn.style.display="inline-flex";
-}
-function bootAuthed(){
-  loginCard.style.display="none";
-  app.style.display="block";
-  roleTag.style.display="inline-flex";
-  logoutBtn.style.display="inline-flex";
-  lockBtn.style.display="inline-flex";
-  applyRoleUI();
-  setSyncBtnVisible(true);
-  updateSyncBadge();
-  render();
-  ensureIncomeDefaults();
-  calcMonthlyIncome();
-  maybeRemindBackup();
-  scheduleAutoLogout();
-  ["click","keydown","mousemove","touchstart"].forEach(ev=>{
-    window.addEventListener(ev,scheduleAutoLogout,{passive:true});
-  });
-}
-
-function load(){try{return JSON.parse(localStorage.getItem(KEY)||"[]");}catch{return[];}}
-function save(d){localStorage.setItem(KEY,JSON.stringify(d));}
-function loadLog(){try{return JSON.parse(localStorage.getItem(LOG_KEY)||"[]");}catch{return[];}}
-function saveLog(list){localStorage.setItem(LOG_KEY,JSON.stringify(list));}
-function addLog(action,payload){
-  const role=getRole()||"unknown";
-  const item={t:Date.now(),role,action,...payload};
-  const log=loadLog();
-  log.push(item);
-  if(log.length>5000) log.splice(0,log.length-5000);
-  saveLog(log);
-}
-
-function backupJSON(){
-  const payload={exportedAt:new Date().toISOString(),data:load(),log:loadLog()};
-  const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json;charset=utf-8"});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-  a.href=url;a.download="backup.json";
-  document.body.appendChild(a);a.click();a.remove();
-  URL.revokeObjectURL(url);
-  localStorage.setItem(LAST_SYNC_KEY, JSON.stringify({type:"backup", t:Date.now()}));
-  updateSyncBadge();
-  alert("تم حفظ النسخة الاحتياطية (backup.json)");
-}
-function restoreJSON(event){
-  const file = event.target.files && event.target.files[0];
-  if(!file) return;
-
-  const handleText = (txt)=>{
-    let obj;
-    try{ obj = JSON.parse(txt); }catch{ alert("الملف غير صالح"); event.target.value=""; return; }
-    if(!obj || !Array.isArray(obj.data)){
-      alert("الملف لا يحتوي بيانات صحيحة"); event.target.value=""; return;
-    }
-    save(obj.data);
-    if(Array.isArray(obj.log)) saveLog(obj.log);
-    localStorage.setItem(LAST_SYNC_KEY, JSON.stringify({type:"restore", t:Date.now()}));
-    updateSyncBadge();
-    render(); ensureIncomeDefaults(); calcMonthlyIncome();
-    alert("تم استرجاع البيانات بنجاح ✅");
-    event.target.value="";
-  };
-
-  // أفضل توافق: استخدم FileReader، ومعه fallback لـ file.text
-  try{
-    const reader = new FileReader();
-    reader.onload = ()=>handleText(String(reader.result||""));
-    reader.onerror = ()=>{
-      // fallback
-      if(file.text){ file.text().then(handleText).catch(()=>alert("تعذر قراءة الملف")); }
-      else alert("تعذر قراءة الملف");
-      event.target.value="";
+  <!-- Firebase (compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script>
+    // 🔧 ضع إعدادات Firebase الخاصة بك هنا
+    const firebaseConfig = {
+      apiKey: "AIzaSyCTFWu05DqfkiSN_0vGSb6CpAwGJ5lMoC0",
+      authDomain: "stok-ef86f.firebaseapp.com",
+      projectId: "stok-ef86f",
+      storageBucket: "stok-ef86f.firebasestorage.app",
+      messagingSenderId: "845285269041",
+      appId: "1:845285269041:web:4bdb61a61aa114d600ff10",
+      measurementId: "G-EBF3TC1QWT"
     };
-    reader.readAsText(file);
-  }catch(e){
-    if(file.text){
-      file.text().then(handleText).catch(()=>alert("تعذر قراءة الملف"));
-    }else{
-      alert("تعذر قراءة الملف");
+
+    if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+
+    // ===== Firestore Allowlist (مشتركة بين كل الأجهزة) =====
+    const db = firebase.firestore();
+    const ALLOW_DOC = db.collection("admin").doc("allowlist"); // admin/allowlist
+    let ALLOW_CACHE = [];  // array of lowercased emails
+    let allowUnsub = null;
+
+    const normEmail = (x)=>String(x||"").trim().toLowerCase();
+    const isAllowedEmail = (email)=>{
+      if(!ALLOW_CACHE.length) return true;   // فارغة = السماح للجميع
+      return ALLOW_CACHE.includes(normEmail(email));
+    };
+
+    async function loadAllowlistOnce(){
+      const snap = await ALLOW_DOC.get();
+      const data = snap.exists ? (snap.data()||{}) : {};
+      const arr = Array.isArray(data.emails) ? data.emails : [];
+      ALLOW_CACHE = arr.map(normEmail).filter(Boolean);
+      return ALLOW_CACHE;
     }
-    event.target.value="";
-  }
-}
 
-function updateSyncBadge(){
-  const badge=document.getElementById("syncBadge");
-  const text=document.getElementById("syncText");
-  if(!badge||!text) return;
-  let info=null;
-  try{info=JSON.parse(localStorage.getItem(LAST_SYNC_KEY)||"null");}catch{}
-  if(!info||!info.t){
-    text.textContent="آخر مزامنة: -";
-    badge.classList.remove("ok","warn","bad");
-    return;
-  }
-  const dt=new Date(info.t);
-  const type=info.type==="restore"?"Restore":"Backup";
-  const stamp=dt.toLocaleString("ar-DZ");
-  text.textContent=`آخر مزامنة: ${type} — ${stamp}`;
+    function subscribeAllowlist(){
+      return ALLOW_DOC.onSnapshot((snap)=>{
+        const data = snap.exists ? (snap.data()||{}) : {};
+        const arr = Array.isArray(data.emails) ? data.emails : [];
+        ALLOW_CACHE = arr.map(normEmail).filter(Boolean);
+        try{ renderAllowlistUI(); }catch(e){}
+      }, (err)=>{
+        console.error("allowlist snapshot error", err);
+      });
+    }
 
-  const ageH=(Date.now()-info.t)/3600000;
-  badge.classList.remove("ok","warn","bad");
-  if(ageH<=24) badge.classList.add("ok");
-  else if(ageH<=72) badge.classList.add("warn");
-  else badge.classList.add("bad");
-}
+    async function saveAllowlist(arr){
+      const clean = Array.from(new Set(arr.map(normEmail).filter(Boolean)));
+      await ALLOW_DOC.set({ emails: clean, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge:true });
+    }
 
-function safeText(v){return (v===undefined||v===null||String(v).trim()==="")?"-":String(v);}
-function isValidEmail(e){const s=String(e||"").trim();return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);}
-function parseISODateToUTC(iso){
-  const [y,m,d]=String(iso||"").split("-").map(Number);
-  if(!y||!m||!d) return null;
-  return new Date(Date.UTC(y,m-1,d));
-}
-function addMonths(dateStr,months){
-  const [y,m,d]=dateStr.split("-").map(Number);
-  const dt=new Date(Date.UTC(y,m-1,d));
-  const day=dt.getUTCDate();
-  dt.setUTCMonth(dt.getUTCMonth()+Number(months));
-  if(dt.getUTCDate()!==day) dt.setUTCDate(0);
-  return dt;
-}
-function fmt(dt){
-  const y=dt.getUTCFullYear();
-  const m=String(dt.getUTCMonth()+1).padStart(2,"0");
-  const d=String(dt.getUTCDate()).padStart(2,"0");
-  return `${y}-${m}-${d}`;
-}
-function daysLeft(endUTC){
-  const now=new Date();
-  const todayUTC=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()));
-  return Math.ceil((endUTC.getTime()-todayUTC.getTime())/86400000);
-}
-function statusOf(r){
-  if(!r.start||!r.months) return {status:"-",left:null,end:"-"};
-  const end=addMonths(r.start,r.months);
-  const left=daysLeft(end);
-  let status="active";
-  if(left<0) status="expired";
-  else if(left<=7) status="near";
-  return {status,left,end:fmt(end)};
-}
-function badgeHTML(st){
-  if(st==="active") return `<span class="badge ok"><span class="dot"></span>نشط</span>`;
-  if(st==="near") return `<span class="badge warn"><span class="dot"></span>قارب ينتهي</span>`;
-  if(st==="expired") return `<span class="badge bad"><span class="dot"></span>منتهي</span>`;
-  return "-";
-}
-async function copyText(t){
-  try{await navigator.clipboard.writeText(t);alert("تم نسخ الإيميل");}
-  catch{
-    const ta=document.createElement("textarea");
-    ta.value=t;document.body.appendChild(ta);
-    ta.select();document.execCommand("copy");
-    ta.remove();alert("تم النسخ");
-  }
-}
+    // ===== Allowlist UI =====
+    const allowBack = document.getElementById("allowBack");
+    const btnAllowlist = document.getElementById("btnAllowlist");
+    const allowEmail = document.getElementById("allowEmail");
+    const btnAllowAdd = document.getElementById("btnAllowAdd");
+    const allowList = document.getElementById("allowList");
 
-document.addEventListener("click",(e)=>{
-  if(!e.target.closest(".actions")){
-    document.querySelectorAll(".menu.open").forEach(m=>m.classList.remove("open"));
-  }
-});
+    function openAllow(){ if(allowBack) allowBack.style.display="flex"; try{ renderAllowlistUI(); }catch(e){} }
+    function closeAllow(){ if(allowBack) allowBack.style.display="none"; }
+    window.closeAllow = closeAllow;
 
-function applyFilterAndSort(data){
-  const q=(search.value||"").toLowerCase().trim();
-  const f=(filterStatus.value||"all");
-  const s=(sort.value||"newest");
-
-  let out=data.filter(r=>{
-    const hay=`${r.name||""} ${r.email||""} ${r.plan||""} ${r.notes||""}`.toLowerCase();
-    return !q||hay.includes(q);
-  });
-
-  out=out.filter(r=>f==="all"?true:statusOf(r).status===f);
-
-  out.sort((a,b)=>{
-    const sa=statusOf(a), sb=statusOf(b);
-    const endA=(sa.end&&sa.end!=="-")?sa.end:"0000-00-00";
-    const endB=(sb.end&&sb.end!=="-")?sb.end:"0000-00-00";
-    if(s==="newest") return (b.createdAt||0)-(a.createdAt||0);
-    if(s==="oldest") return (a.createdAt||0)-(b.createdAt||0);
-    if(s==="end_asc") return endA.localeCompare(endB);
-    if(s==="end_desc") return endB.localeCompare(endA);
-    if(s==="name_asc") return (a.name||"").localeCompare(b.name||"");
-    if(s==="name_desc") return (b.name||"").localeCompare(a.name||"");
-    if(s==="email_asc") return (a.email||"").localeCompare(b.email||"");
-    if(s==="email_desc") return (b.email||"").localeCompare(a.email||"");
-    return 0;
-  });
-  return out;
-}
-function updateKPIs(all){
-  let active=0,near=0,expired=0;
-  all.forEach(r=>{
-    const st=statusOf(r).status;
-    if(st==="active") active++;
-    else if(st==="near") near++;
-    else if(st==="expired") expired++;
-  });
-  k_all.textContent=all.length;
-  k_active.textContent=active;
-  k_near.textContent=near;
-  k_expired.textContent=expired;
-}
-
-function render(){
-  const data=load();
-  updateKPIs(data);
-  const view=applyFilterAndSort(data);
-  rows.innerHTML="";
-  view.forEach(r=>{
-    const realIndex=data.indexOf(r);
-    const st=statusOf(r);
-    const menuId=`menu_${realIndex}`;
-    const emailSafe=String(r.email||"");
-    const emailEsc=emailSafe.replaceAll("'","\\'");
-    rows.innerHTML+=`
-      <tr>
-        <td>${safeText(r.name)}</td>
-        <td>
-          <div class="row" style="gap:8px">
-            <span>${safeText(r.email)}</span>
-            <button class="btn ghost" style="padding:6px 10px" onclick="copyText('${emailEsc}')">📋</button>
-            <a class="btn ghost" style="padding:6px 10px; text-decoration:none" href="mailto:${encodeURIComponent(emailSafe)}">✉️</a>
-          </div>
-        </td>
-        <td>${safeText(r.plan)}</td>
-        <td>${safeText(r.price)}</td>
-        <td>${safeText(r.start)}</td>
-        <td>${st.end}</td>
-        <td>${st.left===null?"-":st.left}</td>
-        <td>${badgeHTML(st.status)}</td>
-        <td>${safeText(r.notes)}</td>
-        <td>
-          <button class="btn" type="button" onclick="openActionsModal(${realIndex})">⚡ إجراءات</button></td>
-      </tr>`;
-  });
-  stats.textContent=`المعروض: ${view.length} | يمكنك التمرير أفقياً على الموبايل لعرض كامل الأعمدة`;
-  calcMonthlyIncome();
-}
-
-let editingIndex=null;
-function openAdd(){
-  if(!canEdit()){alert("ليس لديك صلاحية للإضافة");return;}
-  editingIndex=null;
-  modalTitle.textContent="➕ إضافة اشتراك";
-  deleteBtn.style.display="none";
-  m_name.value="";m_email.value="";m_plan.value="";m_price.value="";
-  m_start.value="";m_months.value="";m_notes.value="";
-  updatePreview();
-  modalBack.style.display="flex";
-}
-function openEdit(index){
-  if(!canEdit()){alert("ليس لديك صلاحية للتعديل");return;}
-  const data=load();const r=data[index];if(!r) return;
-  editingIndex=index;
-  modalTitle.textContent="✏️ تعديل اشتراك";
-  deleteBtn.style.display=canDelete()?"inline-flex":"none";
-  m_name.value=r.name||"";
-  m_email.value=r.email||"";
-  m_plan.value=r.plan||"";
-  m_price.value=r.price??0;
-  m_start.value=r.start||"";
-  m_months.value=r.months??1;
-  m_notes.value=r.notes||"";
-  updatePreview();
-  modalBack.style.display="flex";
-}
-function closeModal(){modalBack.style.display="none";}
-function validateModal(){
-  if(!m_email.value.trim()) return "اكتب البريد الإلكتروني";
-  if(!isValidEmail(m_email.value.trim())) return "البريد الإلكتروني غير صحيح";
-  if(!m_start.value) return "اختر تاريخ التسجيل";
-  if(!m_months.value||Number(m_months.value)<1) return "حدد مدة الاشتراك بالأشهر";
-  return null;
-}
-function saveModal(){
-  if(!canEdit()){alert("ليس لديك صلاحية للحفظ");return;}
-  const err=validateModal();if(err){alert(err);return;}
-  const data=load();
-  const item={
-    name:m_name.value.trim(),
-    email:m_email.value.trim(),
-    plan:m_plan.value.trim(),
-    price:Number(m_price.value||0),
-    start:m_start.value,
-    months:Number(m_months.value),
-    notes:m_notes.value.trim(),
-    createdAt:editingIndex===null?Date.now():(data[editingIndex]?.createdAt||Date.now())
-  };
-  const isNew=(editingIndex===null);
-  if(isNew) data.push(item); else data[editingIndex]=item;
-  save(data);
-  if(isNew) addLog("add_payment",{amount:Number(item.price||0),plan:item.plan||"بدون خطة",email:item.email||""});
-  else addLog("edit",{email:item.email||"",plan:item.plan||"بدون خطة"});
-  closeModal();render();
-}
-function del(i){
-  if(!canDelete()){alert("ليس لديك صلاحية للحذف");return;}
-  if(!confirm("حذف هذا الاشتراك؟")) return;
-  const d=load();const r=d[i];
-  d.splice(i,1);save(d);
-  addLog("delete",{email:r?.email||"",plan:r?.plan||"بدون خطة"});
-  render();
-}
-function deleteFromModal(){
-  if(!canDelete()){alert("ليس لديك صلاحية للحذف");return;}
-  if(editingIndex===null) return;
-  del(editingIndex);closeModal();
-}
-function updatePreview(){
-  const start=m_start.value;
-  const months=Number(m_months.value||0);
-  if(!start||!months){preview.textContent="اختر تاريخ ومدة لعرض معاينة الانتهاء والمتبقي.";return;}
-  const end=addMonths(start,months);
-  const left=daysLeft(end);
-  const st=left<0?"منتهي":(left<=7?"قارب ينتهي":"نشط");
-  preview.textContent=`معاينة: الانتهاء ${fmt(end)} | المتبقي ${left} يوم | الحالة ${st}`;
-}
-["m_start","m_months"].forEach(id=>document.getElementById(id).addEventListener("input",updatePreview));
-
-function isoTodayUTC(){
-  const now=new Date();
-  const d=new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate()));
-  return fmt(d);
-}
-function renew(index,addMonthsCount){
-  if(!canEdit()){alert("ليس لديك صلاحية");return;}
-  const data=load();const r=data[index];if(!r) return;
-  const mode=(document.getElementById("renewMode")?.value)||"end";
-  const st=statusOf(r);
-  let baseStart=r.start;
-  if(mode==="today") baseStart=isoTodayUTC();
-  else if(st.end&&st.end!=="-") baseStart=st.end;
-  r.start=baseStart;
-  r.months=Number(r.months||1)+Number(addMonthsCount);
-  r.createdAt=r.createdAt||Date.now();
-  data[index]=r;save(data);
-  addLog("renew_payment",{amount:Number(r.price||0),plan:r.plan||"بدون خطة",email:r.email||"",months_added:Number(addMonthsCount||0)});
-  render();
-}
-
-// Wrapper so Actions Modal can renew reliably
-function renewRow(index){
-  // default: تمديد شهر واحد
-  return renew(index, 1);
-}
-
-function renewCustom(index){
-  if(!canEdit()){alert("ليس لديك صلاحية");return;}
-  const input=prompt("اكتب عدد الأشهر التي تريد إضافتها (مثال: 2 أو 6 أو 24)");
-  if(input===null) return;
-  const n=Number(String(input).trim());
-  if(!Number.isFinite(n)||n<=0||n>600){alert("عدد الأشهر غير صحيح.");return;}
-  renew(index,Math.floor(n));
-}
-function renewWithPrice(index){
-  if(!canEdit()){alert("ليس لديك صلاحية");return;}
-  const monthsInput=prompt("عدد الأشهر للإضافة (مثال: 1 أو 3 أو 12)");
-  if(monthsInput===null) return;
-  const addM=Number(String(monthsInput).trim());
-  if(!Number.isFinite(addM)||addM<=0||addM>600){alert("عدد الأشهر غير صحيح.");return;}
-  const priceInput=prompt("السعر الجديد (اتركه فارغاً للاحتفاظ بالسعر الحالي)");
-  if(priceInput===null) return;
-  const data=load();const r=data[index];if(!r) return;
-  const p=String(priceInput).trim();
-  if(p!==""){
-    const newPrice=Number(p);
-    if(!Number.isFinite(newPrice)||newPrice<0){alert("السعر غير صحيح.");return;}
-    r.price=newPrice;data[index]=r;save(data);
-    addLog("price_change",{email:r.email||"",plan:r.plan||"بدون خطة",amount:newPrice});
-  }
-  renew(index,Math.floor(addM));
-}
-
-function exportCSV(){
-  const data=load();
-  // Excel-friendly CSV: BOM + semicolon delimiter + CRLF
-  const header=["name","email","plan","price","start","months","notes"];
-  const delim=";";
-  const lines=[header.join(delim)].concat(
-    data.map(r=>header.map(h=>{
-      const v = String(r[h]??"");
-      return `"${v.replaceAll('"','""')}"`;
-    }).join(delim))
-  ).join("\r\n");
-  const blob=new Blob(["\ufeff"+lines],{type:"text/csv;charset=utf-8"});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-  a.href=url;a.download="subscriptions.csv";
-  document.body.appendChild(a);a.click();a.remove();
-  URL.revokeObjectURL(url);
-}
-function importCSV(event){
-  if(!canImportClear()){alert("ليس لديك صلاحية للاستيراد");event.target.value="";return;}
-  const file=event.target.files&&event.target.files[0];
-  if(!file) return;
-
-  const reader = new FileReader();
-  reader.onerror = ()=>{ alert("تعذر قراءة الملف"); event.target.value=""; };
-  reader.onload = ()=>{
-    try{
-      const text = String(reader.result||"");
-      const rows = parseCSV(text);
-
-      const cleaned = rows.map(r=>({
-        name: String(r.name||"").trim(),
-        email: String(r.email||"").trim(),
-        plan: String(r.plan||"").trim(),
-        price: Number(String(r.price||"").replace(",", ".")) || 0,
-        start: normalizeDate(String(r.start||"").trim()),
-        months: Number(r.months||1) || 1,
-        notes: String(r.notes||"").trim(),
-        createdAt: Date.now()
-      })).filter(r=>r.email && r.start);
-
-      if(!cleaned.length){
-        alert("لم يتم العثور على صفوف صالحة. تأكد من عناوين الأعمدة (email/start) أو الفاصل (, أو ;).");
-        event.target.value="";
+    function renderAllowlistUI(){
+      if(!allowList) return;
+      if(!ALLOW_CACHE.length){
+        allowList.innerHTML = "<div>— لا يوجد أي إيميل (السماح للجميع) —</div>";
         return;
       }
-
-      save(cleaned);
-      addLog("import",{count:cleaned.length});
-      render();
-      alert("✅ تم استيراد CSV بنجاح: " + cleaned.length);
-    }catch(e){
-      alert("خطأ في CSV: " + (e && e.message ? e.message : "غير معروف"));
+      allowList.innerHTML = ALLOW_CACHE.map(em=>{
+        const safe = em.replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+        return `<div style="display:flex;gap:8px;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.08);padding:6px 0">
+          <span>${safe}</span>
+          <button class="btn mini" type="button" data-del="${safe}">حذف</button>
+        </div>`;
+      }).join("");
+      // bind delete buttons
+      allowList.querySelectorAll("button[data-del]").forEach(b=>{
+        b.onclick = async ()=>{
+          const em = normEmail(b.getAttribute("data-del"));
+          try{
+            await saveAllowlist(ALLOW_CACHE.filter(x=>x!==em));
+          }catch(e){
+            alert("تعذر الحذف");
+          }
+        };
+      });
     }
-    event.target.value="";
-  };
-  reader.readAsText(file, "utf-8");
-}
-function parseCSV(text){
-  // Remove BOM
-  text = (text||"").replace(/^\uFEFF/,"");
-  const lines=text.split(/\r?\n/).filter(l=>l.trim().length);
-  if(!lines.length) return [];
 
-  // Detect delimiter from header line
-  const hline = lines[0];
-  const counts = {
-    ",": (hline.match(/,/g)||[]).length,
-    ";": (hline.match(/;/g)||[]).length,
-    "\t": (hline.match(/\t/g)||[]).length
-  };
-  let delim = ",";
-  if(counts[";"]>counts[","] && counts[";"]>=1) delim=";";
-  else if(counts["\t"]>counts[","] && counts["\t"]>=1) delim="\t";
-
-  const rawHeader=splitLine(hline, delim).map(h=>h.trim());
-  const header = rawHeader.map(h=>mapCSVHeader(h));
-
-  const out=[];
-  for(let i=1;i<lines.length;i++){
-    const cols=splitLine(lines[i], delim);
-    const obj={};
-    header.forEach((h,idx)=>{
-      if(!h) return;
-      obj[h]=(cols[idx]??"");
-    });
-    out.push(obj);
-  }
-  return out;
-}
-
-function splitLine(line, delim){
-  const res=[];let cur="";let inQ=false;
-  for(let i=0;i<line.length;i++){
-    const ch=line[i];
-    if(ch=='"'){
-      if(inQ && line[i+1]=='"'){cur+='"';i++;}
-      else inQ=!inQ;
-    }else if(ch===delim && !inQ){
-      res.push(cur);cur="";
-    }else{
-      cur+=ch;
+    if(btnAllowlist){
+      btnAllowlist.addEventListener("click", openAllow);
     }
-  }
-  res.push(cur);
-  return res;
-}
-
-function mapCSVHeader(h){
-  // normalize: lowercase, remove spaces/underscores, arabic normalize
-  const s=(h||"").toString().trim().toLowerCase();
-  const n=s.replace(/[\s_]+/g,"");
-  const ar=n
-    .replace(/[أإآ]/g,"ا")
-    .replace(/ة/g,"ه")
-    .replace(/ى/g,"ي");
-
-  // English keys
-  const table = {
-    "name":"name","clientname":"name","customername":"name",
-    "email":"email","mail":"email","e-mail":"email",
-    "plan":"plan","plantype":"plan","subscriptionplan":"plan",
-    "price":"price","amount":"price","cost":"price",
-    "start":"start","startdate":"start","registerdate":"start","date":"start",
-    "months":"months","duration":"months","period":"months",
-    "notes":"notes","note":"notes","comment":"notes","remarks":"notes"
-  };
-  if(table[n]) return table[n];
-
-  // Arabic headers (common)
-  const arTable = {
-    "اسمالعميل":"name","الاسم":"name","اسم":"name",
-    "البريدالالكتروني":"email","البريد":"email","ايميل":"email","email":"email",
-    "نوعالخطة":"plan","الخطة":"plan","نوعالخطه":"plan",
-    "سعر":"price","السعر":"price","المبلغ":"price",
-    "تاريخالتسجيل":"start","تاريخالبداية":"start","بداية":"start",
-    "المدة":"months","مده":"months","مدةالاشتراك":"months","مدهالاشتراك":"months","اشهر":"months",
-    "ملاحظات":"notes","ملاحظه":"notes"
-  };
-  if(arTable[ar]) return arTable[ar];
-
-  // If header is already one of our keys
-  if(["name","email","plan","price","start","months","notes"].includes(s)) return s;
-
-  return ""; // ignore unknown columns
-}
-
-function normalizeDate(s){
-  s=(s||"").trim();
-  if(!s) return "";
-  if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-
-  // DD/MM/YYYY or D/M/YYYY
-  let m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
-  if(m){
-    const dd = String(m[1]).padStart(2,"0");
-    const mm = String(m[2]).padStart(2,"0");
-    const yy = m[3];
-    return `${yy}-${mm}-${dd}`;
-  }
-
-  // YYYY/MM/DD
-  m = s.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
-  if(m){
-    const yy=m[1];
-    const mm=String(m[2]).padStart(2,"0");
-    const dd=String(m[3]).padStart(2,"0");
-    return `${yy}-${mm}-${dd}`;
-  }
-
-  return s;
-}
-function clearAll(){
-  if(!canImportClear()){alert("ليس لديك صلاحية لمسح الكل");return;}
-  if(!confirm("هل أنت متأكد من مسح كل البيانات؟")) return;
-  localStorage.removeItem(KEY);
-  addLog("clear_all",{});
-  render();
-}
-
-function monthRangeUTC(yyyy_mm){
-  const [y,m]=String(yyyy_mm||"").split("-").map(Number);
-  if(!y||!m) return null;
-  const start=new Date(Date.UTC(y,m-1,1));
-  const end=new Date(Date.UTC(y,m,1));
-  return {start,end,y,m};
-}
-function ensureIncomeDefaults(){
-  const now=new Date();
-  const y=now.getFullYear();
-  const m=String(now.getMonth()+1).padStart(2,"0");
-  const el=document.getElementById("incomeMonth");
-  if(el && !el.value) el.value=`${y}-${m}`;
-}
-function getCurrency(){
-  const c=document.getElementById("currency")?.value||"DZD";
-  if(c==="custom"){
-    const v=(document.getElementById("customCurrency")?.value||"").trim();
-    return v||"CUR";
-  }
-  return c;
-}
-(function wireCurrency(){
-  const sel=document.getElementById("currency");
-  const custom=document.getElementById("customCurrency");
-  if(!sel||!custom) return;
-  sel.addEventListener("change",()=>{custom.style.display=(sel.value==="custom")?"inline-block":"none";});
-}
-function money(n){
-  const x=Number(n||0);
-  const cur=getCurrency();
-  return `${x.toLocaleString("ar-DZ",{maximumFractionDigits:2})} ${cur}`;
-}
-function ymStr(date){
-  const y=date.getUTCFullYear();
-  const m=String(date.getUTCMonth()+1).padStart(2,"0");
-  return `${y}-${m}`;
-}
-function monthStartUTC(y,m){return new Date(Date.UTC(y,m-1,1));}
-
-function calcIncomeForMonth(mode,ym){
-  const range=monthRangeUTC(ym);
-  if(!range) return {total:0,count:0,byPlan:new Map()};
-  let total=0,count=0; const byPlan=new Map();
-  const data=load(); const log=loadLog();
-
-  if(mode==="payments"){
-    const start=range.start.getTime(), end=range.end.getTime();
-    for(const e of log){
-      if(e.t>=start && e.t<end && (e.action==="renew_payment"||e.action==="add_payment")){
-        const amount=Number(e.amount||0);
-        const plan=(e.plan&&String(e.plan).trim())?String(e.plan).trim():"بدون خطة";
-        total+=amount; count+=1;
-        const prev=byPlan.get(plan)||{count:0,sum:0};
-        prev.count+=1; prev.sum+=amount;
-        byPlan.set(plan,prev);
-      }
+    if(btnAllowAdd){
+      btnAllowAdd.addEventListener("click", async ()=>{
+        const em = normEmail(allowEmail.value);
+        if(!em) return;
+        try{
+          await saveAllowlist([...(ALLOW_CACHE||[]), em]);
+          allowEmail.value = "";
+        }catch(e){
+          alert("تعذر الإضافة");
+        }
+      });
     }
-    return {total,count,byPlan};
-  }
 
-  for(const r of data){
-    const price=Number(r.price||0);
-    const months=Number(r.months||0);
-    const startDt=parseISODateToUTC(r.start);
-    if(!startDt||!months||months<1) continue;
-    const endDt=addMonths(r.start,months);
-    const plan=(r.plan&&String(r.plan).trim())?String(r.plan).trim():"بدون خطة";
-    let contribution=0, include=false;
-    if(mode==="start"){
-      if(startDt>=range.start && startDt<range.end){include=true; contribution=price;}
-    } else {
-      const overlaps=(startDt<range.end) && (endDt>range.start);
-      if(overlaps){include=true; contribution=price/months;}
+
+    // ---------- UI helpers ----------
+    const $ = (id)=>document.getElementById(id);
+    const loginBack = $("loginBack");
+    const loginEmail = $("loginEmail");
+    const loginPass  = $("loginPass");
+    const loginMsg   = $("loginMsg");
+    const app        = $("app");
+    const userBadge  = $("userBadge");
+
+    function showLogin(show){
+      loginBack.style.display = show ? "flex" : "none";
+      if(show && !loginMsg.textContent) loginMsg.textContent = "";
     }
-    if(include){
-      total+=contribution; count+=1;
-      const prev=byPlan.get(plan)||{count:0,sum:0};
-      prev.count+=1; prev.sum+=contribution;
-      byPlan.set(plan,prev);
+    function setUserBadge(text){
+      userBadge.querySelector(".muted").textContent = text || "—";
     }
-  }
-  return {total,count,byPlan};
-}
-
-function drawIncomeChart(points){
-  const canvas=document.getElementById("incomeChart"); if(!canvas) return;
-  const ctx=canvas.getContext("2d");
-  const w=canvas.clientWidth, h=canvas.height;
-  canvas.width=Math.floor(w*devicePixelRatio);
-  canvas.height=Math.floor(h*devicePixelRatio);
-  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
-  ctx.clearRect(0,0,w,h);
-
-  const pad=14, chartW=w-pad*2, chartH=h-pad*2;
-  const vals=points.map(p=>p.value);
-  const maxV=Math.max(1,...vals);
-
-  ctx.globalAlpha=0.25; ctx.strokeStyle="#ffffff"; ctx.lineWidth=1;
-  for(let i=0;i<=3;i++){
-    const yy=pad+(chartH*i/3);
-    ctx.beginPath();ctx.moveTo(pad,yy);ctx.lineTo(pad+chartW,yy);ctx.stroke();
-  }
-  ctx.globalAlpha=1;
-  ctx.strokeStyle="#ffffff"; ctx.lineWidth=2;
-  ctx.beginPath();
-  points.forEach((p,i)=>{
-    const x=pad+(chartW*(i/(points.length-1||1)));
-    const y=pad+chartH-(p.value/maxV)*chartH;
-    if(i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-  });
-  ctx.stroke();
-  ctx.fillStyle="#ffffff";
-  points.forEach((p,i)=>{
-    const x=pad+(chartW*(i/(points.length-1||1)));
-    const y=pad+chartH-(p.value/maxV)*chartH;
-    ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();
-  });
-  ctx.fillStyle="rgba(255,255,255,.75)";
-  ctx.font="12px system-ui";
-  points.forEach((p,i)=>{
-    const x=pad+(chartW*(i/(points.length-1||1)));
-    ctx.fillText(p.label,Math.max(2,x-10),h-2);
-  });
-}
-
-function calcMonthlyIncome(){
-  try{ if(window.__showIncomeChart) window.__showIncomeChart(); }catch(e){}
-  const month=document.getElementById("incomeMonth")?.value;
-  const mode=document.getElementById("incomeMode")?.value||"start";
-  if(!month) return;
-  const res=calcIncomeForMonth(mode,month);
-  incomeTotal.textContent=money(res.total);
-  incomeCount.textContent=(res.count||0).toLocaleString("ar-DZ");
-  incomeAvg.textContent=money(res.count?(res.total/res.count):0);
-
-  incomeHint.textContent=
-    (mode==="start")?"حسب الاشتراكات التي بدأت داخل هذا الشهر."
-    :(mode==="spread")?"موزّع: (السعر ÷ مدة الاشتراك) للاشتراكات التي تغطي الشهر."
-    :"حسب الدفعات المسجلة في سجل العمليات داخل هذا الشهر.";
-
-  let topPlan="-", topSum=-Infinity;
-  for(const [plan,obj] of res.byPlan.entries()){
-    if(obj.sum>topSum){topSum=obj.sum; topPlan=plan;}
-  }
-  incomeTopPlan.textContent=topPlan;
-
-  incomePlanRows.innerHTML="";
-  const planRows=Array.from(res.byPlan.entries()).sort((a,b)=>b[1].sum-a[1].sum);
-  for(const [plan,obj] of planRows){
-    const tr=document.createElement("tr");
-    tr.innerHTML=`<td>${plan}</td><td>${obj.count}</td><td>${money(obj.sum)}</td>`;
-    incomePlanRows.appendChild(tr);
-  }
-  if(planRows.length===0){
-    incomePlanRows.innerHTML=`<tr><td colspan="3" class="muted">لا توجد بيانات لهذا الشهر.</td></tr>`;
-  }
-
-  const range=monthRangeUTC(month);
-  if(range){
-    const base=monthStartUTC(range.y,range.m);
-    const points=[];
-    for(let i=5;i>=0;i--){
-      const d=new Date(base);
-      d.setUTCMonth(d.getUTCMonth()-i);
-      const ym=ymStr(d);
-      const rr=calcIncomeForMonth(mode,ym);
-      points.push({label:ym.slice(5), value:rr.total});
+    function friendlyErr(e){
+      const c = (e && e.code) ? e.code : "";
+      if(c.includes("auth/invalid-credential")) return "بيانات الدخول غير صحيحة.";
+      if(c.includes("auth/user-not-found")) return "الحساب غير موجود.";
+      if(c.includes("auth/wrong-password")) return "كلمة المرور غير صحيحة.";
+      if(c.includes("auth/email-already-in-use")) return "هذا البريد مسجل مسبقًا.";
+      if(c.includes("auth/weak-password")) return "كلمة المرور ضعيفة.";
+      if(c.includes("auth/invalid-email")) return "البريد غير صالح.";
+      if(c.includes("auth/network-request-failed")) return "تحقق من اتصال الإنترنت.";
+      return (e && e.message) ? e.message : "حدث خطأ.";
     }
-    chartHint.textContent=`الوضع: ${mode}`;
-    drawIncomeChart(points);
-  }
-}
 
-function openPwModal(){
-  const role=getRole();
-  if(role!=="admin" && role!=="staff"){alert("ليس لديك صلاحية لتغيير كلمة المرور");return;}
-  document.getElementById("pw_current").value="";
-  document.getElementById("pw_new").value="";
-  document.getElementById("pw_new2").value="";
-  const target=document.getElementById("pw_target");
-  target.value="self";
-  target.querySelector('option[value="all"]').disabled=(role!=="admin");
-  document.getElementById("pwBack").style.display="flex";
-}
-function closePwModal(e){
-  if(e && e.target && e.target.id!=="pwBack") return;
-  document.getElementById("pwBack").style.display="none";
-}
-async function saveNewPassword(){
-  const role=getRole();
-  const currentUser=role==="admin"?"admin":(role==="staff"?"staff":"viewer");
-  const cur=(document.getElementById("pw_current").value||"").trim();
-  const nw=(document.getElementById("pw_new").value||"").trim();
-  const nw2=(document.getElementById("pw_new2").value||"").trim();
-  const target=document.getElementById("pw_target").value;
-  if(!cur||!nw||!nw2){alert("املأ كل الخانات");return;}
-  if(nw.length<6){alert("اختر كلمة مرور أطول (6 أحرف على الأقل)");return;}
-  if(nw!==nw2){alert("التأكيد لا يطابق كلمة المرور الجديدة");return;}
-  const users=loadUsers();
-  const me=users.find(x=>x.username===currentUser);
-  if(!me||!me.passHash){alert("لم يتم إعداد كلمات المرور بعد.");return;}
-  const curHash=await sha256Base64(cur);
-  if(curHash!==me.passHash){alert("كلمة المرور الحالية غير صحيحة");return;}
-  const newHash=await sha256Base64(nw);
-  if(target==="all"){
-    if(role!=="admin"){alert("فقط admin يمكنه التغيير للجميع");return;}
-    saveUsers(users.map(x=>({...x,passHash:newHash})));
-    alert("تم تغيير كلمة المرور للجميع ✅");
-  }else{
-    saveUsers(users.map(x=>x.username===currentUser?({...x,passHash:newHash}):x));
-    alert("تم تغيير كلمة المرور ✅");
-  }
-  closePwModal();
-}
-
-
-function setSyncBtnVisible(v){
-  const b=document.getElementById("syncMenuBtn");
-  if(!b) return;
-  b.style.display = v ? "inline-flex" : "none";
-}
-
-function openSyncMenu(){
-  try{ closeActions(); }catch{}
-  try{ closeRemind(); }catch{}
-  try{ closeSyncHelp(); }catch{}
-  const b=document.getElementById("syncMenuBack");
-  if(b) b.style.display="flex";
-}
-function closeSyncMenu(e){
-  if(e && e.target && e.target.id!=="syncMenuBack") return;
-  const b=document.getElementById("syncMenuBack");
-  if(b) b.style.display="none";
-}
-
-function openSyncHelp(){
-  const back=document.getElementById("syncHelpBack");
-  if(back) back.style.display="flex";
-}
-function closeSyncHelp(e){
-  if(e && e.target && e.target.id!=="syncHelpBack") return;
-  const back=document.getElementById("syncHelpBack");
-  if(back) back.style.display="none";
-}
-function wireAutoBackupToggle(){
-  const t=document.getElementById("autoBackupToggle");
-  if(!t) return;
-  const enabled=localStorage.getItem(AUTO_BACKUP_KEY);
-  t.checked = (enabled!== "0"); // الافتراضي مفعل
-  t.addEventListener("change",()=>{
-    localStorage.setItem(AUTO_BACKUP_KEY, t.checked ? "1" : "0");
-  });
-}
-function maybeRemindBackup(){
-  const enabled=localStorage.getItem(AUTO_BACKUP_KEY);
-  if(enabled==="0") return;
-  let info=null;
-  try{info=JSON.parse(localStorage.getItem(LAST_SYNC_KEY)||"null");}catch{}
-  const lastT = info && info.t ? Number(info.t) : 0;
-  const day = 24*60*60*1000;
-  if(!lastT || (Date.now()-lastT) > day){
-    // تذكير لطيف عند الدخول فقط
-    setTimeout(()=>{
-      const msg = "🔔 تذكير: مرّ أكثر من يوم بدون Backup/Restore. هل تريد عمل Backup الآن؟";
-      if(confirm(msg)){
-        backupJSON();
-      }
-    }, 800);
-  }
-}
-
-function bootLocal(){
-  updateSyncBadge();
-  if(getRole()){
-    bootAuthed();
-  }else{
-    const users=loadUsers();
-    const ready=users.every(u=>u.passHash && u.passHash.length>10);
-    lockMsg.textContent=ready?"سجّل دخولك.":"لا يوجد إعداد كلمات مرور بعد. افتح (إعداد أول مرة) واحفظ الإعداد.";
-  }
-}
-
-function toggleChartSwitch(show){
-  const w=document.getElementById("chartWrap");
-  if(!w) return;
-  w.style.display = show ? "block" : "none";
-  try{
-    if(show && typeof calcMonthlyIncome==="function"){
-      setTimeout(calcMonthlyIncome,100);
-    }
-  }catch(e){}
-}
-
-
-function initChartToggle(){
-  // ابدأ دائمًا مخفيًا حتى يفعّل المستخدم السويتشر
-  toggleChartSwitch(false);
-}
-window.addEventListener("load", initChartToggle);
-
-function toggleChartSwitch(show){
-  const w=document.getElementById("chartWrap");
-  if(!w) return;
-  w.style.display = show ? "block" : "none";
-
-  // إذا تم الإخفاء: امسح الرسم/ودمّر الشارت إن وُجد
-  if(!show){
-    try{ if(window.incomeChart){ window.incomeChart.destroy(); window.incomeChart=null; } }catch(e){}
-    try{
-      const c=document.getElementById("incomeChart");
-      if(c && c.getContext){ const ctx=c.getContext("2d"); ctx.clearRect(0,0,c.width,c.height); }
-    }catch(e){}
-    return;
-  }
-
-  // إذا تم الإظهار: احسب/ارسم بعد أن يأخذ المقاس
-  try{
-    if(typeof calcMonthlyIncome==="function"){
-      setTimeout(calcMonthlyIncome,150);
-    }
-  }catch(e){}
-}
-
-// امنع رسم المنحنى إذا السويتشر OFF
-(function(){
-  const _orig = window.calcMonthlyIncome;
-  if(typeof _orig === "function" && !window.__patchedCalcMonthlyIncome){
-    window.__patchedCalcMonthlyIncome = true;
-    window.calcMonthlyIncome = function(){
-      const cb=document.getElementById("chartToggle");
-      if(cb && !cb.checked) return; // لا ترسم إلا إذا مُفعّل
-      return _orig.apply(this, arguments);
-    };
-  }
-  window.addEventListener("load", ()=>{ toggleChartSwitch(false); });
-}
-
-
-// Close actions dropdown after choosing an option
-document.addEventListener('click', (e)=>{
-  const btn = e.target.closest && e.target.closest('.actionsDetails .menuDetails button');
-  if(btn){
-    const d = btn.closest('details');
-    if(d) d.removeAttribute('open');
-  }
-});
-
-
-// --- Actions Modal logic ---
-let __actionsIdx = null;
-
-function openActionsModal(idx){
-  __actionsIdx = idx;
-  const back=document.getElementById("actionsModalBack");
-  const sub=document.getElementById("actionsModalSub");
-  try{
-    const data=load();
-    const row=data && data[idx] ? data[idx] : null;
-    if(sub) sub.textContent = row ? (`${row.name||"عميل"} — ${row.email||""}`) : "";
-  }catch(e){
-    if(sub) sub.textContent = "";
-  }
-  if(back){ back.style.display="flex"; }
-  try{ const rb=document.getElementById("renewBox"); if(rb) rb.style.display="none"; }catch(e){}
-}
-
-function closeActionsModal(){
-  const back=document.getElementById("actionsModalBack");
-  if(back) back.style.display="none";
-  __actionsIdx = null;
-}
-
-function actionsDo(kind){
-  const idx=__actionsIdx;
-  if(idx===null || idx===undefined) return;
-
-  // حاول استخدام الدوال الموجودة في المشروع حسب المتوفر
-  try{
-    if(kind==="edit"){
-      if(typeof openEdit === "function") openEdit(idx);
-      else if(typeof editRow === "function") editRow(idx);
-      else if(typeof editItem === "function") editItem(idx);
-      else alert("لا توجد دالة تعديل في هذه النسخة.");
-    }else if(kind==="renew"){
-      if(typeof renewRow === "function") renewRow(idx);
-      else if(typeof renew === "function") renew(idx,1);
-      else if(typeof renewItem === "function") renewItem(idx);
-      else if(typeof extendSub === "function") extendSub(idx);
-      else alert("لا توجد دالة تجديد في هذه النسخة.");
-    }else if(kind==="delete"){
-      if(confirm("هل تريد حذف هذا السجل؟")){
-        if(typeof deleteRow === "function") deleteRow(idx);
-        else if(typeof removeRow === "function") removeRow(idx);
-        else if(typeof delSub === "function") delSub(idx);
-        else alert("لا توجد دالة حذف في هذه النسخة.");
-      }else{
-        return;
-      }
-    }else if(kind==="copy"){
+    $("btnLogin").addEventListener("click", async ()=>{
       try{
-        const data=load();
-        const row=data && data[idx] ? data[idx] : null;
-        const email=row ? (row.email||"") : "";
-        if(!email){ alert("لا يوجد Email لنسخه"); return; }
-        if(navigator.clipboard && navigator.clipboard.writeText){
-          navigator.clipboard.writeText(email).then(()=>alert("✅ تم النسخ")).catch(()=>fallbackCopy(email));
-        }else fallbackCopy(email);
+        loginMsg.textContent = "جاري التحقق...";
+        await auth.signInWithEmailAndPassword(loginEmail.value.trim(), loginPass.value);
       }catch(e){
-        alert("تعذر النسخ");
+        loginMsg.textContent = friendlyErr(e);
+      }
+    });
+
+    $("btnCreate").addEventListener("click", async ()=>{
+      try{
+        loginMsg.textContent = "جاري إنشاء الحساب...";
+        await auth.createUserWithEmailAndPassword(loginEmail.value.trim(), loginPass.value);
+      }catch(e){
+        loginMsg.textContent = friendlyErr(e);
+      }
+    });
+
+    $("btnLogout").addEventListener("click", async ()=>{
+      await auth.signOut();
+    });
+
+    // Guard: app only after auth
+    auth.onAuthStateChanged(async (user)=>{
+      // تحميل/اشتراك allowlist بعد تسجيل الدخول + التحقق من الإيميل
+      if(user){
+        if(!allowUnsub){
+          try{ await loadAllowlistOnce(); }catch(e){}
+          allowUnsub = subscribeAllowlist();
+        }
+        if(!isAllowedEmail(user.email)){
+          try{ loginMsg.textContent = "هذا الحساب غير مسموح له بالدخول."; }catch(e){}
+          await auth.signOut();
+          app.style.display = "none";
+          setUserBadge("—");
+          showLogin(true);
+          return;
+        }
+      }else{
+        if(allowUnsub){ try{ allowUnsub(); }catch(e){} allowUnsub = null; }
+        ALLOW_CACHE = [];
+      }
+
+      if(user){
+        showLogin(false);
+        if(btnAllowlist) btnAllowlist.style.display = 'inline-flex';
+        app.style.display = "block";
+        setUserBadge(user.email);
+      }else{
+        if(btnAllowlist) btnAllowlist.style.display = 'none';
+        app.style.display = "none";
+        setUserBadge("—");
+        loginMsg.textContent = "";
+        showLogin(true);
+      }
+    });
+
+    // ----------------- APP LOGIC (LocalStorage) -----------------
+    const KEY = "subs_data_v1";
+    function load(){
+      try{ return JSON.parse(localStorage.getItem(KEY)) || []; }catch(e){ return []; }
+    }
+    function save(arr){
+      localStorage.setItem(KEY, JSON.stringify(arr));
+    }
+
+    function uid(){
+      return Math.random().toString(16).slice(2)+Date.now().toString(16);
+    }
+    function monthsToMs(m){ return 1000*60*60*24*30*m; } // approximate for display only
+
+    function addMonths(dateStr, m){
+      const d = new Date(dateStr+"T00:00:00");
+      const day = d.getDate();
+      d.setMonth(d.getMonth()+m);
+      // prevent month overflow issues
+      if(d.getDate() < day) d.setDate(0);
+      return d.toISOString().slice(0,10);
+    }
+
+    function statusFor(endStr){
+      const now = new Date();
+      const end = new Date(endStr+"T23:59:59");
+      const diff = end - now;
+      if(diff >= 0) return {k:"active", label:"نشط", dot:"ok"};
+      return {k:"expired", label:"منتهي", dot:"bad"};
+    }
+
+    // Form bindings
+    const fEmail=$("fEmail"), fName=$("fName"), fStart=$("fStart"), fDur=$("fDur"),
+          fDurCustomWrap=$("fDurCustomWrap"), fDurCustom=$("fDurCustom"), fPlan=$("fPlan"),
+          fPrice=$("fPrice"), fNotes=$("fNotes"), fRenew=$("fRenew");
+
+    // Defaults
+    (function initDefaults(){
+      const today = new Date().toISOString().slice(0,10);
+      fStart.value = today;
+      fPrice.value = "";
+    })();
+
+    fDur.addEventListener("change", ()=>{
+      fDurCustomWrap.style.display = (fDur.value==="custom") ? "block" : "none";
+    });
+
+    function getDurMonths(){
+      return (fDur.value==="custom") ? Math.max(1, parseInt(fDurCustom.value||"1",10)) : parseInt(fDur.value,10);
+    }
+
+    function clearForm(){
+      fEmail.value=""; fName.value=""; fPlan.value="Pro"; fPrice.value=""; fNotes.value=""; fRenew.value="manual";
+      fDur.value="3"; fDurCustomWrap.style.display="none";
+      fStart.value = new Date().toISOString().slice(0,10);
+      editingId = null;
+      $("btnAdd").textContent = "➕ إضافة اشتراك";
+    }
+
+    $("btnClearForm").addEventListener("click", clearForm);
+
+    // Table rendering
+    const tbody = $("tbody");
+    const q = $("q"), filterSel=$("filter"), sortSel=$("sort");
+    const kTotal=$("kTotal"), kActive=$("kActive"), kMonthIncome=$("kMonthIncome");
+
+    function money(x){
+      const n = Number(x||0);
+      if(!isFinite(n)) return "0";
+      return n.toFixed(2);
+    }
+
+    function calcMonthIncome(items){
+      // estimate: price / durationMonths summed
+      let sum = 0;
+      items.forEach(it=>{
+        const m = Math.max(1, Number(it.durationMonths||1));
+        const p = Number(it.price||0);
+        if(isFinite(p)) sum += (p / m);
+      });
+      return sum;
+    }
+
+    function applyQuery(items){
+      const term = (q.value||"").trim().toLowerCase();
+      let out = items.slice();
+      if(term){
+        out = out.filter(it=>{
+          return (it.email||"").toLowerCase().includes(term) ||
+                 (it.name||"").toLowerCase().includes(term) ||
+                 (it.plan||"").toLowerCase().includes(term) ||
+                 (it.notes||"").toLowerCase().includes(term);
+        });
+      }
+      const f = filterSel.value;
+      if(f!=="all"){
+        out = out.filter(it=>statusFor(it.endDate).k===f);
+      }
+      const s = sortSel.value;
+      out.sort((a,b)=>{
+        if(s==="endAsc") return a.endDate.localeCompare(b.endDate);
+        if(s==="endDesc") return b.endDate.localeCompare(a.endDate);
+        if(s==="priceDesc") return Number(b.price||0)-Number(a.price||0);
+        if(s==="priceAsc") return Number(a.price||0)-Number(b.price||0);
+        if(s==="nameAsc") return (a.name||"").localeCompare(b.name||"");
+        return 0;
+      });
+      return out;
+    }
+
+    function render(){
+      const all = load();
+      const view = applyQuery(all);
+
+      // KPIs (based on all)
+      kTotal.textContent = String(all.length);
+      kActive.textContent = String(all.filter(it=>statusFor(it.endDate).k==="active").length);
+      kMonthIncome.textContent = money(calcMonthIncome(all));
+
+      tbody.innerHTML = "";
+      view.forEach(it=>{
+        const st = statusFor(it.endDate);
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+          <td><span class="badge"><span class="dot ${st.dot}"></span>${st.label}</span></td>
+          <td>${escapeHtml(it.email||"")}</td>
+          <td>${escapeHtml(it.name||"")}</td>
+          <td><span class="pill">${escapeHtml(it.plan||"")}</span></td>
+          <td>${money(it.price)}</td>
+          <td>${it.startDate}</td>
+          <td>${it.durationMonths} شهر</td>
+          <td>${it.endDate}</td>
+          <td><span class="pill">${it.renew||"manual"}</span></td>
+          <td class="muted" title="${escapeHtml(it.notes||"")}">${escapeHtml((it.notes||"").slice(0,24))}${(it.notes||"").length>24?"…":""}</td>
+          <td>
+            <div class="tBtns">
+              <button class="btn mini" data-act="actions" data-id="${it.id}">إجراءات</button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function escapeHtml(s){
+      return String(s||"").replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+    }
+
+    // Add / edit
+    let editingId = null;
+
+    $("btnAdd").addEventListener("click", ()=>{
+      const email = fEmail.value.trim();
+      if(!email) return;
+
+      const start = fStart.value;
+      const dur = getDurMonths();
+      const end = addMonths(start, dur);
+
+      const item = {
+        id: editingId || uid(),
+        email,
+        name: fName.value.trim(),
+        plan: fPlan.value,
+        price: Number(fPrice.value||0),
+        notes: fNotes.value.trim(),
+        renew: fRenew.value,
+        startDate: start,
+        durationMonths: dur,
+        endDate: end,
+        updatedAt: Date.now()
+      };
+
+      const all = load();
+      const idx = all.findIndex(x=>x.id===item.id);
+      if(idx>=0) all[idx]=item;
+      else all.push(item);
+      save(all);
+      clearForm();
+      render();
+    });
+
+    // Table actions (event delegation)
+    tbody.addEventListener("click", (e)=>{
+      const btn = e.target.closest("button[data-act]");
+      if(!btn) return;
+      const id = btn.getAttribute("data-id");
+      if(btn.getAttribute("data-act")==="actions") openActions(id);
+    });
+
+    // Actions modal
+    const actionsBack=$("actionsBack");
+    const actionsTitle=$("actionsTitle");
+    const btnEditRow=$("btnEditRow");
+    const btnDeleteRow=$("btnDeleteRow");
+    const btnCopyEmail=$("btnCopyEmail");
+    const btnRenew3=$("btnRenew3");
+    const btnRenew6=$("btnRenew6");
+    let actionsId=null;
+
+    function openActions(id){
+      actionsId=id;
+      const it = load().find(x=>x.id===id);
+      actionsTitle.textContent = it ? `إجراءات: ${it.email}` : "إجراءات";
+      actionsBack.style.display="flex";
+    }
+    function closeActions(){ actionsBack.style.display="none"; actionsId=null; }
+    window.closeActions = closeActions;
+
+    btnEditRow.addEventListener("click", ()=>{
+      const it = load().find(x=>x.id===actionsId);
+      if(!it) return;
+      editingId = it.id;
+      fEmail.value = it.email || "";
+      fName.value = it.name || "";
+      fPlan.value = it.plan || "Pro";
+      fPrice.value = String(it.price||0);
+      fNotes.value = it.notes || "";
+      fRenew.value = it.renew || "manual";
+      fStart.value = it.startDate;
+      fDur.value = ["1","3","6","12"].includes(String(it.durationMonths)) ? String(it.durationMonths) : "custom";
+      fDurCustomWrap.style.display = (fDur.value==="custom") ? "block" : "none";
+      fDurCustom.value = String(it.durationMonths||3);
+      $("btnAdd").textContent = "💾 حفظ التعديل";
+      closeActions();
+      window.scrollTo({top:0,behavior:"smooth"});
+    });
+
+    btnDeleteRow.addEventListener("click", ()=>{
+      if(!actionsId) return;
+      const all = load().filter(x=>x.id!==actionsId);
+      save(all);
+      closeActions();
+      render();
+    });
+
+    btnCopyEmail.addEventListener("click", async ()=>{
+      const it = load().find(x=>x.id===actionsId);
+      if(!it) return;
+      try{
+        await navigator.clipboard.writeText(it.email);
+      }catch(e){}
+      closeActions();
+    });
+
+    function renewByMonths(m){
+      const all = load();
+      const idx = all.findIndex(x=>x.id===actionsId);
+      if(idx<0) return;
+      const it = all[idx];
+      const newStart = new Date().toISOString().slice(0,10);
+      it.startDate = newStart;
+      it.durationMonths = m;
+      it.endDate = addMonths(newStart, m);
+      it.updatedAt = Date.now();
+      all[idx]=it;
+      save(all);
+      closeActions();
+      render();
+    }
+    btnRenew3.addEventListener("click", ()=>renewByMonths(3));
+    btnRenew6.addEventListener("click", ()=>renewByMonths(6));
+
+    // Search controls
+    [q, filterSel, sortSel].forEach(el=>el.addEventListener("input", render));
+    [filterSel, sortSel].forEach(el=>el.addEventListener("change", render));
+
+    // CSV import/export
+    const fileCSV = $("fileCSV");
+    $("btnImportCSV").addEventListener("click", ()=>fileCSV.click());
+    $("btnExportCSV").addEventListener("click", exportCSV);
+
+    fileCSV.addEventListener("change", async (e)=>{
+      const f = e.target.files && e.target.files[0];
+      if(!f) return;
+      const text = await f.text();
+      const rows = parseCSV(text);
+      // expected headers: email,name,plan,price,startDate,durationMonths,renew,notes
+      const items = [];
+      rows.forEach(r=>{
+        const email = (r.email||"").trim();
+        if(!email) return;
+        const start = (r.startDate||new Date().toISOString().slice(0,10)).slice(0,10);
+        const dur = Math.max(1, parseInt(r.durationMonths||"3",10));
+        items.push({
+          id: uid(),
+          email,
+          name: (r.name||"").trim(),
+          plan: (r.plan||"Pro").trim(),
+          price: Number(r.price||0),
+          notes: (r.notes||"").trim(),
+          renew: (r.renew||"manual").trim(),
+          startDate: start,
+          durationMonths: dur,
+          endDate: addMonths(start, dur),
+          updatedAt: Date.now()
+        });
+      });
+      const merged = load().concat(items);
+      save(merged);
+      fileCSV.value="";
+      render();
+    });
+
+    function exportCSV(){
+      const items = load();
+      const header = ["email","name","plan","price","startDate","durationMonths","endDate","renew","notes"];
+      const lines = [header.join(",")];
+      items.forEach(it=>{
+        lines.push([
+          it.email, it.name, it.plan, it.price, it.startDate, it.durationMonths, it.endDate, it.renew, (it.notes||"").replace(/\n/g," ")
+        ].map(csvEscape).join(","));
+      });
+      const blob = new Blob([lines.join("\n")], {type:"text/csv;charset=utf-8"});
+      downloadBlob(blob, "subscriptions.csv");
+    }
+    function csvEscape(v){
+      const s = String(v ?? "");
+      if(/[",\n]/.test(s)) return `"${s.replace(/"/g,'""')}"`;
+      return s;
+    }
+    function parseCSV(text){
+      // simple CSV parser with header row
+      const rows = [];
+      const lines = text.replace(/\r/g,"").split("\n").filter(l=>l.trim().length);
+      if(!lines.length) return rows;
+      const header = splitCSVLine(lines[0]).map(h=>h.trim());
+      for(let i=1;i<lines.length;i++){
+        const cols = splitCSVLine(lines[i]);
+        const obj = {};
+        header.forEach((h,idx)=>obj[h]=cols[idx] ?? "");
+        rows.push(obj);
+      }
+      return rows;
+    }
+    function splitCSVLine(line){
+      const out=[]; let cur=""; let q=false;
+      for(let i=0;i<line.length;i++){
+        const c=line[i];
+        if(q){
+          if(c === '"' && line[i+1] === '"'){ cur+='"'; i++; }
+          else if(c === '"'){ q=false; }
+          else cur+=c;
+        }else{
+          if(c === ','){ out.push(cur); cur=""; }
+          else if(c === '"'){ q=true; }
+          else cur+=c;
+        }
+      }
+      out.push(cur);
+      return out;
+    }
+
+    // Backup/Restore JSON
+    const fileJSON = $("fileJSON");
+    $("btnBackup").addEventListener("click", backupJSON);
+    $("btnRestore").addEventListener("click", ()=>fileJSON.click());
+    fileJSON.addEventListener("change", restoreJSON);
+
+    function backupJSON(){
+      const payload = { exportedAt: new Date().toISOString(), data: load() };
+      const blob = new Blob([JSON.stringify(payload,null,2)], {type:"application/json;charset=utf-8"});
+      downloadBlob(blob, "backup.json");
+    }
+    async function restoreJSON(e){
+      const f = e.target.files && e.target.files[0];
+      if(!f) return;
+      try{
+        const text = await f.text();
+        const obj = JSON.parse(text);
+        if(!obj || !Array.isArray(obj.data)) throw new Error("bad");
+        save(obj.data);
+        fileJSON.value="";
+        render();
+      }catch(_){
+        fileJSON.value="";
       }
     }
-  }finally{
-    closeActionsModal();
-    try{ render && render(); }catch(e){}
-  }
-}
 
-function fallbackCopy(text){
-  const ta=document.createElement("textarea");
-  ta.value=text; document.body.appendChild(ta);
-  ta.select(); ta.setSelectionRange(0, 99999);
-  try{ document.execCommand("copy"); alert("✅ تم النسخ"); }catch(e){ alert("تعذر النسخ"); }
-  ta.remove();
-}
-
-// Close modal when clicking backdrop
-document.addEventListener("click", (e)=>{
-  const back=document.getElementById("actionsModalBack");
-  if(!back || back.style.display==="none") return;
-  if(e.target === back) closeActionsModal();
-}, {capture:true});
-
-
-
-// Guard: لا تقم بالتجديد إلا بعد فتح صندوق التجديد
-function __isRenewBoxOpen(){
-  const rb = document.getElementById("renewBox");
-  return rb && rb.style.display !== "none";
-}
-
-// --- Renew options handlers ---
-let __renewMonths = 1;
-
-function showRenewOptions(){
-  const box = document.getElementById("renewBox");
-  if(!box) return;
-  box.style.display = "block";
-  __renewMonths = 1;
-  // reset chips
-  box.querySelectorAll(".chip").forEach(c=>c.classList.remove("active"));
-  const first = box.querySelector('.chip[data-m="1"]');
-  if(first) first.classList.add("active");
-  const input = document.getElementById("renewMonthsInput");
-  if(input) input.value = "";
-}
-
-document.addEventListener("click", (e)=>{
-  const chip = e.target.closest && e.target.closest("#renewBox .chip");
-  if(!chip) return;
-  const m = parseInt(chip.getAttribute("data-m")||"1", 10);
-  if(!Number.isFinite(m) || m<1) return;
-  __renewMonths = m;
-  chip.parentElement.querySelectorAll(".chip").forEach(c=>c.classList.remove("active"));
-  chip.classList.add("active");
-  const input = document.getElementById("renewMonthsInput");
-  if(input) input.value = "";
-}, {capture:true});
-
-function confirmRenew(){
-  if(!__isRenewBoxOpen()){ return; }
-  const idx = __actionsIdx;
-  if(idx===null || idx===undefined) return;
-
-  const input = document.getElementById("renewMonthsInput");
-  let months = __renewMonths;
-
-  if(input && input.value){
-    const v = parseInt(input.value, 10);
-    if(!Number.isFinite(v) || v<1){
-      alert("أدخل رقم صحيح (>= 1)");
-      return;
-    }
-    months = v;
-  }
-  // Prefer built-in renew(index, months)
-  if(typeof renew === "function") renew(idx, months);
-  else if(typeof renewRow === "function") renewRow(idx); // fallback (1 month)
-  else alert("لا توجد دالة تجديد في هذه النسخة.");
-
-  closeActionsModal();
-  try{ render && render(); }catch(e){}
-}
-
-
-function shareBackup(){
-  // مشاركة ملف backup.json عبر واجهة المشاركة إن وُجدت
-  try{
-    const payload={exportedAt:new Date().toISOString(),data:load(),log:loadLog()};
-    const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json;charset=utf-8"});
-    const file=new File([blob],"backup.json",{type:"application/json"});
-    if(navigator.share){
-      navigator.share({files:[file], title:"Backup", text:"backup.json"});
-    }else{
-      // fallback: تنزيل
-      const url=URL.createObjectURL(blob);
+    function downloadBlob(blob, name){
+      const url = URL.createObjectURL(blob);
       const a=document.createElement("a");
-      a.href=url;a.download="backup.json";
-      document.body.appendChild(a);a.click();a.remove();
+      a.href=url; a.download=name;
+      document.body.appendChild(a); a.click(); a.remove();
       URL.revokeObjectURL(url);
     }
-    localStorage.setItem(LAST_SYNC_KEY, JSON.stringify({type:"backup", t:Date.now()}));
-    updateSyncBadge();
-  }catch(e){
-    alert("تعذر مشاركة النسخة الاحتياطية");
-  }
-}
 
-</script>
+    // initial render
+    render();
+  </script>
 
-<div class="modalBack" id="syncMenuBack" onclick="closeSyncMenu(event)">
-  <div class="modal" onclick="event.stopPropagation()" style="max-width:560px">
-    <div class="modalHeader">
-      <h3>☁️ المزامنة والنسخ الاحتياطي</h3>
-      <button class="btn ghost" onclick="closeSyncMenu()">✖</button>
-    </div>
-
-    <div class="card" style="margin:0; padding:10px">
-      <div style="display:flex;flex-direction:column;gap:8px;max-height:62vh;overflow:auto;padding:4px">
-
-        <div class="muted" style="margin-bottom:2px">📦 النسخ والاسترجاع</div>
-        <button class="btn" onclick="backupJSON(); closeSyncMenu()">💾 Backup (تنزيل)</button>
-        <button class="btn" onclick="shareBackup(); closeSyncMenu()">📤 مشاركة Backup</button>
-        <button class="btn" onclick="document.getElementById('restoreFile').click(); closeSyncMenu()">📥 Restore (اختيار ملف)</button>
-<div style="height:1px;background:rgba(255,255,255,.10);margin:6px 2px"></div>
-
-        <div class="muted" style="margin-bottom:2px">☁️ خدمات التخزين</div>
-        <button class="btn" onclick="window.open('https://drive.google.com/drive/my-drive','_blank','noopener'); closeSyncMenu()">📂 فتح Google Drive</button>
-        <button class="btn" onclick="window.open('https://www.dropbox.com/home','_blank','noopener'); closeSyncMenu()">📂 فتح Dropbox</button>
-
-        <div style="height:1px;background:rgba(255,255,255,.10);margin:6px 2px"></div>
-
-        <div class="muted" style="margin-bottom:2px">⚙️ إعدادات ومساعدة</div>
-        
-
+  <!-- Allowlist (Firestore) -->
+  <div class="back" id="allowBack">
+    <div class="modal">
+      <div class="modalHeader">
+        <h3>الإيميلات المسموح لها</h3>
+        <button class="x" type="button" onclick="closeAllow()">✕</button>
       </div>
-      <p class="muted" style="margin:10px 6px 0; line-height:1.8">
-        ملاحظة: المزامنة بدون سيرفر تكون عبر ملف <b>backup.json</b> (Backup → مشاركة/رفع → Restore).
+      <div class="hr"></div>
+      <p class="muted" style="margin:0 0 10px;font-size:12px">
+        إذا كانت القائمة فارغة: يسمح للجميع. عند إضافة أول إيميل: يصبح الدخول مقيدًا.
       </p>
-    </div>
-
-    <div class="row" style="margin-top:12px">
-      <button class="btn" onclick="closeSyncMenu()">إغلاق</button>
-    </div>
-  </div>
-</div>
-
-<input type="file" id="restoreFile" accept="application/json" style="display:none" onchange="restoreJSON(event)">
-
-
-<!-- Actions Modal -->
-<div id="actionsModalBack" class="modalBack" style="display:none">
-  <div class="modal">
-    <div class="modalHead">
-      <div class="modalTitle">إجراءات</div>
-      <button class="iconBtn" type="button" onclick="closeActionsModal()">✕</button>
-    </div>
-    <div class="modalBody">
-      <div class="muted" id="actionsModalSub" style="margin-bottom:10px"></div>
-      <div class="modalGrid">
-      <button class="btn" type="button" onclick="actionsDo('edit')">✏️ تعديل</button>
-      <button class="btn" type="button" onclick="showRenewOptions()">🔁 تجديد</button>
-      <button class="btn danger" type="button" onclick="actionsDo('delete')">🗑️ حذف</button>
-      <button class="btn secondary" type="button" onclick="actionsDo('copy')">📋 نسخ Email</button>
-</div>
-    <div id="renewBox" class="renewBox" style="display:none">
-      <div class="renewTitle">اختيار مدة التجديد</div>
-      <div class="renewChips">
-        <button class="chip" type="button" data-m="1">شهر</button>
-        <button class="chip" type="button" data-m="3">3 أشهر</button>
-        <button class="chip" type="button" data-m="6">6 أشهر</button>
+      <div class="row">
+        <input id="allowEmail" type="email" placeholder="email@example.com">
+        <button class="btn ok" id="btnAllowAdd" type="button">إضافة</button>
       </div>
-      <div class="renewManual">
-        <label class="renewLabel">أو أدخل رقم بالأشهر</label>
-        <div class="renewRow">
-          <input id="renewMonthsInput" class="renewInput" type="number" inputmode="numeric" min="1" max="120" placeholder="مثال: 2" />
-          <button class="btn" type="button" onclick="confirmRenew()">تأكيد التجديد</button>
-        </div>
-        <div class="renewHint">سيتم إضافة المدة إلى تاريخ الانتهاء الحالي.</div>
-      </div>
-    </div>
-</div>
-      <div style="margin-top:12px">
-        <button class="btn secondary" style="width:100%" type="button" onclick="closeActionsModal()">إغلاق</button>
-      </div>
+      <div class="hr"></div>
+      <div id="allowList" class="muted" style="font-size:13px"></div>
     </div>
   </div>
-</div>
 
-
-<!-- ================= Firebase Login (Email/Password) ================= -->
-<div id="loginBack" style="display:flex;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:99999;align-items:center;justify-content:center;padding:16px">
-  <div style="width:min(420px,96vw);background:#0f172a;border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:18px;color:#e5e7eb">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-      <strong>تسجيل الدخول</strong>
-    </div>
-
-    <div style="display:grid;gap:10px">
-      <input id="loginEmail" type="email" placeholder="Email"
-        style="padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.25);color:#fff;outline:none">
-
-      <input id="loginPass" type="password" placeholder="Password"
-        style="padding:10px 12px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.25);color:#fff;outline:none">
-
-      <button id="btnLogin" type="button"
-        style="padding:10px;border-radius:12px;border:0;background:#3b82f6;color:white;cursor:pointer">
-        دخول
-      </button>
-
-      <button id="btnCreate" type="button"
-        style="padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:transparent;color:white;cursor:pointer">
-        إنشاء حساب (مرة واحدة)
-      </button>
-
-      <div id="loginMsg" style="color:#fca5a5;font-size:13px;min-height:18px">جاري التحميل...</div>
-    </div>
-  </div>
-</div>
-
-<button id="btnLogout" class="btn secondary" type="button"
-  style="display:none;position:fixed;bottom:14px;left:14px;z-index:9999">
-  تسجيل خروج
-</button>
-
-
-<!-- Firebase (compat) -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script>
-  // إعدادات مشروعك
-  const firebaseConfig = {
-    apiKey: "AIzaSyCTFWu05DqfkiSN_0vGSb6CpAwGJ5lMoC0",
-    authDomain: "stok-ef86f.firebaseapp.com",
-    projectId: "stok-ef86f",
-    storageBucket: "stok-ef86f.firebasestorage.app",
-    messagingSenderId: "845285269041",
-    appId: "1:845285269041:web:4bdb61a61aa114d600ff10",
-    measurementId: "G-EBF3TC1QWT"
-  };
-
-  // init once
-  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-
-  // ===== Allowlist (تقييد الدخول على إيميلات محددة) =====
-  // يتم تخزين القائمة محليًا على نفس الجهاز (LocalStorage)
-  const ALLOW_KEY = "firebase_allowed_emails_v1";
-  function normEmail(x){ return String(x||"").trim().toLowerCase(); }
-  function getAllowed(){
-    try{ const v = JSON.parse(localStorage.getItem(ALLOW_KEY)); return Array.isArray(v)? v: []; }
-    catch(e){ return []; }
-  }
-  function setAllowed(arr){ localStorage.setItem(ALLOW_KEY, JSON.stringify(arr)); }
-  function isAllowedEmail(email){
-    const list = getAllowed().map(normEmail).filter(Boolean);
-    if(!list.length) return true; // فارغة = السماح للجميع
-    return list.includes(normEmail(email));
-  }
-
-  // واجهة الإدارة
-  window.refreshAllowedUI = function(){
-    const ul = document.getElementById("allowedList");
-    if(!ul) return;
-    ul.innerHTML = "";
-    const arr = getAllowed().map(normEmail).filter(Boolean);
-    if(!arr.length){
-      const li = document.createElement("li");
-      li.textContent = "لا يوجد أي إيميل مضاف (السماح للجميع).";
-      ul.appendChild(li);
-      return;
-    }
-    arr.forEach((em, i)=>{
-      const li = document.createElement("li");
-      li.style.margin = "6px 0";
-      li.textContent = em + " ";
-      const b = document.createElement("button");
-      b.type = "button";
-      b.textContent = "حذف";
-      b.style.marginInlineStart = "8px";
-      b.style.padding = "4px 10px";
-      b.style.borderRadius = "10px";
-      b.style.border = "1px solid rgba(255,255,255,.15)";
-      b.style.background = "transparent";
-      b.style.color = "#fff";
-      b.style.cursor = "pointer";
-      b.onclick = ()=>{
-        const a = getAllowed().map(normEmail).filter(Boolean);
-        a.splice(i,1);
-        setAllowed(a);
-        refreshAllowedUI();
-      };
-      li.appendChild(b);
-      ul.appendChild(li);
-    });
-  }
-
-  window.openAllowlist = function(){
-    refreshAllowedUI();
-    const m = document.getElementById("allowlistModal");
-    if(m) m.style.display = "flex";
-  }
-  window.closeAllowlist = function(){
-    const m = document.getElementById("allowlistModal");
-    if(m) m.style.display = "none";
-  }
-  window.addAllowedEmail = function(){
-    const inp = document.getElementById("newAllowedEmail");
-    if(!inp) return;
-    const em = normEmail(inp.value);
-    if(!em) return;
-    const a = getAllowed().map(normEmail).filter(Boolean);
-    if(!a.includes(em)) a.push(em);
-    setAllowed(a);
-    inp.value = "";
-    refreshAllowedUI();
-  }
-
-
-  const loginBack = document.getElementById("loginBack");
-  const emailEl = document.getElementById("loginEmail");
-  const passEl = document.getElementById("loginPass");
-  const msgEl = document.getElementById("loginMsg");
-  const btnLogin = document.getElementById("btnLogin");
-  const btnCreate = document.getElementById("btnCreate");
-  const btnLogout = document.getElementById("btnLogout");
-
-  function showLogin(show){
-    loginBack.style.display = show ? "flex" : "none";
-    if(show && !msgEl.textContent) msgEl.textContent = "";
-  }
-
-  function friendlyErr(e){
-    const code = (e && e.code) ? e.code : "";
-    if(code.includes("auth/invalid-credential")) return "بيانات الدخول غير صحيحة.";
-    if(code.includes("auth/user-not-found")) return "الحساب غير موجود.";
-    if(code.includes("auth/wrong-password")) return "كلمة المرور غير صحيحة.";
-    if(code.includes("auth/email-already-in-use")) return "هذا البريد مسجل مسبقًا.";
-    if(code.includes("auth/weak-password")) return "كلمة المرور ضعيفة.";
-    if(code.includes("auth/invalid-email")) return "البريد غير صالح.";
-    if(code.includes("auth/network-request-failed")) return "تحقق من اتصال الإنترنت.";
-    return (e && e.message) ? e.message : "حدث خطأ.";
-  }
-
-  // Auth guard (Firebase only) + bypass local login (admin)
-  auth.onAuthStateChanged((user) => {
-    // 🔒 تقييد الدخول حسب القائمة
-    if(user && !isAllowedEmail(user.email)){
-      try{ msgEl.textContent = "هذا الحساب غير مسموح له بالدخول."; }catch(e){}
-      auth.signOut();
-      showLogin(true);
-      return;
-    }
-
-    const appDiv = document.getElementById("app");
-    const loginCard = document.getElementById("loginCard");
-    if(user){
-      const btnAllow = document.getElementById("btnAllowlist");
-      if(btnAllow){ btnAllow.style.display = "block"; btnAllow.onclick = openAllowlist; }
-      showLogin(false);
-      btnLogout.style.display = "block";
-      if(loginCard) loginCard.style.display = "none";
-
-      try{ sessionStorage.setItem("role","admin"); }catch(e){}
-      if(appDiv) appDiv.style.display = "block";
-
-      if(!window.__firebaseBooted){
-        window.__firebaseBooted = true;
-        try{ if(typeof bootAuthed === "function") bootAuthed(); }catch(e){}
-      }
-    }else{
-      const btnAllow = document.getElementById("btnAllowlist");
-      if(btnAllow) btnAllow.style.display = "none";
-      window.__firebaseBooted = false;
-      btnLogout.style.display = "none";
-      if(appDiv) appDiv.style.display = "none";
-      if(loginCard) loginCard.style.display = "none";
-      try{ sessionStorage.removeItem("role"); }catch(e){}
-      msgEl.textContent = "";
-      showLogin(true);
-    }
-  });
-
-  btnLogin.addEventListener("click", async () => {
-    try{
-      msgEl.textContent = "جاري التحقق...";
-      await auth.signInWithEmailAndPassword(emailEl.value.trim(), passEl.value);
-    }catch(e){
-      msgEl.textContent = friendlyErr(e);
-    }
-  });
-
-  btnCreate.addEventListener("click", async () => {
-    try{
-      msgEl.textContent = "جاري إنشاء الحساب...";
-      await auth.createUserWithEmailAndPassword(emailEl.value.trim(), passEl.value);
-    }catch(e){
-      msgEl.textContent = friendlyErr(e);
-    }
-  });
-
-  btnLogout.addEventListener("click", async () => {
-    await auth.signOut();
-  });
-</script>
-<!-- ================================================================ -->
-
-
-
-<!-- ===== Allowlist UI (إيميلات مسموح لها) ===== -->
-<div id="allowlistModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:99990;align-items:center;justify-content:center;padding:14px">
-  <div style="width:min(520px,96vw);background:#0f172a;color:#fff;padding:16px;border-radius:16px;border:1px solid rgba(255,255,255,.12)">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-      <h3 style="margin:0;font-size:18px">الإيميلات المسموح لها</h3>
-      <button type="button" onclick="closeAllowlist()" style="border:0;background:transparent;color:#fff;font-size:18px;cursor:pointer">✕</button>
-    </div>
-    <p style="opacity:.85;margin:8px 0 12px;font-size:13px">إذا كانت القائمة فارغة: يسمح للجميع. عند إضافة أول إيميل: يصبح الدخول مقيدًا.</p>
-
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <input id="newAllowedEmail" type="email" placeholder="email@example.com"
-        style="flex:1;min-width:220px;padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.25);color:#fff;outline:none">
-      <button type="button" onclick="addAllowedEmail()"
-        style="padding:10px 14px;border-radius:10px;background:#22c55e;color:#08111f;border:0;cursor:pointer">إضافة</button>
-    </div>
-
-    <ul id="allowedList" style="margin:12px 0 0;padding-left:18px;max-height:240px;overflow:auto"></ul>
-  </div>
-</div>
-
-<button id="btnAllowlist" type="button"
-  style="position:fixed;bottom:14px;right:14px;z-index:9999;display:none;padding:10px 14px;border-radius:12px;background:#0ea5e9;color:#08111f;border:0;cursor:pointer">
-  إدارة الإيميلات
-</button>
+  <button class="btn" id="btnAllowlist" type="button" style="display:none;position:fixed;bottom:14px;left:14px;z-index:9998">
+    إدارة الإيميلات
+  </button>
 
 </body>
 </html>

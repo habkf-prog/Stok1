@@ -1373,17 +1373,6 @@ $("closeTotals").onclick  = ()=> closeModal("totalsModal");
 
 $("closeSyncX").onclick = ()=> closeModal("syncModal");
 $("closeSync").onclick  = ()=> closeModal("syncModal");
-/* ===== Share modal ===== */
-(function bindShareModal(){
-  const csx = 
-
-  // اغلاق عند الضغط خارج النافذة
-  const sm = $();
-  if(sm){
-    sm.addEventListener("click",(e)=>{ if(e.target && e.target.id===) closeModal(); });
-  }
-})();
-
 /* ===== Auth modal ===== */
 $("openAuth").onclick = ()=>{
   if(!authReady) initAuth();
@@ -1400,7 +1389,7 @@ $("cancelPaste").onclick = ()=> closeModal("pasteModal");
 $("search").addEventListener("input", render);
 
 /* ✅ حذف الكل: الآن مع Undo */
-function openShareModal(text){
+async function openShareModal(text){
   try{
     const enc = encodeURIComponent(text || "");
     const wa = document.getElementById("shareWhatsApp");
@@ -1473,28 +1462,6 @@ async function doShare(){
     navigator.clipboard.writeText(text)
       .then(()=> showToast("تم النسخ ✅", "تم نسخ التقرير إلى الحافظة", "ok"))
       .catch(()=> showToast("تعذر النسخ", "", "err"));
-  }catch(e){
-    showToast("فشلت المشاركة", String(e?.message||e), "err");
-  }
-}
-
-// بدائل مشاركة داخلية (واتساب/تيليجرام/إيميل/نسخ)
-openShareModal(text);
-return;
-
-// fallback: نسخ للحافظة
-    try{
-      await navigator.clipboard.writeText(text);
-      showToast("تم النسخ ✅", "تم نسخ التقرير إلى الحافظة", "ok");
-    }catch{
-      // fallback: تنزيل ملف CSV
-      if(typeof downloadFile === "function"){
-        downloadFile("subscriptions_report.csv", text, "text/csv;charset=utf-8");
-        showToast("تم التنزيل ✅", "subscriptions_report.csv", "ok");
-      }else{
-        alert(text);
-      }
-    }
   }catch(e){
     showToast("فشلت المشاركة", String(e?.message||e), "err");
   }

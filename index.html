@@ -437,7 +437,7 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
 <div class="container">
   <div class="header">
     <h1>🧾 لوحة تسيير الاشتراكات</h1>
-    <div class="sub">⚡ إجراءات للصف + ☁️ نافذة مزامنة/نسخ احتياطي. <span style="opacity:.7;font-weight:800">(v1.2.6)</span></div>
+    <div class="sub">⚡ إجراءات للصف + ☁️ نافذة مزامنة/نسخ احتياطي. <span style="opacity:.7;font-weight:800">(v1.2.5)</span></div>
   </div>
 
   <div class="card">
@@ -899,7 +899,7 @@ function setStoredAlertDays(n){
   localStorage.setItem(SETTINGS_KEY, JSON.stringify({alertDays:n}));
 }
 function getAlertDaysFromForm(){
-  const n = Number($("alertDays").value);
+  const n = Number($("alertDays").value || formState.alertDays);
   return (n && n>0) ? n : 7;
 }
 function status(endISO, alertDays){
@@ -1051,6 +1051,22 @@ function restoreFromUndo(){
 /* ===== نهاية Undo ===== */
 
 /* ===== Form modal ===== */
+// ===== Mobile input commit helper (cache live values) =====
+const formState = { name:"", email:"", months:"", start:"", alertDays:"" };
+function bindFormState(){
+  const ids = ["name","email","months","start","alertDays"];
+  ids.forEach(id=>{
+    const el = $(id);
+    if(!el) return;
+    const pull = ()=>{ formState[id] = el.value; };
+    // init
+    pull();
+    el.addEventListener("input", pull);
+    el.addEventListener("change", pull);
+    el.addEventListener("blur", pull);
+  });
+}
+
 function resetForm(){
   $("name").value="";
   $("email").value="";
@@ -1163,10 +1179,15 @@ function upsert(rec){
 }
 
 function handleSaveClick(){
-  const name = $("name").value.trim();
-  const email = normalizeEmail($("email").value);
-  const months = Number($("months").value);
-  const start = $("start").value;
+  const _nameRaw = ($("name").value || formState.name || "").trim();
+  const _emailRaw = ($("email").value || formState.email || "");
+  const _monthsRaw = ($("months").value || formState.months || "");
+  const _startRaw = ($("start").value || formState.start || "");
+
+  const name = _nameRaw;
+  const email = normalizeEmail(_emailRaw);
+  const months = Number(_monthsRaw);
+  const start = _startRaw;
   const alertDays = getAlertDaysFromForm();
 
   if(!name) haptic("light"); showToast("أدخل الاسم", "", "warn"); return;
@@ -1212,7 +1233,7 @@ function handleSaveClick(){
     try{ document.activeElement && document.activeElement.blur && document.activeElement.blur(); }catch{}
 
     // نفّذ بعد لحظة صغيرة حتى تُحدَّث قيم الإدخال
-    setTimeout(()=>{ try{ handleSaveClick(); }catch(err){ try{ showToast("خطأ أثناء الحفظ", String(err?.message||err), "err"); }catch{} } }, 0);
+    setTimeout(()=>{ try{ handleSaveClick(); }catch(err){ try{ showToast("خطأ أثناء الحفظ", String(err?.message||err), "err"); }catch{} } }, 60);
   };
 
   // استخدم pointerup إن وُجد (أفضل للموبايل)، مع click كاحتياط
@@ -1283,7 +1304,7 @@ $("fileInput").addEventListener("change", async ()=>{
     lastFire = now;
 
     try{ document.activeElement && document.activeElement.blur && document.activeElement.blur(); }catch{}
-    setTimeout(()=>{ importFromText($("pasteArea").value); }, 0);
+    setTimeout(()=>{ importFromText($("pasteArea").value); }, 60);
   };
 
   b.addEventListener("pointerup", fire);
@@ -1520,6 +1541,7 @@ function render(){
 }
 
 /* init */
+bindFormState();
 (async ()=>{
   await load();
   render();

@@ -564,6 +564,15 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
             <button class="btn soft" id="exportCsvBtn" type="button">تصدير</button>
           </div>
         </div>
+
+        <div class="backTile">
+          <div class="t">↩️ استرجاع آخر حذف</div>
+          <div class="d">يعيد البيانات من آخر عملية حذف (تراجع بعد الحذف بالخطأ).</div>
+          <div class="actions">
+            <button class="btn soft" id="restoreLastDeleteBtn" type="button">استرجاع</button>
+          </div>
+        </div>
+
       </div>
 
       <div class="note">
@@ -1059,9 +1068,26 @@ $("cancelBtn").onclick = ()=> closeModal("formModal");
 $("quickPlan").onchange = ()=>{ const v = $("quickPlan").value; if(v) $("months").value = v; };
 
 /* ===== Backup modal ===== */
-$("openBackup").onclick = ()=> openModal("backupModal");
+$("openBackup").onclick = ()=>{
+  openModal("backupModal");
+  try{
+    const snap = getUndoSnapshot();
+    const b = $("restoreLastDeleteBtn");
+    if(b){ b.disabled = !snap; b.style.opacity = snap ? "1" : ".55"; }
+  }catch{}
+};
 $("closeBackup").onclick = ()=> closeModal("backupModal");
 $("closeBackup2").onclick = ()=> closeModal("backupModal");
+
+/* ✅ استرجاع آخر حذف من نافذة النسخ الاحتياطي */
+const __restoreBtn = $("restoreLastDeleteBtn");
+if(__restoreBtn){
+  __restoreBtn.onclick = ()=>{
+    restoreFromUndo();
+    closeModal("backupModal");
+  };
+}
+
 
 /* ===== Sync modal ===== */
 $("openSync").onclick = ()=> openModal("syncModal");

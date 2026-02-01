@@ -430,6 +430,7 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
       <button class="btn primary" id="openAdd" type="button">➕ إضافة</button>
       <button class="btn soft" id="openBackup" type="button">📦 النسخ الاحتياطي</button>
       <button class="btn soft" id="openSync" type="button">☁️ المزامنة</button>
+      <button class="btn soft" id="openAuth" type="button">👤 حساب</button>
 
       <div class="searchWrap">
         <input id="search" placeholder="بحث بالاسم أو الإيميل..." />
@@ -662,6 +663,58 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
   </div>
 </div>
 
+
+<!-- ===== Modal: الحساب ===== -->
+<div class="modal" id="authModal" aria-hidden="true">
+  <div class="box" role="dialog" aria-modal="true" style="width:min(720px, 100%)">
+    <div class="modalHeader">
+      <div>
+        <h2>👤 الحساب</h2>
+        <div class="hint" id="authHint">تسجيل الدخول / إنشاء حساب</div>
+      </div>
+      <button class="btn" id="closeAuthX" type="button">✕</button>
+    </div>
+
+    <div class="modalBody">
+      <div class="formGrid" style="grid-template-columns: 1.2fr 1.2fr;">
+        <div class="field">
+          <label>البريد الإلكتروني</label>
+          <input id="authEmail" placeholder="name@example.com" inputmode="email" autocomplete="email">
+        </div>
+        <div class="field">
+          <label>كلمة المرور</label>
+          <input id="authPass" type="password" placeholder="••••••••" autocomplete="current-password">
+        </div>
+      </div>
+
+      <div class="note" id="authStatus" style="margin-top:12px">
+        الحالة: <b>غير متصل</b>
+      </div>
+
+      <div class="note" style="margin-top:12px">
+        <b>ملاحظة:</b> هذه المرحلة تضيف تسجيل الدخول فقط. بيانات الجدول ما زالت كما هي (غير مرتبطة بالحساب بعد).
+      </div>
+
+      <div class="note" style="margin-top:12px">
+        <b>تنبيه:</b> يجب أن تضع إعدادات Firebase Auth (apiKey...) داخل الكود لكي يعمل تسجيل الدخول.
+      </div>
+    </div>
+
+    <div class="modalFooter">
+      <button class="btn primary" id="loginBtn" type="button">تسجيل الدخول</button>
+      <button class="btn soft" id="signupBtn" type="button">إنشاء حساب</button>
+      <button class="btn danger" id="logoutBtn" type="button" disabled>تسجيل الخروج</button>
+      <button class="btn" id="closeAuth" type="button">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- Firebase (Auth) -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
 <script>
 'use strict';
 const APP_VERSION = 'v1.2.5 – Hardened';
@@ -784,6 +837,75 @@ const STORAGE_KEY = "subs_dashboard_actions_modal_v2";
 const SETTINGS_KEY = "subs_dashboard_actions_modal_settings_v2";
 
 let data = [];
+/* =========================
+   المرحلة 1: Auth UI فقط (بدون ربط البيانات)
+========================= */
+
+// ضع إعدادات مشروعك من Firebase Console > Project settings > General > SDK setup
+// IMPORTANT: يجب ملء apiKey ليعمل Auth
+const FIREBASE_CONFIG = {
+  apiKey: "",                // <-- ضع apiKey هنا
+  authDomain: "dattta-6f497.firebaseapp.com",
+  projectId: "dattta-6f497",
+};
+
+let authReady = false;
+let authUserEmail = null;
+
+function initAuth(){
+  try{
+    if(!window.firebase || !firebase.apps) return;
+    if(!FIREBASE_CONFIG.apiKey){
+      // لا نفعل Auth بدون apiKey
+      authReady = false;
+      return;
+    }
+    if(!firebase.apps.length){
+      firebase.initializeApp(FIREBASE_CONFIG);
+    }
+    const auth = firebase.auth();
+
+    auth.onAuthStateChanged((user)=>{
+      authUserEmail = user ? (user.email || "مستخدم") : null;
+      updateAuthUI(user);
+    });
+
+    authReady = true;
+  }catch(e){
+    authReady = false;
+    try{ showToast("تعذّر تهيئة الحساب", String(e && e.message ? e.message : e), "err"); }catch{}
+  }
+}
+
+function updateAuthUI(user){
+  const statusEl = document.getElementById("authStatus");
+  const hintEl = document.getElementById("authHint");
+  const logoutBtn = document.getElementById("logoutBtn");
+  const openAuth = document.getElementById("openAuth");
+
+  if(!statusEl || !hintEl || !logoutBtn || !openAuth) return;
+
+  if(!authReady){
+    hintEl.textContent = "تسجيل الدخول / إنشاء حساب";
+    statusEl.innerHTML = 'الحالة: <b>غير مفعّل</b> — ضع <b>apiKey</b> داخل الكود لتفعيل Firebase Auth.';
+    logoutBtn.disabled = true;
+    openAuth.textContent = "👤 حساب";
+    return;
+  }
+
+  if(user){
+    hintEl.textContent = "متصل";
+    statusEl.innerHTML = `الحالة: <b>متصل</b> — ${escapeHtml(user.email || "مستخدم")}`;
+    logoutBtn.disabled = false;
+    openAuth.textContent = "👤 " + (user.email || "حساب");
+  }else{
+    hintEl.textContent = "تسجيل الدخول / إنشاء حساب";
+    statusEl.innerHTML = 'الحالة: <b>غير متصل</b>';
+    logoutBtn.disabled = true;
+    openAuth.textContent = "👤 حساب";
+  }
+}
+
 let editingId = null;
 
 /* ===== Utils ===== */
@@ -871,11 +993,11 @@ function closeModal(id){
   $(id).setAttribute("aria-hidden","true");
 }
 function closeAllModals(){
-  ["formModal","backupModal","pasteModal","rowActionsModal","syncModal"].forEach(closeModal);
+  ["formModal","backupModal","pasteModal","rowActionsModal","syncModal","authModal"].forEach(closeModal);
 }
 
 /* close on background click */
-["formModal","backupModal","pasteModal","rowActionsModal","syncModal"].forEach(mid=>{
+["formModal","backupModal","pasteModal","rowActionsModal","syncModal","authModal"].forEach(mid=>{
   $(mid).addEventListener("click",(e)=>{
     if(e.target.id===mid) closeModal(mid);
   });
@@ -962,6 +1084,74 @@ $("closeBackup").onclick = ()=> closeModal("backupModal");
 $("closeBackup2").onclick = ()=> closeModal("backupModal");
 
 /* ===== Sync modal ===== */
+/* ===== Auth modal handlers ===== */
+$("openAuth").onclick = ()=>{
+  openModal("authModal");
+  // تعبئة الإيميل من آخر مرة إن وجد
+  try{
+    const last = localStorage.getItem("last_auth_email") || "";
+    if(last) $("authEmail").value = last;
+  }catch{}
+};
+$("closeAuthX").onclick = ()=> closeModal("authModal");
+$("closeAuth").onclick  = ()=> closeModal("authModal");
+
+$("loginBtn").onclick = async ()=>{
+  const email = normalizeEmail($("authEmail").value);
+  const pass  = $("authPass").value;
+  if(!email || !validateEmail(email)) return showToast("أدخل إيميل صحيح", "", "err");
+  if(!pass || pass.length < 6) return showToast("كلمة المرور قصيرة", "6 أحرف على الأقل", "err");
+
+  try{
+    if(!authReady) return showToast("Auth غير مفعّل", "ضع apiKey داخل الكود", "err");
+    setSyncState("saving"); // فقط لإظهار نشاط
+    await firebase.auth().signInWithEmailAndPassword(email, pass);
+    localStorage.setItem("last_auth_email", email);
+    haptic("ok");
+    showToast("✅ تم تسجيل الدخول", email, "ok");
+  }catch(e){
+    haptic("fail");
+    showToast("فشل تسجيل الدخول", (e && e.message) ? e.message : "خطأ", "err");
+  }finally{
+    render(); // لتحديث شريط الإحصائيات/الواجهة
+  }
+};
+
+$("signupBtn").onclick = async ()=>{
+  const email = normalizeEmail($("authEmail").value);
+  const pass  = $("authPass").value;
+  if(!email || !validateEmail(email)) return showToast("أدخل إيميل صحيح", "", "err");
+  if(!pass || pass.length < 6) return showToast("كلمة المرور قصيرة", "6 أحرف على الأقل", "err");
+
+  try{
+    if(!authReady) return showToast("Auth غير مفعّل", "ضع apiKey داخل الكود", "err");
+    setSyncState("saving");
+    await firebase.auth().createUserWithEmailAndPassword(email, pass);
+    localStorage.setItem("last_auth_email", email);
+    haptic("ok");
+    showToast("✅ تم إنشاء الحساب", email, "ok");
+  }catch(e){
+    haptic("fail");
+    showToast("فشل إنشاء الحساب", (e && e.message) ? e.message : "خطأ", "err");
+  }finally{
+    render();
+  }
+};
+
+$("logoutBtn").onclick = async ()=>{
+  try{
+    if(!authReady) return;
+    await firebase.auth().signOut();
+    haptic("light");
+    showToast("تم تسجيل الخروج", "", "warn");
+  }catch(e){
+    haptic("fail");
+    showToast("تعذّر تسجيل الخروج", (e && e.message) ? e.message : "خطأ", "err");
+  }finally{
+    render();
+  }
+};
+
 $("openSync").onclick = ()=> openModal("syncModal");
 $("closeSyncX").onclick = ()=> closeModal("syncModal");
 $("closeSync").onclick  = ()=> closeModal("syncModal");
@@ -1307,6 +1497,7 @@ function render(){
 
 /* init */
 (async ()=>{
+  initAuth();
   await load();
   render();
 })();

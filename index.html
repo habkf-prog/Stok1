@@ -6,211 +6,469 @@
 <title>لوحة تسيير الاشتراكات</title>
 
 <style>
+/* =========================
+   Modern Pro Layout (RTL)
+   ========================= */
 :root{
-  --bg:#0b0f17; --card:#ffffff10; --line:#ffffff20; --text:#e9eef7; --muted:#b7bfd0;
-  --accent:#7c5cff; --ok:#22c55e; --warn:#f59e0b; --err:#ef4444; --radius:16px;
+  --bg0:#070a12;
+  --bg1:#0b1020;
+  --card: rgba(255,255,255,.06);
+  --card2: rgba(255,255,255,.04);
+  --line: rgba(255,255,255,.10);
+
+  --text:#eaf0ff;
+  --muted: rgba(234,240,255,.70);
+
+  --accent:#7c5cff;
+  --accent2:#22c55e;
+  --warn:#f59e0b;
+  --err:#ef4444;
+
+  --radius:18px;
+  --shadow: 0 18px 45px rgba(0,0,0,.45);
 }
+
 *{box-sizing:border-box}
-body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial;background:var(--bg);color:var(--text);padding:18px}
-.container{max-width:1150px;margin:auto}
-.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
-h1{margin:0 0 8px;font-size:20px}
-.small{color:var(--muted);font-size:12px}
-
-.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
-.btn{padding:11px 14px;border-radius:14px;border:1px solid var(--line);background:#00000040;color:var(--text);font-weight:900;cursor:pointer}
-.btn.primary{border-color:var(--accent);background:linear-gradient(135deg,var(--accent),#4f46e5)}
-.btn.danger{border-color:#ef444466}
-input,select,textarea{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:#00000040;color:var(--text)}
-
-.badge{padding:4px 10px;border-radius:999px;font-size:12px;font-weight:900;border:1px solid var(--line)}
-.badge.ok{border-color:#22c55e55;color:#c9f7d7}
-.badge.warn{border-color:#f59e0b55;color:#ffe2b3}
-.badge.err{border-color:#ef444455;color:#ffd0d0}
-
-table{width:100%;border-collapse:collapse;margin-top:14px}
-th,td{padding:10px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:middle}
-th{color:var(--muted);text-align:right}
-
-/* صف منتهي (أحمر) */
-tr.expired-row{background:rgba(239,68,68,.12)}
-tr.expired-row td:first-child{box-shadow:inset 4px 0 0 rgba(239,68,68,.75)}
-
-/* صف قريب ينتهي (أصفر) */
-tr.expiring-row{background:rgba(245,158,11,.10)}
-tr.expiring-row td:first-child{box-shadow:inset 4px 0 0 rgba(245,158,11,.75)}
-
-/* قائمة ⋯ لكل صف */
-.menuWrap{position:relative;display:inline-block}
-.iconBtn{
-  width:42px;height:38px;border-radius:12px;
-  border:1px solid var(--line);
-  background:#00000040;color:var(--text);
-  cursor:pointer;font-weight:900;
+html,body{height:100%}
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  color: var(--text);
+  background:
+    radial-gradient(1200px 650px at 85% -10%, rgba(124,92,255,.25), transparent 60%),
+    radial-gradient(1000px 600px at 10% 0%, rgba(34,197,94,.18), transparent 60%),
+    linear-gradient(180deg, var(--bg0), var(--bg1));
+  padding: 18px;
 }
-.menu{
-  position:absolute; inset:auto 0 0 auto;
-  transform:translateY(42px);
-  min-width:180px;
-  background:#0b0f17;
+
+.container{max-width:1200px;margin:0 auto}
+.header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:14px;
+  margin-bottom:14px;
+}
+.titleBox h1{
+  margin:0;
+  font-size:20px;
+  letter-spacing:.2px;
+}
+.titleBox .sub{
+  margin-top:6px;
+  font-size:13px;
+  color: var(--muted);
+  line-height:1.7;
+}
+
+.card{
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(10px);
+  overflow:hidden;
+}
+
+.topbar{
+  padding:14px;
+  border-bottom:1px solid var(--line);
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.btn{
   border:1px solid var(--line);
+  background: rgba(0,0,0,.18);
+  color: var(--text);
+  padding:10px 12px;
   border-radius:14px;
+  font-weight:900;
+  cursor:pointer;
+  transition: transform .08s ease, background .15s ease, border-color .15s ease;
+}
+.btn:hover{ background: rgba(255,255,255,.06); }
+.btn:active{ transform: scale(.98); }
+.btn.primary{
+  border-color: rgba(124,92,255,.55);
+  background: linear-gradient(135deg, rgba(124,92,255,.55), rgba(124,92,255,.15));
+}
+.btn.danger{
+  border-color: rgba(239,68,68,.55);
+  background: linear-gradient(135deg, rgba(239,68,68,.35), rgba(239,68,68,.12));
+}
+
+.searchWrap{
+  flex:1;
+  min-width:240px;
+  position:relative;
+}
+.searchWrap input{
+  width:100%;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid var(--line);
+  background: rgba(0,0,0,.18);
+  color: var(--text);
+  outline:none;
+}
+.searchWrap input:focus{
+  border-color: rgba(124,92,255,.6);
+  box-shadow: 0 0 0 4px rgba(124,92,255,.14);
+}
+
+.pills{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-inline-start:auto;
+}
+.pill{
+  font-size:12px;
+  font-weight:900;
+  padding:7px 10px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background: rgba(0,0,0,.18);
+  color: var(--muted);
+}
+
+/* ======= Table ======= */
+.tableWrap{ overflow:auto; }
+table{
+  width:100%;
+  border-collapse:separate;
+  border-spacing:0;
+  min-width: 920px;
+}
+thead th{
+  position:sticky; top:0;
+  z-index:5;
+  background: rgba(0,0,0,.22);
+  color: var(--muted);
+  text-align:right;
+  font-size:12px;
+  font-weight:900;
+  padding:12px 12px;
+  border-bottom:1px solid var(--line);
+}
+tbody td{
+  padding:12px 12px;
+  border-bottom:1px solid rgba(255,255,255,.07);
+  white-space:nowrap;
+  vertical-align:middle;
+}
+tbody tr:hover{ background: rgba(255,255,255,.03); }
+
+/* Expired & Expiring rows */
+tr.expired-row{ background: rgba(239,68,68,.10); }
+tr.expiring-row{ background: rgba(245,158,11,.08); }
+tr.expired-row td:first-child{ box-shadow: inset 4px 0 0 rgba(239,68,68,.85); }
+tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); }
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  font-size:12px;
+  font-weight:900;
+}
+.badge.ok{ border-color: rgba(34,197,94,.45); color:#c8f7d9; }
+.badge.warn{ border-color: rgba(245,158,11,.45); color:#ffe2b3; }
+.badge.err{ border-color: rgba(239,68,68,.45); color:#ffd0d0; }
+
+/* Actions menu (⋯) */
+.menuWrap{ position:relative; display:inline-block; }
+.iconBtn{
+  width:42px; height:40px;
+  border-radius:14px;
+  border:1px solid var(--line);
+  background: rgba(0,0,0,.18);
+  color: var(--text);
+  cursor:pointer;
+  font-weight:900;
+}
+.iconBtn:hover{ background: rgba(255,255,255,.06); }
+.menu{
+  position:absolute;
+  inset:auto 0 0 auto;
+  transform: translateY(46px);
+  min-width:200px;
+  background: rgba(10,14,26,.98);
+  border:1px solid var(--line);
+  border-radius:16px;
   padding:6px;
   display:none;
   z-index:1000;
-  box-shadow:0 18px 45px rgba(0,0,0,.45);
+  box-shadow: 0 22px 70px rgba(0,0,0,.60);
 }
 .menu button{
   width:100%;
   padding:10px 10px;
   border-radius:12px;
   border:1px solid transparent;
-  background:transparent;
-  color:var(--text);
+  background: transparent;
+  color: var(--text);
   text-align:right;
   cursor:pointer;
-  font-weight:800;
+  font-weight:900;
 }
-.menu button:hover{background:#ffffff10;border-color:var(--line)}
-.menu .danger{color:#ffd0d0}
+.menu button:hover{
+  background: rgba(255,255,255,.06);
+  border-color: rgba(255,255,255,.08);
+}
+.menu .danger{ color:#ffd0d0; }
 
-/* صندوق النسخ الاحتياطي */
+/* Backup area (clean) */
+.backup{
+  padding: 12px 14px;
+  border-top:1px solid var(--line);
+  background: var(--card2);
+}
 details{
-  margin-top:10px;
-  border:1px solid var(--line);
-  border-radius:14px;
-  background:#00000026;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:16px;
   padding:10px 12px;
+  background: rgba(0,0,0,.16);
 }
-summary{cursor:pointer;font-weight:900}
-
-/* Modal عام */
-.modal{
-  position:fixed; inset:0;
-  background:rgba(0,0,0,.55);
-  display:none; align-items:center; justify-content:center;
-  z-index:9999;
+summary{
+  cursor:pointer;
+  font-weight:900;
+  color: var(--text);
+  list-style:none;
 }
-.modal .box{
-  width:min(720px,92vw);
-  background:#0b0f17;
-  border:1px solid var(--line);
-  border-radius:18px;
-  padding:16px;
-  box-shadow:0 20px 60px rgba(0,0,0,.5);
-}
-.modal h2{margin:0 0 10px;font-size:18px}
-.grid{
-  display:grid;
-  grid-template-columns: 1.2fr 1.2fr .8fr .8fr .8fr .8fr;
+summary::-webkit-details-marker{display:none}
+.summaryRow{
+  display:flex; align-items:center; justify-content:space-between;
   gap:10px;
 }
-@media (max-width:980px){.grid{grid-template-columns:1fr 1fr}}
-label{display:block;font-weight:900;margin:8px 0 6px}
-.hr{height:1px;background:var(--line);margin:10px 0}
+.summaryHint{font-size:12px;color:var(--muted)}
+.backRow{
+  display:flex; gap:10px; flex-wrap:wrap;
+  margin-top:10px;
+}
+
+/* ======= Modals ======= */
+.modal{
+  position:fixed; inset:0;
+  display:none;
+  align-items:center; justify-content:center;
+  background: rgba(0,0,0,.62);
+  z-index:9999;
+  padding: 18px;
+}
+.modal .box{
+  width:min(820px, 100%);
+  background: rgba(10,14,26,.96);
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 22px;
+  box-shadow: 0 30px 90px rgba(0,0,0,.65);
+  overflow:hidden;
+  animation: pop .14s ease-out;
+}
+@keyframes pop{ from{ transform: translateY(8px); opacity:.0 } to{ transform: translateY(0); opacity:1 } }
+.modalHeader{
+  padding:14px 16px;
+  border-bottom:1px solid rgba(255,255,255,.10);
+  display:flex; align-items:center; justify-content:space-between;
+  gap:10px;
+}
+.modalHeader h2{margin:0;font-size:16px}
+.modalHeader .hint{color:var(--muted);font-size:12px}
+.modalBody{ padding: 14px 16px; }
+.formGrid{
+  display:grid;
+  grid-template-columns: 1.2fr 1.2fr .9fr .9fr .9fr .9fr;
+  gap:10px;
+}
+@media (max-width: 980px){
+  table{min-width: 860px}
+  .formGrid{ grid-template-columns: 1fr 1fr; }
+}
+.field label{
+  display:block;
+  font-weight:900;
+  font-size:12px;
+  color: var(--muted);
+  margin-bottom:6px;
+}
+.field input, .field select, .field textarea{
+  width:100%;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.22);
+  color: var(--text);
+  outline:none;
+}
+.field input:focus, .field select:focus, .field textarea:focus{
+  border-color: rgba(124,92,255,.6);
+  box-shadow: 0 0 0 4px rgba(124,92,255,.14);
+}
+.modalFooter{
+  padding:12px 16px;
+  border-top:1px solid rgba(255,255,255,.10);
+  display:flex; gap:10px; flex-wrap:wrap;
+  justify-content:flex-start;
+}
+.kbd{
+  font-size:12px;
+  color: var(--muted);
+  margin-inline-start:auto;
+  display:flex; align-items:center; gap:8px;
+}
+.kbd span{
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(0,0,0,.18);
+  padding:4px 8px;
+  border-radius:10px;
+}
+
+/* Small helper */
+.hidden{display:none}
 </style>
 </head>
 
 <body>
 <div class="container">
-  <div class="card">
-    <h1>🧾 لوحة تسيير الاشتراكات</h1>
-    <div class="small">✅ الإدخال يظهر فقط عند الضغط على “إضافة”. حفظ تلقائي + تنبيه قبل الانتهاء.</div>
+  <div class="header">
+    <div class="titleBox">
+      <h1>🧾 لوحة تسيير الاشتراكات</h1>
+      <div class="sub">واجهة أنظف: الإدخال يظهر فقط عند الضغط على “إضافة”. مع حفظ تلقائي، تنبيه قبل الانتهاء، ونسخ احتياطي JSON/CSV.</div>
+    </div>
+  </div>
 
-    <div class="row">
+  <div class="card">
+    <div class="topbar">
       <button class="btn primary" id="openAdd">➕ إضافة</button>
-      <input id="search" placeholder="بحث بالاسم أو الإيميل..." style="flex:1;min-width:220px">
+      <div class="searchWrap">
+        <input id="search" placeholder="بحث بالاسم أو الإيميل..." />
+      </div>
       <button class="btn danger" id="clearBtn">حذف الكل</button>
-      <div class="small" id="stats" style="margin-inline-start:auto"></div>
+      <div class="pills">
+        <div class="pill" id="statsPill">—</div>
+      </div>
     </div>
 
-    <details>
-      <summary>📦 نسخ احتياطي (تصدير/استيراد)</summary>
-      <div class="row">
-        <button class="btn" id="exportJsonBtn">⬇️ JSON</button>
-        <button class="btn" id="importFileBtn">⬆️ ملف JSON</button>
-        <button class="btn" id="importPasteBtn">📋 لصق JSON</button>
-        <button class="btn" id="exportCsvBtn">⬇️ CSV</button>
-        <input id="fileInput" type="file" accept="application/json,.json" style="display:none">
-      </div>
-      <div class="small">صدّر JSON دوريًا للاحتفاظ بنسخة احتياطية.</div>
-    </details>
+    <div class="tableWrap">
+      <table>
+        <thead>
+          <tr>
+            <th>الاسم</th>
+            <th>الإيميل</th>
+            <th>المدة</th>
+            <th>البداية</th>
+            <th>الانتهاء</th>
+            <th>المتبقي</th>
+            <th>الحالة</th>
+            <th>⋯</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>الاسم</th>
-          <th>الإيميل</th>
-          <th>المدة</th>
-          <th>البداية</th>
-          <th>الانتهاء</th>
-          <th>المتبقي</th>
-          <th>الحالة</th>
-          <th>⋯</th>
-        </tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-    </table>
+    <div class="backup">
+      <details>
+        <summary>
+          <div class="summaryRow">
+            <div>📦 نسخ احتياطي (تصدير/استيراد)</div>
+            <div class="summaryHint">JSON / CSV / لصق</div>
+          </div>
+        </summary>
+        <div class="backRow">
+          <button class="btn" id="exportJsonBtn">⬇️ تصدير JSON</button>
+          <button class="btn" id="importFileBtn">⬆️ استيراد ملف</button>
+          <button class="btn" id="importPasteBtn">📋 لصق JSON</button>
+          <button class="btn" id="exportCsvBtn">⬇️ تصدير CSV</button>
+          <input id="fileInput" type="file" accept="application/json,.json" class="hidden">
+        </div>
+        <div class="sub" style="margin-top:10px">نصيحة: صدّر JSON من حين لآخر حتى لا تضيع بياناتك عند تغيير المتصفح/الهاتف.</div>
+      </details>
+    </div>
   </div>
 </div>
 
-<!-- Modal إضافة/تعديل -->
+<!-- Modal: Add/Edit -->
 <div class="modal" id="formModal" aria-hidden="true">
-  <div class="box">
-    <h2 id="formTitle">إضافة اشتراك</h2>
-    <div class="small">املأ البيانات ثم اضغط حفظ.</div>
-    <div class="hr"></div>
+  <div class="box" role="dialog" aria-modal="true">
+    <div class="modalHeader">
+      <div>
+        <h2 id="formTitle">إضافة اشتراك</h2>
+        <div class="hint">املأ البيانات ثم اضغط حفظ</div>
+      </div>
+      <button class="btn" id="closeForm">✕ إغلاق</button>
+    </div>
 
-    <div class="grid">
-      <div>
-        <label>الاسم</label>
-        <input id="name" placeholder="مثال: Ahmed">
-      </div>
-      <div>
-        <label>الإيميل</label>
-        <input id="email" placeholder="name@example.com" inputmode="email">
-      </div>
-      <div>
-        <label>اختيار سريع</label>
-        <select id="quickPlan">
-          <option value="">— اختر —</option>
-          <option value="1">1 شهر</option>
-          <option value="3">3 أشهر</option>
-          <option value="6">6 أشهر</option>
-          <option value="12">12 شهر</option>
-        </select>
-      </div>
-      <div>
-        <label>عدد الأشهر (أي رقم)</label>
-        <input id="months" type="number" min="1" step="1" placeholder="مثال: 2 / 5 / 18">
-      </div>
-      <div>
-        <label>تاريخ البداية</label>
-        <input id="start" type="date">
-      </div>
-      <div>
-        <label>تنبيه قبل الانتهاء (أيام)</label>
-        <input id="alertDays" type="number" min="1" step="1" placeholder="مثال: 7">
+    <div class="modalBody">
+      <div class="formGrid">
+        <div class="field">
+          <label>الاسم</label>
+          <input id="name" placeholder="مثال: Ahmed">
+        </div>
+        <div class="field">
+          <label>الإيميل</label>
+          <input id="email" placeholder="name@example.com" inputmode="email">
+        </div>
+        <div class="field">
+          <label>اختيار سريع</label>
+          <select id="quickPlan">
+            <option value="">— اختر —</option>
+            <option value="1">1 شهر</option>
+            <option value="3">3 أشهر</option>
+            <option value="6">6 أشهر</option>
+            <option value="12">12 شهر</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>عدد الأشهر (أي رقم)</label>
+          <input id="months" type="number" min="1" step="1" placeholder="مثال: 2 / 5 / 18">
+        </div>
+        <div class="field">
+          <label>تاريخ البداية</label>
+          <input id="start" type="date">
+        </div>
+        <div class="field">
+          <label>تنبيه قبل الانتهاء (أيام)</label>
+          <input id="alertDays" type="number" min="1" step="1" placeholder="مثال: 7">
+        </div>
       </div>
     </div>
 
-    <div class="row" style="margin-top:12px">
+    <div class="modalFooter">
       <button class="btn primary" id="saveBtn">💾 حفظ</button>
       <button class="btn" id="cancelBtn">إلغاء</button>
+      <div class="kbd"><span>Esc</span> لإغلاق النافذة</div>
     </div>
   </div>
 </div>
 
-<!-- Modal لصق JSON -->
+<!-- Modal: Paste JSON -->
 <div class="modal" id="pasteModal" aria-hidden="true">
-  <div class="box">
-    <h2>📋 استيراد باللصق (JSON)</h2>
-    <div class="small">الصق JSON ثم اضغط استيراد (يتم الدمج حسب الإيميل).</div>
-    <label style="margin-top:10px">JSON</label>
-    <textarea id="pasteArea" rows="10" style="min-height:200px"></textarea>
-    <div class="row" style="margin-top:10px">
+  <div class="box" role="dialog" aria-modal="true">
+    <div class="modalHeader">
+      <div>
+        <h2>📋 استيراد باللصق (JSON)</h2>
+        <div class="hint">الصق JSON ثم اضغط استيراد (دمج حسب الإيميل)</div>
+      </div>
+      <button class="btn" id="closePaste">✕ إغلاق</button>
+    </div>
+
+    <div class="modalBody">
+      <div class="field">
+        <label>JSON</label>
+        <textarea id="pasteArea" rows="10" style="min-height:220px"></textarea>
+      </div>
+    </div>
+
+    <div class="modalFooter">
       <button class="btn primary" id="doPasteImport">استيراد</button>
-      <button class="btn" id="closePaste">إغلاق</button>
+      <button class="btn" id="cancelPaste">إلغاء</button>
     </div>
   </div>
 </div>
@@ -218,8 +476,8 @@ label{display:block;font-weight:900;margin:8px 0 6px}
 <script>
 const $ = (id)=>document.getElementById(id);
 
-const STORAGE_KEY = "subs_dashboard_data_modal_v1";
-const SETTINGS_KEY = "subs_dashboard_settings_modal_v1";
+const STORAGE_KEY = "subs_dashboard_clean_ui_v1";
+const SETTINGS_KEY = "subs_dashboard_clean_ui_settings_v1";
 
 let data = [];
 let editingId = null;
@@ -252,13 +510,24 @@ function daysLeft(endISO){
   const end=toDate(endISO);
   return Math.round((end-now)/(1000*60*60*24));
 }
-function getAlertDays(){
+
+/* alertDays stored */
+function getStoredAlertDays(){
+  try{
+    const s = JSON.parse(localStorage.getItem(SETTINGS_KEY)||"{}");
+    const a = Number(s.alertDays);
+    return (a && a>0) ? a : 7;
+  }catch{ return 7; }
+}
+function setStoredAlertDays(n){
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify({alertDays:n}));
+}
+function getAlertDaysFromForm(){
   const n = Number($("alertDays").value);
   return (n && n>0) ? n : 7;
 }
-function status(endISO){
+function status(endISO, alertDays){
   const left=daysLeft(endISO);
-  const alertDays=getAlertDays();
   if(left < 0) return {key:"expired", label:"منتهي", cls:"err", left};
   if(left <= alertDays) return {key:"expiring", label:"قريب ينتهي", cls:"warn", left};
   return {key:"active", label:"فعّال", cls:"ok", left};
@@ -272,23 +541,9 @@ function load(){
     if(!Array.isArray(data)) data=[];
   }catch{ data=[]; }
 }
-function save(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
-function loadSettings(){
-  try{
-    const s = JSON.parse(localStorage.getItem(SETTINGS_KEY)||"{}");
-    const a = Number(s.alertDays);
-    $("alertDays").value = (a && a>0) ? a : 7;
-  }catch{
-    $("alertDays").value = 7;
-  }
-}
-function saveSettings(){
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify({alertDays: getAlertDays()}));
-}
+function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
 
-/* ===== Modal controls ===== */
+/* ===== Modals ===== */
 function openModal(id){
   const m=$(id);
   m.style.display="flex";
@@ -305,32 +560,46 @@ function resetForm(){
   $("quickPlan").value="";
   $("months").value="";
   $("start").value=todayISO();
+  $("alertDays").value=getStoredAlertDays();
   editingId=null;
   $("formTitle").textContent="إضافة اشتراك";
 }
+function fillForm(rec){
+  editingId = rec.id;
+  $("formTitle").textContent="تعديل اشتراك";
+  $("name").value = rec.name || "";
+  $("email").value = rec.email || "";
+  $("months").value = rec.months || "";
+  $("start").value = rec.start || todayISO();
+  $("quickPlan").value = ["1","3","6","12"].includes(String(rec.months)) ? String(rec.months) : "";
+  $("alertDays").value = getStoredAlertDays();
+}
 
-/* Close modals on background click */
+$("openAdd").onclick = ()=>{ resetForm(); openModal("formModal"); };
+$("closeForm").onclick = ()=> closeModal("formModal");
+$("cancelBtn").onclick = ()=> closeModal("formModal");
+
+$("importPasteBtn").onclick = ()=>{ $("pasteArea").value=""; openModal("pasteModal"); };
+$("closePaste").onclick = ()=> closeModal("pasteModal");
+$("cancelPaste").onclick = ()=> closeModal("pasteModal");
+
+/* click outside closes */
 ["formModal","pasteModal"].forEach(mid=>{
   $(mid).addEventListener("click",(e)=>{
     if(e.target.id===mid) closeModal(mid);
   });
 });
 
-/* ===== UI actions ===== */
-$("openAdd").onclick = ()=>{
-  resetForm();
-  loadSettings();               // لضمان alertDays يظهر صحيح
-  openModal("formModal");
-};
+/* Esc closes */
+document.addEventListener("keydown",(e)=>{
+  if(e.key==="Escape"){
+    closeModal("formModal");
+    closeModal("pasteModal");
+    closeAllMenus();
+  }
+});
 
-$("cancelBtn").onclick = ()=> closeModal("formModal");
-$("closePaste").onclick = ()=> closeModal("pasteModal");
-
-$("quickPlan").onchange = ()=>{
-  const v = $("quickPlan").value;
-  if(v) $("months").value = v;
-};
-
+/* ===== Top actions ===== */
 $("search").addEventListener("input", render);
 
 $("clearBtn").onclick = ()=>{
@@ -338,7 +607,13 @@ $("clearBtn").onclick = ()=>{
   data=[]; save(); render();
 };
 
-/* ===== Upsert ===== */
+/* quickPlan -> months */
+$("quickPlan").onchange = ()=>{
+  const v = $("quickPlan").value;
+  if(v) $("months").value = v;
+};
+
+/* ===== Upsert record (merge by email) ===== */
 function upsert(rec){
   const idxByEmail = data.findIndex(r=>normalizeEmail(r.email)===normalizeEmail(rec.email));
 
@@ -354,7 +629,6 @@ function upsert(rec){
       return;
     }
   }
-
   if(idxByEmail>=0){
     data[idxByEmail] = {...data[idxByEmail], ...rec, id:data[idxByEmail].id};
   }else{
@@ -362,20 +636,20 @@ function upsert(rec){
   }
 }
 
-/* ===== Save record ===== */
+/* Save from form */
 $("saveBtn").onclick = ()=>{
   const name = $("name").value.trim();
   const email = normalizeEmail($("email").value);
   const months = Number($("months").value);
   const start = $("start").value;
+  const alertDays = getAlertDaysFromForm();
 
   if(!name) return alert("أدخل الاسم");
   if(!email || !validateEmail(email)) return alert("الإيميل غير صحيح");
   if(!start) return alert("اختر تاريخ البداية");
   if(!months || months<1) return alert("أدخل عدد الأشهر");
 
-  // حفظ الإعداد قبل الحساب
-  saveSettings();
+  setStoredAlertDays(alertDays);
 
   const end = addMonths(start, months);
   const rec = {
@@ -389,7 +663,7 @@ $("saveBtn").onclick = ()=>{
   closeModal("formModal");
 };
 
-/* ===== Menu ⋯ per row ===== */
+/* ===== Menu ⋯ ===== */
 function closeAllMenus(){
   document.querySelectorAll(".menu").forEach(m=>m.style.display="none");
 }
@@ -428,14 +702,7 @@ $("tbody").addEventListener("click",(e)=>{
     save(); render(); return;
   }
   if(act==="edit"){
-    editingId = rec.id;
-    $("formTitle").textContent="تعديل اشتراك";
-    $("name").value = rec.name||"";
-    $("email").value = rec.email||"";
-    $("months").value = rec.months||"";
-    $("start").value = rec.start||todayISO();
-    $("quickPlan").value = ["1","3","6","12"].includes(String(rec.months)) ? String(rec.months) : "";
-    loadSettings();
+    fillForm(rec);
     openModal("formModal");
     return;
   }
@@ -452,23 +719,23 @@ function downloadFile(filename, content, mime){
 }
 
 $("exportJsonBtn").onclick = ()=>{
-  // قراءة alertDays من storage (أو الحالي)
-  const alertDays = Number(localStorage.getItem(SETTINGS_KEY) ? JSON.parse(localStorage.getItem(SETTINGS_KEY)).alertDays : 7) || 7;
-  const payload = {version:1, exportedAt:new Date().toISOString(), alertDays, data};
+  const payload = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    alertDays: getStoredAlertDays(),
+    data
+  };
   downloadFile("subscriptions_backup.json", JSON.stringify(payload,null,2), "application/json;charset=utf-8");
 };
 
 $("importFileBtn").onclick = ()=> $("fileInput").click();
 $("fileInput").addEventListener("change", async ()=>{
-  const f=$("fileInput").files[0]; $("fileInput").value="";
+  const f=$("fileInput").files[0];
+  $("fileInput").value="";
   if(!f) return;
   importFromText(await f.text());
 });
 
-$("importPasteBtn").onclick = ()=>{
-  $("pasteArea").value="";
-  openModal("pasteModal");
-};
 $("doPasteImport").onclick = ()=> importFromText($("pasteArea").value);
 
 function importFromText(text){
@@ -483,7 +750,7 @@ function importFromText(text){
   if(!Array.isArray(importedData)){ alert("لا توجد بيانات"); return; }
 
   if(incoming && typeof incoming.alertDays==="number" && incoming.alertDays>0){
-    localStorage.setItem(SETTINGS_KEY, JSON.stringify({alertDays: incoming.alertDays}));
+    setStoredAlertDays(incoming.alertDays);
   }
 
   let added=0, updated=0;
@@ -496,8 +763,11 @@ function importFromText(text){
     const start = r.start || todayISO();
     const end = r.end || addMonths(start, months);
 
-    const rec = { id: r.id || (Date.now()+"_"+Math.random().toString(16).slice(2)),
-      name:(r.name||"").trim(), email, months, start, end };
+    const rec = {
+      id: r.id || (Date.now()+"_"+Math.random().toString(16).slice(2)),
+      name: (r.name||"").trim(),
+      email, months, start, end
+    };
 
     const idx = data.findIndex(x=>normalizeEmail(x.email)===email);
     if(idx>=0){ data[idx] = {...data[idx], ...rec, id:data[idx].id}; updated++; }
@@ -529,20 +799,12 @@ function render(){
   const tb = $("tbody");
   tb.innerHTML="";
 
-  // alertDays من التخزين (حتى لو الفورم مغلق)
-  let alertDays = 7;
-  try{
-    const s = JSON.parse(localStorage.getItem(SETTINGS_KEY)||"{}");
-    const a = Number(s.alertDays);
-    if(a && a>0) alertDays=a;
-  }catch{}
-  // نحتاج alertDays للحساب داخل status -> مؤقتًا نضبط input لو غير موجود
-  // (الـ input داخل المودال، لكن موجود دائمًا في DOM)
-  $("alertDays").value = alertDays;
+  const alertDays = getStoredAlertDays();
 
+  // counts on all
   const allCounts={active:0, expiring:0, expired:0};
   for(const r of data){
-    allCounts[status(r.end).key]++;
+    allCounts[status(r.end, alertDays).key]++;
   }
 
   const rows = data.filter(r=>{
@@ -551,7 +813,8 @@ function render(){
   });
 
   for(const r of rows){
-    const st = status(r.end);
+    const st = status(r.end, alertDays);
+
     const tr = document.createElement("tr");
     if(st.key==="expired") tr.classList.add("expired-row");
     if(st.key==="expiring") tr.classList.add("expiring-row");
@@ -580,14 +843,12 @@ function render(){
     tb.appendChild(tr);
   }
 
-  $("stats").textContent =
+  $("statsPill").textContent =
     `المعروض: ${rows.length} | الإجمالي: ${data.length} | فعّال: ${allCounts.active} | قريب: ${allCounts.expiring} | منتهي: ${allCounts.expired}`;
 }
 
 /* init */
 load();
-loadSettings();
-$("start").value = todayISO();
 render();
 </script>
 </body>

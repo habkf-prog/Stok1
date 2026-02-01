@@ -936,13 +936,36 @@ async function syncPullNow(){
 
 
 window.addEventListener("online", ()=>{
-  // AUTO-RESYNC: إذا لدينا تغييرات لم تُرسل، أرسلها مباشرة
+  // عند عودة الإنترنت: حاول المزامنة مباشرة
   if(pendingSync){
     try{ syncPushNow(); }catch{}
   }else{
-    setSyncState(syncState);
+    // لو كانت الحالة فشل سابقًا، جرّب مرة واحدة
+    if(syncState === "fail") { try{ syncPushNow(); }catch{} }
+    else setSyncState(syncState);
   }
 });
+
+
+// RESYNC_WATCHDOG: طبقة أمان إضافية إذا لم يلتقط المتصفح حدث online
+function tryAutoResync(reason){
+  // لا نزعج المستخدم بتوست كثير: نكتفي بالتحديث البصري
+  if(!pendingSync) return;
+  if(!navigator.onLine) return;
+  // إذا كنا بالفعل في وضع المزامنة، لا نكرر
+  if(syncState === "saving") return;
+  try{ syncPushNow(); }catch{}
+}
+
+// فحص دوري خفيف (كل 20 ثانية) إذا كانت هناك تغييرات معلّقة
+setInterval(()=>{ tryAutoResync("interval"); }, 20000);
+
+// عند الرجوع للتبويب أو فتح الصفحة مجددًا
+window.addEventListener("focus", ()=>{ tryAutoResync("focus"); });
+document.addEventListener("visibilitychange", ()=>{
+  if(document.visibilityState === "visible") tryAutoResync("visible");
+});
+
 window.addEventListener("offline", ()=> setSyncState("offline"));
 
 const SETTINGS_KEY = "subs_dashboard_actions_modal_settings_v2";

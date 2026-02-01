@@ -99,18 +99,7 @@ body{
   box-shadow: 0 0 0 4px rgba(124,92,255,.14);
 }
 
-.pills{margin-inline-start:auto;display:flex;gap:8px;flex-wrap:wrap}
-.pill{
-  font-size:12px;
-  font-weight:900;
-  padding:7px 10px;
-  border-radius:999px;
-  border:1px solid var(--line);
-  background: rgba(0,0,0,.18);
-  color: var(--muted);
-}
-
-/* ===== Stats Bar (better UI) ===== */
+/* ===== Stats Bar ===== */
 #statsBar{
   margin-inline-start:auto;
   display:flex;
@@ -140,11 +129,7 @@ body{
   border-color: rgba(124,92,255,.45);
   background: rgba(124,92,255,.10);
 }
-/* Stat icons */
-.statChip .ico{
-  font-size:14px;
-  line-height:1;
-}
+.statChip .ico{ font-size:14px; line-height:1; }
 .statChip.ok .ico{ color:#22c55e; }
 .statChip.warn .ico{ color:#f59e0b; }
 .statChip.err .ico{ color:#ef4444; }
@@ -335,7 +320,7 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
 }
 .actBtn.danger:hover{ background: rgba(239,68,68,.28); }
 
-/* ===== Sync Modal UI (مثل الصورة) ===== */
+/* ===== Sync Modal UI ===== */
 .syncSectionTitle{
   font-weight: 900;
   margin: 2px 0 10px;
@@ -415,15 +400,68 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
 .toast .msg{ font-weight: 900; }
 .toast .sub{ color: var(--muted); font-weight: 800; }
 
+/* ===== Auth modal small UI (كان ناقص) ===== */
+.iconBtn{
+  border:1px solid rgba(255,255,255,.14);
+  background: rgba(255,255,255,.04);
+  color: var(--text);
+  padding:10px 12px;
+  border-radius:14px;
+  font-weight:900;
+  cursor:pointer;
+}
+.iconBtn:hover{ background: rgba(255,255,255,.08); }
+.grid2{
+  padding: 14px 16px;
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:10px;
+}
+.grid2 label{
+  display:block;
+  font-weight:900;
+  font-size:12px;
+  color: var(--muted);
+  margin-bottom:6px;
+}
+.grid2 input{
+  width:100%;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(0,0,0,.22);
+  color: var(--text);
+  outline:none;
+}
+.grid2 input:focus{
+  border-color: rgba(124,92,255,.6);
+  box-shadow: 0 0 0 4px rgba(124,92,255,.14);
+}
+.rowBtns{
+  padding: 0 16px 16px;
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+.mini{
+  padding: 0 16px 16px;
+  color: var(--muted);
+  font-size:12px;
+  line-height:1.7;
+}
+@media (max-width: 760px){
+  .grid2{ grid-template-columns: 1fr; }
+}
+
 </style>
 
-<!-- Firebase (Compat) for Auth UI -->
+<!-- Firebase (Compat) for Auth -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-
 </head>
 
 <body>
+
 <div class="container">
   <div class="header">
     <h1>🧾 لوحة تسيير الاشتراكات</h1>
@@ -602,7 +640,7 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
   </div>
 </div>
 
-<!-- ===== Modal: إجراءات الجدول ===== -->
+<!-- Modal: إجراءات الجدول -->
 <div class="modal" id="rowActionsModal" aria-hidden="true">
   <div class="box" role="dialog" aria-modal="true" style="width:min(740px, 100%)">
     <div class="modalHeader">
@@ -628,7 +666,7 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
   </div>
 </div>
 
-<!-- ===== Modal: المزامنة والنسخ الاحتياطي ===== -->
+<!-- Modal: المزامنة والنسخ الاحتياطي -->
 <div class="modal" id="syncModal" aria-hidden="true">
   <div class="box" role="dialog" aria-modal="true" style="width:min(760px, 100%)">
     <div class="modalHeader">
@@ -668,14 +706,52 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
   </div>
 </div>
 
+<!-- Modal: Auth -->
+<div class="modal" id="authModal" aria-hidden="true">
+  <div class="box" role="dialog" aria-modal="true">
+    <div class="modalHeader">
+      <div>
+        <h2>👤 الحساب</h2>
+        <div class="hint">المرحلة 1: تسجيل الدخول/إنشاء حساب فقط (بدون ربط البيانات بالحساب بعد)</div>
+      </div>
+      <button class="iconBtn" id="closeAuth" type="button" aria-label="إغلاق">✕</button>
+    </div>
+
+    <div class="grid2">
+      <div>
+        <label>الإيميل</label>
+        <input id="authEmail" type="email" inputmode="email" placeholder="name@example.com" autocomplete="email">
+      </div>
+      <div>
+        <label>كلمة المرور</label>
+        <input id="authPass" type="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+    </div>
+
+    <div class="rowBtns">
+      <button class="btn primary" id="authLogin" type="button">تسجيل الدخول</button>
+      <button class="btn soft" id="authRegister" type="button">إنشاء حساب</button>
+      <button class="btn danger" id="authLogout" type="button" style="margin-inline-start:auto">تسجيل خروج</button>
+    </div>
+
+    <div class="mini" id="authStateText">—</div>
+
+    <div class="mini" style="color:var(--muted)">
+      ملاحظة: إذا واجهت خطأ “authDomain / apiKey”، تأكد أنك سجلت تطبيق Web في Firebase وأخذت الإعدادات الصحيحة.
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>
+
 <script>
 'use strict';
+
 const APP_VERSION = 'v1.2.5 – Hardened';
 const DEBUG = false;
 const log = (...a)=>{ if(DEBUG) console.log('[APP]', ...a); };
 
-
-// ===== Firebase Auth (Stage 1) =====
 const FIREBASE_CONFIG = {
   apiKey: "AIzaSyAQPzqeazhj4rjyY1dbcGZ9YEAv8ZhLQbQ",
   authDomain: "dattta-6f497.firebaseapp.com",
@@ -686,9 +762,68 @@ const FIREBASE_CONFIG = {
   appId: "1:804914291938:web:7a7d3fe8a5ebb28a306abb"
 };
 
+const $ = (id)=>document.getElementById(id);
+
+const FIREBASE_URL  = "https://dattta-6f497-default-rtdb.firebaseio.com";
+const FIREBASE_PATH = "subscriptions";
+const LOCAL_BACKUP_KEY = "subs_local_backup_v3";
+const SETTINGS_KEY = "subs_dashboard_actions_modal_settings_v2";
+
+let data = [];
+let editingId = null;
+
 let authReady = false;
 let currentUser = null;
 
+let syncState = "idle"; // idle | saving | ok | fail | offline
+let lastSyncAt = null;
+
+function nowHHMM(){
+  const d = new Date();
+  return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+}
+
+function getSyncText(){
+  if(!navigator.onLine) return "📴 أوفلاين";
+  if(syncState === "saving") return "⏳ جارٍ الحفظ...";
+  if(syncState === "ok") return `✅ تم (${lastSyncAt || ""})`;
+  if(syncState === "fail") return "🔴 فشل";
+  return "—";
+}
+function setSyncState(state){
+  syncState = state;
+  const el = document.getElementById("syncVal");
+  if(el) el.textContent = getSyncText();
+}
+
+/* Toast */
+let toastTimer=null;
+function haptic(type="light"){
+  try{
+    if(!navigator.vibrate) return;
+    if(type==="light") navigator.vibrate(12);
+    else if(type==="ok") navigator.vibrate([12, 30, 12]);
+    else if(type==="fail") navigator.vibrate([28, 40, 28]);
+    else navigator.vibrate(15);
+  }catch{}
+}
+function showToast(message, detail="", kind="warn"){
+  const t = $("toast");
+  if(!t) return;
+  t.className = `toast ${kind}`;
+  t.innerHTML = `
+    <span class="ico">${kind==="err" ? "❌" : kind==="ok" ? "✅" : "⚠️"}</span>
+    <div>
+      <div class="msg">${message}</div>
+      ${detail ? `<div class="sub">${detail}</div>` : ``}
+    </div>
+  `;
+  clearTimeout(toastTimer);
+  t.classList.add("show");
+  toastTimer = setTimeout(()=> t.classList.remove("show"), 2200);
+}
+
+/* Auth */
 function initAuth(){
   try{
     if(!window.firebase || !firebase.initializeApp) return false;
@@ -706,15 +841,14 @@ function initAuth(){
   }catch(e){
     authReady = false;
     currentUser = null;
-    if(typeof setSyncState==='function') setSyncState('fail');
-    try{ showToast("تعذر تهيئة الحساب", String(e?.message || e), "err"); }catch{}
+    setSyncState('fail');
+    showToast("تعذر تهيئة الحساب", String(e?.message || e), "err");
     return false;
   }
 }
-
 function updateAuthUI(){
-  const t = document.getElementById("authStateText");
-  const logoutBtn = document.getElementById("authLogout");
+  const t = $("authStateText");
+  const logoutBtn = $("authLogout");
   if(!t || !logoutBtn) return;
 
   if(!authReady){
@@ -722,7 +856,6 @@ function updateAuthUI(){
     logoutBtn.disabled = true;
     return;
   }
-
   if(currentUser){
     t.textContent = `✅ مسجل دخول: ${currentUser.email || "—"}`;
     logoutBtn.disabled = false;
@@ -732,7 +865,7 @@ function updateAuthUI(){
   }
 }
 
-// Fetch مع مهلة (حتى لا يعلق)
+/* Fetch with timeout */
 async function fetchWithTimeout(url, options={}, timeoutMs=12000){
   const controller = new AbortController();
   const t = setTimeout(()=>controller.abort(), timeoutMs);
@@ -743,48 +876,7 @@ async function fetchWithTimeout(url, options={}, timeoutMs=12000){
   }
 }
 
-// إظهار أخطاء الجافاسكربت بدل توقف الصفحة بصمت
-window.addEventListener('error', (e)=>{
-  try{ showToast('حدث خطأ في الصفحة', (e && e.message) ? e.message : '', 'err'); }catch{}
-  log('error', e);
-});
-window.addEventListener('unhandledrejection', (e)=>{
-  try{ showToast('حدث خطأ غير متوقع', (e && e.reason) ? String(e.reason) : '', 'err'); }catch{}
-  log('unhandledrejection', e);
-});
-
-const $ = (id)=>document.getElementById(id);
-const FIREBASE_URL  = "https://dattta-6f497-default-rtdb.firebaseio.com";
-const FIREBASE_PATH = "subscriptions"; // مسار التخزين في Firebase
-const LOCAL_BACKUP_KEY = "subs_local_backup_v3";
-
-let syncState = "idle"; // idle | saving | ok | fail | offline
-let lastSyncAt = null;
-
-/* مؤشر بصري للمزامنة داخل الشريط العلوي */
-
-function getSyncText(){
-  if(!navigator.onLine) return "📴 أوفلاين";
-  if(syncState === "saving") return "⏳ جارٍ الحفظ...";
-  if(syncState === "ok") return `✅ تم (${lastSyncAt || ""})`;
-  if(syncState === "fail") return "🔴 فشل";
-  return "—";
-}
-
-function setSyncState(state){
-  syncState = state;
-  const el = document.getElementById("syncVal");
-  if(el) el.textContent = getSyncText();
-}
-
-
-function nowHHMM(){
-  const d = new Date();
-  const hh = String(d.getHours()).padStart(2,"0");
-  const mm = String(d.getMinutes()).padStart(2,"0");
-  return `${hh}:${mm}`;
-}
-
+/* Local backup */
 function saveLocalBackup(){
   try{ localStorage.setItem(LOCAL_BACKUP_KEY, JSON.stringify(data)); }catch{}
 }
@@ -796,13 +888,13 @@ function loadLocalBackup(){
   }catch{ return []; }
 }
 
+/* Firebase RTDB */
 async function firebasePull(){
   const res = await fetchWithTimeout(`${FIREBASE_URL}/${FIREBASE_PATH}.json`, {});
   if(!res.ok) throw new Error("Firebase pull failed");
   const json = await res.json();
   return Array.isArray(json) ? json : (json ? json : []);
 }
-
 async function firebasePush(){
   const res = await fetchWithTimeout(`${FIREBASE_URL}/${FIREBASE_PATH}.json`, {
     method: "PUT",
@@ -811,8 +903,6 @@ async function firebasePush(){
   });
   if(!res.ok) throw new Error("Firebase push failed");
 }
-
-/* مزامنة فورية بدون تأخير */
 async function syncPushNow(){
   saveLocalBackup();
   if(!navigator.onLine){ setSyncState("offline"); return; }
@@ -825,7 +915,6 @@ async function syncPushNow(){
     setSyncState("fail");
   }
 }
-
 async function syncPullNow(){
   if(!navigator.onLine){ setSyncState("offline"); return; }
   try{
@@ -843,14 +932,7 @@ async function syncPullNow(){
 window.addEventListener("online", ()=> setSyncState(syncState));
 window.addEventListener("offline", ()=> setSyncState("offline"));
 
-
-const STORAGE_KEY = "subs_dashboard_actions_modal_v2";
-const SETTINGS_KEY = "subs_dashboard_actions_modal_settings_v2";
-
-let data = [];
-let editingId = null;
-
-/* ===== Utils ===== */
+/* Utils */
 function todayISO(){
   const d=new Date(); d.setHours(0,0,0,0);
   return d.toISOString().slice(0,10);
@@ -878,8 +960,6 @@ function daysLeft(endISO){
   const end=toDate(endISO);
   return Math.round((end-now)/(1000*60*60*24));
 }
-
-/* alertDays stored */
 function getStoredAlertDays(){
   try{
     const s = JSON.parse(localStorage.getItem(SETTINGS_KEY)||"{}");
@@ -901,9 +981,8 @@ function status(endISO, alertDays){
   return {key:"active", label:"فعّال", cls:"ok", left};
 }
 
-/* ===== Storage ===== */
+/* Load */
 async function load(){
-  // أولوية: Firebase ثم نسخة محلية
   if(navigator.onLine){
     try{
       setSyncState("saving");
@@ -918,194 +997,21 @@ async function load(){
   }else{
     setSyncState("offline");
   }
-
   data = loadLocalBackup();
   setSyncState(syncState);
 }
-
 function save(){
-  // حفظ محلي + مزامنة فورية (لا ننتظر)
   syncPushNow();
 }
-/* ===== Modals ===== */
-function openModal(id){
-  $(id).setAttribute("aria-hidden","false");
-}
-function closeModal(id){
-  $(id).setAttribute("aria-hidden","true");
-}
+
+/* Modals */
+function openModal(id){ $(id).setAttribute("aria-hidden","false"); }
+function closeModal(id){ $(id).setAttribute("aria-hidden","true"); }
 function closeAllModals(){
-  ["formModal","backupModal","pasteModal","rowActionsModal","syncModal"].forEach(closeModal);
+  ["formModal","backupModal","pasteModal","rowActionsModal","syncModal","authModal"].forEach((x)=>{ const el=$(x); if(el) closeModal(x); });
 }
 
-/* close on background click */
-["formModal","backupModal","pasteModal","rowActionsModal","syncModal"].forEach(mid=>{
-  $(mid).addEventListener("click",(e)=>{
-    if(e.target.id===mid) closeModal(mid);
-  });
-});
-
-/* Esc closes */
-document.addEventListener("keydown",(e)=>{
-  if(e.key==="Escape"){
-    closeAllModals();
-  }
-});
-
-/* ===== vibration helper ===== */
-function vibrateLight(){
-  try{ if (navigator.vibrate) navigator.vibrate(20); }catch{}
-}
-
-
-// ===== Toast + Haptics =====
-let toastTimer = null;
-
-function haptic(type="light"){
-  try{
-    if(!navigator.vibrate) return;
-    if(type==="light") navigator.vibrate(12);
-    else if(type==="ok") navigator.vibrate([12, 30, 12]);
-    else if(type==="fail") navigator.vibrate([28, 40, 28]);
-    else navigator.vibrate(15);
-  }catch{}
-}
-
-function showToast(message, detail="", kind="warn"){
-  const t = document.getElementById("toast");
-  if(!t) return;
-
-  t.className = `toast ${kind}`;
-  t.innerHTML = `
-    <span class="ico">${kind==="err" ? "❌" : kind==="ok" ? "✅" : "⚠️"}</span>
-    <div>
-      <div class="msg">${message}</div>
-      ${detail ? `<div class="sub">${detail}</div>` : ``}
-    </div>
-  `;
-
-  clearTimeout(toastTimer);
-  t.classList.add("show");
-  toastTimer = setTimeout(()=> t.classList.remove("show"), 2200);
-}
-
-/* ===== Form modal ===== */
-function resetForm(){
-  $("name").value="";
-  $("email").value="";
-  $("quickPlan").value="";
-  $("months").value="";
-  $("start").value=todayISO();
-  $("alertDays").value=getStoredAlertDays();
-  editingId=null;
-  $("formTitle").textContent="إضافة اشتراك";
-}
-function fillForm(rec){
-  editingId = rec.id;
-  $("formTitle").textContent="تعديل اشتراك";
-  $("name").value = rec.name || "";
-  $("email").value = rec.email || "";
-  $("months").value = rec.months || "";
-  $("start").value = rec.start || todayISO();
-  $("quickPlan").value = ["1","3","6","12"].includes(String(rec.months)) ? String(rec.months) : "";
-  $("alertDays").value = getStoredAlertDays();
-}
-
-$("openAdd").onclick = ()=>{ resetForm(); openModal("formModal"); };
-$("closeForm").onclick = ()=> closeModal("formModal");
-$("cancelBtn").onclick = ()=> closeModal("formModal");
-
-$("quickPlan").onchange = ()=>{
-  const v = $("quickPlan").value;
-  if(v) $("months").value = v;
-};
-
-/* ===== Backup modal ===== */
-$("openBackup").onclick = ()=> openModal("backupModal");
-$("closeBackup").onclick = ()=> closeModal("backupModal");
-$("closeBackup2").onclick = ()=> closeModal("backupModal");
-
-/* ===== Sync modal ===== */
-$("openSync").onclick = ()=> openModal("syncModal");
-$("closeSyncX").onclick = ()=> closeModal("syncModal");
-$("closeSync").onclick  = ()=> closeModal("syncModal");
-
-
-/* ===== Auth modal (Stage 1) ===== */
-$("openAuth").onclick = ()=>{
-  // initAuth once on first open
-  if(!authReady) initAuth();
-  openModal("authModal");
-  updateAuthUI();
-};
-$("closeAuth").onclick = ()=> closeModal("authModal");
-$("authLogin").onclick = async ()=>{
-  if(!authReady) initAuth();
-  const email = ($("authEmail").value || "").trim();
-  const pass  = ($("authPass").value || "");
-  if(!email || !pass){ haptic("light"); showToast("أكمل الإيميل وكلمة المرور", "", "warn"); return; }
-  try{
-    setSyncState("saving");
-    await firebase.auth().signInWithEmailAndPassword(email, pass);
-    setSyncState("ok");
-    haptic("ok");
-    showToast("تم تسجيل الدخول", email, "ok");
-  }catch(e){
-    setSyncState("fail");
-    haptic("fail");
-    showToast("فشل تسجيل الدخول", String(e?.message || e), "err");
-  }
-};
-$("authRegister").onclick = async ()=>{
-  if(!authReady) initAuth();
-  const email = ($("authEmail").value || "").trim();
-  const pass  = ($("authPass").value || "");
-  if(!email || !pass){ haptic("light"); showToast("أكمل الإيميل وكلمة المرور", "", "warn"); return; }
-  try{
-    setSyncState("saving");
-    await firebase.auth().createUserWithEmailAndPassword(email, pass);
-    setSyncState("ok");
-    haptic("ok");
-    showToast("تم إنشاء الحساب", email, "ok");
-  }catch(e){
-    setSyncState("fail");
-    haptic("fail");
-    showToast("فشل إنشاء الحساب", String(e?.message || e), "err");
-  }
-};
-$("authLogout").onclick = async ()=>{
-  if(!authReady) initAuth();
-  try{
-    setSyncState("saving");
-    await firebase.auth().signOut();
-    setSyncState("ok");
-    haptic("ok");
-    showToast("تم تسجيل الخروج", "", "ok");
-  }catch(e){
-    setSyncState("fail");
-    haptic("fail");
-    showToast("فشل تسجيل الخروج", String(e?.message || e), "err");
-  }
-};
-
-
-/* ===== Paste modal ===== */
-$("openPasteFromBackup").onclick = ()=>{
-  $("pasteArea").value="";
-  openModal("pasteModal");
-};
-$("closePaste").onclick = ()=> closeModal("pasteModal");
-$("cancelPaste").onclick = ()=> closeModal("pasteModal");
-
-/* ===== Top actions ===== */
-$("search").addEventListener("input", render);
-
-$("clearBtn").onclick = ()=>{
-  if(!confirm("حذف كل البيانات؟")) return;
-  data=[]; save(); render();
-};
-
-/* ===== Upsert record (merge by email) ===== */
+/* Upsert */
 function upsert(rec){
   const idxByEmail = data.findIndex(r=>normalizeEmail(r.email)===normalizeEmail(rec.email));
 
@@ -1128,57 +1034,7 @@ function upsert(rec){
   }
 }
 
-/* Save from form */
-function handleSaveClick(){
-  const name = $("name").value.trim();
-  const email = normalizeEmail($("email").value);
-  const months = Number($("months").value);
-  const start = $("start").value;
-  const alertDays = getAlertDaysFromForm();
-
-  if(!name) return alert("أدخل الاسم");
-  if(!email || !validateEmail(email)) return alert("الإيميل غير صحيح");
-  if(!start) return alert("اختر تاريخ البداية");
-  if(!months || months<1) return alert("أدخل عدد الأشهر");
-
-  // ===== منع تكرار الإيميل =====
-  const existsIndex = data.findIndex(r => normalizeEmail(r.email) === email);
-  const isDuplicate = existsIndex >= 0 && (!editingId || data[existsIndex].id !== editingId);
-  if(isDuplicate){
-    haptic("fail");
-    showToast("الايميل مكرر", email, "err");
-    try{ $("email").focus(); }catch{}
-    return;
-  }
-
-
-  setStoredAlertDays(alertDays);
-
-  const end = addMonths(start, months);
-  const rec = {
-    id: editingId || (Date.now()+"_"+Math.random().toString(16).slice(2)),
-    name, email, months, start, end
-  };
-
-  upsert(rec);
-  save();
-  render();
-  closeModal("formModal");
-}
-
-(function bindSaveButton(){
-  const btn = $("saveBtn");
-  if(!btn) return;
-  const fire = (e)=>{
-    try{ e.preventDefault(); }catch{}
-    handleSaveClick();
-  };
-  btn.addEventListener("click", fire);
-  // على بعض هواتف أندرويد أول نقرة تزيل التركيز فقط، لذلك نلتقط touchend أيضًا
-  btn.addEventListener("touchend", (e)=>{ fire(e); }, {passive:false});
-})();
-
-/* ===== Backup helpers ===== */
+/* Backup helpers */
 function downloadFile(filename, content, mime){
   const blob=new Blob([content],{type:mime});
   const url=URL.createObjectURL(blob);
@@ -1187,7 +1043,6 @@ function downloadFile(filename, content, mime){
   document.body.appendChild(a); a.click(); a.remove();
   URL.revokeObjectURL(url);
 }
-
 function buildBackupPayload(){
   return {
     version: 1,
@@ -1196,183 +1051,28 @@ function buildBackupPayload(){
     data
   };
 }
-
-$("exportJsonBtn").onclick = ()=>{
-  const payload = buildBackupPayload();
-  downloadFile("subscriptions_backup.json", JSON.stringify(payload,null,2), "application/json;charset=utf-8");
-};
-
-$("importFileBtn").onclick = ()=> $("fileInput").click();
-$("fileInput").addEventListener("change", async ()=>{
-  const f=$("fileInput").files[0];
-  $("fileInput").value="";
-  if(!f) return;
-  importFromText(await f.text());
-});
-
-$("doPasteImport").onclick = ()=> importFromText($("pasteArea").value);
-
-function importFromText(text){
-  const raw=(text||"").trim();
-  if(!raw) return alert("لا يوجد JSON");
-
-  let incoming;
-  try{ incoming = JSON.parse(raw); }
-  catch{ alert("JSON غير صالح"); return; }
-
-  const importedData = Array.isArray(incoming) ? incoming : incoming.data;
-  if(!Array.isArray(importedData)){ alert("لا توجد بيانات"); return; }
-
-  if(incoming && typeof incoming.alertDays==="number" && incoming.alertDays>0){
-    setStoredAlertDays(incoming.alertDays);
-  }
-
-  let added=0, updated=0;
-  for(const r of importedData){
-    if(!r || !r.email) continue;
-    const email = normalizeEmail(r.email);
-    if(!email || !validateEmail(email)) continue;
-
-    const months = Number(r.months||1);
-    const start = r.start || todayISO();
-    const end = r.end || addMonths(start, months);
-
-    const rec = {
-      id: r.id || (Date.now()+"_"+Math.random().toString(16).slice(2)),
-      name: (r.name||"").trim(),
-      email, months, start, end
-    };
-
-    const idx = data.findIndex(x=>normalizeEmail(x.email)===email);
-    if(idx>=0){ data[idx] = {...data[idx], ...rec, id:data[idx].id}; updated++; }
-    else { data.unshift(rec); added++; }
-  }
-
-  save(); render();
-  closeModal("pasteModal");
-  alert(`تم الاستيراد ✅\nإضافة: ${added}\nتحديث: ${updated}`);
-}
-
-$("exportCsvBtn").onclick = ()=>{
-  const header=["name","email","months","start","end"];
-  const lines=[header.join(",")];
-  for(const r of data){
-    lines.push([csvCell(r.name),csvCell(r.email),csvCell(r.months),csvCell(r.start),csvCell(r.end)].join(","));
-  }
-  downloadFile("subscriptions.csv", lines.join("\n"), "text/csv;charset=utf-8");
-};
 function csvCell(v){
   const s=String(v??"");
   if(/[,"\n]/.test(s)) return `"${s.replace(/"/g,'""')}"`;
   return s;
 }
 
-/* ===== Actions Modal (للجدول فقط) ===== */
+/* Actions modal */
 let currentRowId = null;
-
 function openRowActions(id){
   currentRowId = id;
   const rec = data.find(x => x.id === id);
   if(!rec) return;
   $("rowActionsHint").textContent = `${rec.name} — ${rec.email}`;
   openModal("rowActionsModal");
-  vibrateLight();
+  try{ if(navigator.vibrate) navigator.vibrate(20); }catch{}
 }
 function closeRowActions(){
   closeModal("rowActionsModal");
   currentRowId = null;
 }
-$("closeRowActionsX").onclick = closeRowActions;
-$("closeRowActions").onclick  = closeRowActions;
 
-$("actEdit").onclick = ()=>{
-  const rec = data.find(x => x.id === currentRowId);
-  if(!rec) return;
-  closeRowActions();
-  fillForm(rec);
-  openModal("formModal");
-};
-
-$("actExtend").onclick = ()=>{
-  const rec = data.find(x => x.id === currentRowId);
-  if(!rec) return;
-  rec.end = addMonths(rec.end, Number(rec.months));
-  save();
-  render();
-  closeRowActions();
-};
-
-$("actDelete").onclick = ()=>{
-  const rec = data.find(x => x.id === currentRowId);
-  if(!rec) return;
-
-  if(!confirm("هل تريد حذف هذا السجل؟")) return;
-  data = data.filter(x => x.id !== currentRowId);
-  save();
-  render();
-  closeRowActions();
-};
-
-$("actCopyEmail").onclick = async ()=>{
-  const rec = data.find(x => x.id === currentRowId);
-  if(!rec) return;
-
-  const text = rec.email || "";
-  try{
-    await navigator.clipboard.writeText(text);
-    vibrateLight();
-    alert("✅ تم نسخ الإيميل");
-  }catch{
-    const tmp = document.createElement("textarea");
-    tmp.value = text;
-    document.body.appendChild(tmp);
-    tmp.select();
-    document.execCommand("copy");
-    tmp.remove();
-    vibrateLight();
-    alert("✅ تم نسخ الإيميل");
-  }
-};
-
-/* ===== Sync modal buttons ===== */
-$("syncBackupDownload").onclick = ()=> syncPushNow();
-
-$("syncRestorePick").onclick = ()=> syncPullNow();
-
-$("syncBackupShare").onclick = async ()=>{
-  const payload = buildBackupPayload();
-  const text = JSON.stringify(payload, null, 2);
-  const blob = new Blob([text], {type:"application/json"});
-  const file = new File([blob], "backup.json", {type:"application/json"});
-
-  try{
-    if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
-      await navigator.share({title:"Backup", text:"backup.json", files:[file]});
-      vibrateLight();
-      return;
-    }
-  }catch{}
-
-  // fallback: تنزيل
-  downloadFile("backup.json", text, "application/json;charset=utf-8");
-  alert("✅ تم إنشاء الملف (backup.json) وتنزيله");
-};
-
-/* ===== Table click handling ===== */
-$("tbody").addEventListener("click",(e)=>{
-  const btn = e.target.closest("button[data-act]");
-  if(!btn) return;
-
-  const act = btn.getAttribute("data-act");
-  const id  = btn.getAttribute("data-id");
-
-  if(act === "actions"){
-    openRowActions(id);
-    return;
-  }
-});
-
-/* ===== Render ===== */
+/* Render */
 function render(){
   const q = ($("search").value||"").trim().toLowerCase();
   const tb = $("tbody");
@@ -1412,7 +1112,7 @@ function render(){
     `;
     tb.appendChild(tr);
   }
-  // صف توضيحي إذا لا توجد نتائج (حتى يظهر الجدول دائماً)
+
   if(rows.length === 0){
     const tr = document.createElement("tr");
     tr.innerHTML = `<td colspan="8" style="text-align:center;color:rgba(234,240,255,.70);padding:18px">
@@ -1421,9 +1121,7 @@ function render(){
     tb.appendChild(tr);
   }
 
-  setSyncState(syncState);
-  // تحديث شريط الإحصائيات
-  const bar = document.getElementById("statsBar");
+  const bar = $("statsBar");
   if(bar){
     bar.innerHTML = `
       <div class="statChip"><span class="ico">👁️</span><span class="k">المعروض</span><span class="v">${rows.length}</span></div>
@@ -1435,117 +1133,317 @@ function render(){
     `;
   }
 
+  setSyncState(syncState);
 }
 
-/* init */
-(async ()=>{
+/* Bind after DOM ready (هذا هو المفتاح) */
+document.addEventListener("DOMContentLoaded", async ()=>{
+
+  // close on background click
+  ["formModal","backupModal","pasteModal","rowActionsModal","syncModal","authModal"].forEach(mid=>{
+    const el = $(mid);
+    if(!el) return;
+    el.addEventListener("click",(e)=>{ if(e.target.id===mid) closeModal(mid); });
+  });
+
+  document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeAllModals(); });
+
+  $("openAdd").onclick = ()=>{ resetForm(); openModal("formModal"); };
+  $("closeForm").onclick = ()=> closeModal("formModal");
+  $("cancelBtn").onclick = ()=> closeModal("formModal");
+
+  $("quickPlan").onchange = ()=>{ const v=$("quickPlan").value; if(v) $("months").value=v; };
+
+  $("openBackup").onclick = ()=> openModal("backupModal");
+  $("closeBackup").onclick = ()=> closeModal("backupModal");
+  $("closeBackup2").onclick = ()=> closeModal("backupModal");
+
+  $("openSync").onclick = ()=> openModal("syncModal");
+  $("closeSyncX").onclick = ()=> closeModal("syncModal");
+  $("closeSync").onclick  = ()=> closeModal("syncModal");
+
+  $("openAuth").onclick = ()=>{
+    if(!authReady) initAuth();
+    openModal("authModal");
+    updateAuthUI();
+  };
+  $("closeAuth").onclick = ()=> closeModal("authModal");
+
+  $("authLogin").onclick = async ()=>{
+    if(!authReady) initAuth();
+    const email = ($("authEmail").value||"").trim();
+    const pass  = ($("authPass").value||"");
+    if(!email || !pass){ haptic("light"); showToast("أكمل الإيميل وكلمة المرور","","warn"); return; }
+    try{
+      setSyncState("saving");
+      await firebase.auth().signInWithEmailAndPassword(email, pass);
+      lastSyncAt = nowHHMM();
+      setSyncState("ok");
+      haptic("ok");
+      showToast("تم تسجيل الدخول", email, "ok");
+    }catch(e){
+      setSyncState("fail");
+      haptic("fail");
+      showToast("فشل تسجيل الدخول", String(e?.message || e), "err");
+    }
+  };
+
+  $("authRegister").onclick = async ()=>{
+    if(!authReady) initAuth();
+    const email = ($("authEmail").value||"").trim();
+    const pass  = ($("authPass").value||"");
+    if(!email || !pass){ haptic("light"); showToast("أكمل الإيميل وكلمة المرور","","warn"); return; }
+    try{
+      setSyncState("saving");
+      await firebase.auth().createUserWithEmailAndPassword(email, pass);
+      lastSyncAt = nowHHMM();
+      setSyncState("ok");
+      haptic("ok");
+      showToast("تم إنشاء الحساب", email, "ok");
+    }catch(e){
+      setSyncState("fail");
+      haptic("fail");
+      showToast("فشل إنشاء الحساب", String(e?.message || e), "err");
+    }
+  };
+
+  $("authLogout").onclick = async ()=>{
+    if(!authReady) initAuth();
+    try{
+      setSyncState("saving");
+      await firebase.auth().signOut();
+      lastSyncAt = nowHHMM();
+      setSyncState("ok");
+      haptic("ok");
+      showToast("تم تسجيل الخروج","", "ok");
+    }catch(e){
+      setSyncState("fail");
+      haptic("fail");
+      showToast("فشل تسجيل الخروج", String(e?.message || e), "err");
+    }
+  };
+
+  $("openPasteFromBackup").onclick = ()=>{ $("pasteArea").value=""; openModal("pasteModal"); };
+  $("closePaste").onclick = ()=> closeModal("pasteModal");
+  $("cancelPaste").onclick = ()=> closeModal("pasteModal");
+
+  $("search").addEventListener("input", render);
+
+  $("clearBtn").onclick = ()=>{
+    if(!confirm("حذف كل البيانات؟")) return;
+    data=[]; save(); render();
+  };
+
+  function resetForm(){
+    $("name").value="";
+    $("email").value="";
+    $("quickPlan").value="";
+    $("months").value="";
+    $("start").value=todayISO();
+    $("alertDays").value=getStoredAlertDays();
+    editingId=null;
+    $("formTitle").textContent="إضافة اشتراك";
+  }
+  function fillForm(rec){
+    editingId = rec.id;
+    $("formTitle").textContent="تعديل اشتراك";
+    $("name").value = rec.name || "";
+    $("email").value = rec.email || "";
+    $("months").value = rec.months || "";
+    $("start").value = rec.start || todayISO();
+    $("quickPlan").value = ["1","3","6","12"].includes(String(rec.months)) ? String(rec.months) : "";
+    $("alertDays").value = getStoredAlertDays();
+  }
+
+  function handleSaveClick(){
+    const name = $("name").value.trim();
+    const email = normalizeEmail($("email").value);
+    const months = Number($("months").value);
+    const start = $("start").value;
+    const alertDays = getAlertDaysFromForm();
+
+    if(!name) return alert("أدخل الاسم");
+    if(!email || !validateEmail(email)) return alert("الإيميل غير صحيح");
+    if(!start) return alert("اختر تاريخ البداية");
+    if(!months || months<1) return alert("أدخل عدد الأشهر");
+
+    const existsIndex = data.findIndex(r => normalizeEmail(r.email) === email);
+    const isDuplicate = existsIndex >= 0 && (!editingId || data[existsIndex].id !== editingId);
+    if(isDuplicate){
+      haptic("fail");
+      showToast("الايميل مكرر", email, "err");
+      try{ $("email").focus(); }catch{}
+      return;
+    }
+
+    setStoredAlertDays(alertDays);
+    const end = addMonths(start, months);
+    const rec = {
+      id: editingId || (Date.now()+"_"+Math.random().toString(16).slice(2)),
+      name, email, months, start, end
+    };
+
+    upsert(rec);
+    save();
+    render();
+    closeModal("formModal");
+  }
+
+  // Save button (click + touch)
+  const btn = $("saveBtn");
+  const fire = (e)=>{ try{ e.preventDefault(); }catch{} handleSaveClick(); };
+  btn.addEventListener("click", fire);
+  btn.addEventListener("touchend", (e)=> fire(e), {passive:false});
+
+  $("exportJsonBtn").onclick = ()=>{
+    const payload = buildBackupPayload();
+    downloadFile("subscriptions_backup.json", JSON.stringify(payload,null,2), "application/json;charset=utf-8");
+  };
+
+  $("importFileBtn").onclick = ()=> $("fileInput").click();
+  $("fileInput").addEventListener("change", async ()=>{
+    const f=$("fileInput").files[0];
+    $("fileInput").value="";
+    if(!f) return;
+    importFromText(await f.text());
+  });
+
+  $("doPasteImport").onclick = ()=> importFromText($("pasteArea").value);
+
+  function importFromText(text){
+    const raw=(text||"").trim();
+    if(!raw) return alert("لا يوجد JSON");
+
+    let incoming;
+    try{ incoming = JSON.parse(raw); }
+    catch{ alert("JSON غير صالح"); return; }
+
+    const importedData = Array.isArray(incoming) ? incoming : incoming.data;
+    if(!Array.isArray(importedData)){ alert("لا توجد بيانات"); return; }
+
+    if(incoming && typeof incoming.alertDays==="number" && incoming.alertDays>0){
+      setStoredAlertDays(incoming.alertDays);
+    }
+
+    let added=0, updated=0;
+    for(const r of importedData){
+      if(!r || !r.email) continue;
+      const em = normalizeEmail(r.email);
+      if(!em || !validateEmail(em)) continue;
+
+      const months = Number(r.months||1);
+      const start = r.start || todayISO();
+      const end = r.end || addMonths(start, months);
+
+      const rec = {
+        id: r.id || (Date.now()+"_"+Math.random().toString(16).slice(2)),
+        name: (r.name||"").trim(),
+        email: em, months, start, end
+      };
+
+      const idx = data.findIndex(x=>normalizeEmail(x.email)===em);
+      if(idx>=0){ data[idx] = {...data[idx], ...rec, id:data[idx].id}; updated++; }
+      else { data.unshift(rec); added++; }
+    }
+
+    save(); render();
+    closeModal("pasteModal");
+    alert(`تم الاستيراد ✅\nإضافة: ${added}\nتحديث: ${updated}`);
+  }
+
+  $("exportCsvBtn").onclick = ()=>{
+    const header=["name","email","months","start","end"];
+    const lines=[header.join(",")];
+    for(const r of data){
+      lines.push([csvCell(r.name),csvCell(r.email),csvCell(r.months),csvCell(r.start),csvCell(r.end)].join(","));
+    }
+    downloadFile("subscriptions.csv", lines.join("\n"), "text/csv;charset=utf-8");
+  };
+
+  $("closeRowActionsX").onclick = closeRowActions;
+  $("closeRowActions").onclick  = closeRowActions;
+
+  $("actEdit").onclick = ()=>{
+    const rec = data.find(x => x.id === currentRowId);
+    if(!rec) return;
+    closeRowActions();
+    fillForm(rec);
+    openModal("formModal");
+  };
+
+  $("actExtend").onclick = ()=>{
+    const rec = data.find(x => x.id === currentRowId);
+    if(!rec) return;
+    rec.end = addMonths(rec.end, Number(rec.months));
+    save(); render(); closeRowActions();
+  };
+
+  $("actDelete").onclick = ()=>{
+    const rec = data.find(x => x.id === currentRowId);
+    if(!rec) return;
+    if(!confirm("هل تريد حذف هذا السجل؟")) return;
+    data = data.filter(x => x.id !== currentRowId);
+    save(); render(); closeRowActions();
+  };
+
+  $("actCopyEmail").onclick = async ()=>{
+    const rec = data.find(x => x.id === currentRowId);
+    if(!rec) return;
+    const text = rec.email || "";
+    try{
+      await navigator.clipboard.writeText(text);
+      haptic("ok");
+      showToast("تم نسخ الإيميل", text, "ok");
+    }catch{
+      const tmp=document.createElement("textarea");
+      tmp.value=text;
+      document.body.appendChild(tmp);
+      tmp.select();
+      document.execCommand("copy");
+      tmp.remove();
+      haptic("ok");
+      showToast("تم نسخ الإيميل", text, "ok");
+    }
+  };
+
+  $("syncBackupDownload").onclick = ()=> syncPushNow();
+  $("syncRestorePick").onclick = ()=> syncPullNow();
+
+  $("syncBackupShare").onclick = async ()=>{
+    const payload = buildBackupPayload();
+    const text = JSON.stringify(payload, null, 2);
+    const blob = new Blob([text], {type:"application/json"});
+    const file = new File([blob], "backup.json", {type:"application/json"});
+    try{
+      if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+        await navigator.share({title:"Backup", text:"backup.json", files:[file]});
+        haptic("ok");
+        return;
+      }
+    }catch{}
+    downloadFile("backup.json", text, "application/json;charset=utf-8");
+    showToast("تم إنشاء الملف", "backup.json", "ok");
+  };
+
+  $("tbody").addEventListener("click",(e)=>{
+    const btn = e.target.closest("button[data-act]");
+    if(!btn) return;
+    const act = btn.getAttribute("data-act");
+    const id  = btn.getAttribute("data-id");
+    if(act === "actions"){ openRowActions(id); }
+  });
+
+  // Error hooks
+  window.addEventListener('error', (e)=>{
+    showToast('حدث خطأ في الصفحة', (e && e.message) ? e.message : '', 'err');
+  });
+  window.addEventListener('unhandledrejection', (e)=>{
+    showToast('حدث خطأ غير متوقع', (e && e.reason) ? String(e.reason) : '', 'err');
+  });
+
   await load();
   render();
-})();
-</script>
-
-
-<!-- Modal: Auth -->
-<div class="modal" id="authModal" aria-hidden="true">
-  <div class="box" role="dialog" aria-modal="true">
-    <div class="modalHeader">
-      <div>
-        <h2>👤 الحساب</h2>
-        <div class="hint">المرحلة 1: تسجيل الدخول/إنشاء حساب فقط (بدون ربط البيانات بالحساب بعد)</div>
-      </div>
-      <button class="iconBtn" id="closeAuth" type="button" aria-label="إغلاق">✕</button>
-    </div>
-
-    <div class="grid2" style="margin-top:10px">
-      <div>
-        <label>الإيميل</label>
-        <input id="authEmail" type="email" inputmode="email" placeholder="name@example.com" autocomplete="email">
-      </div>
-      <div>
-        <label>كلمة المرور</label>
-        <input id="authPass" type="password" placeholder="••••••••" autocomplete="current-password">
-      </div>
-    </div>
-
-    <div class="rowBtns" style="margin-top:12px; flex-wrap:wrap">
-      <button class="btn primary" id="authLogin" type="button">تسجيل الدخول</button>
-      <button class="btn soft" id="authRegister" type="button">إنشاء حساب</button>
-      <button class="btn danger" id="authLogout" type="button" style="margin-inline-start:auto">تسجيل خروج</button>
-    </div>
-
-    <div class="mini" id="authStateText" style="margin-top:10px">—</div>
-
-    <div class="mini" style="margin-top:10px; color:var(--muted)">
-      ملاحظة: إذا واجهت خطأ “authDomain / apiKey”، تأكد أنك سجلت تطبيق Web في Firebase وأخذت الإعدادات الصحيحة.
-    </div>
-  </div>
-</div>
-
-<!-- Toast -->
-<div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>
-<!-- ===== DEBUG PANEL (temporary) ===== -->
-<div id="dbg" style="
-  position:fixed; inset:auto 12px 12px 12px;
-  z-index:99999; border:1px solid rgba(255,0,0,.35);
-  background:rgba(20,0,0,.90); color:#fff; padding:10px 12px;
-  border-radius:12px; font: 12px/1.6 system-ui; max-height:40vh; overflow:auto;
-">
-  <b>DEBUG</b> — loading...
-</div>
-
-<script>
-(function(){
-  const box = document.getElementById("dbg");
-  const log = (t)=>{ box.innerHTML += "<div style='margin-top:6px'>"+t+"</div>"; };
-  const esc = (s)=>String(s).replace(/[<>&]/g, m=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[m]));
-
-  // catch errors
-  window.onerror = function(msg, src, line, col, err){
-    log("❌ JS Error: <b>"+esc(msg)+"</b><br>📍 "+esc(src||"")+" : "+line+":"+col);
-  };
-  window.onunhandledrejection = function(e){
-    log("❌ Promise Rejection: <b>"+esc(e.reason?.message || e.reason || e)+"</b>");
-  };
-
-  // after load, inspect table elements
-  window.addEventListener("load", ()=>{
-    box.innerHTML = "<b>DEBUG</b> — page loaded ✅";
-
-    const tables = document.querySelectorAll("table");
-    log("🔎 tables found: <b>"+tables.length+"</b>");
-
-    const tbody = document.querySelector("tbody");
-    log("🔎 tbody found: <b>"+(!!tbody)+"</b>");
-
-    // common ids used for table wrappers
-    const candidates = ["tableWrap","tblWrap","listWrap","tableContainer","subsTable","table","tbl"];
-    let found = null;
-    for(const id of candidates){
-      const el = document.getElementById(id);
-      if(el){ found = el; break; }
-    }
-    log("🔎 wrapper found by id: <b>"+(found ? found.id : "no")+"</b>");
-
-    // show a snippet of body
-    log("📄 body length: <b>"+document.body.innerText.length+"</b>");
-
-    // force show any table if hidden
-    tables.forEach(t=>{
-      t.style.display = "table";
-      t.style.visibility = "visible";
-      t.style.opacity = "1";
-    });
-    if(found){
-      found.style.display = "block";
-      found.style.visibility = "visible";
-      found.style.opacity = "1";
-    }
-
-    // try detect if an overlay is covering the page
-    const topEl = document.elementFromPoint(window.innerWidth/2, window.innerHeight/2);
-    log("🧱 element at center: <b>"+esc(topEl?.tagName || "none")+"</b> #"+esc(topEl?.id||"")+". "+esc(topEl?.className||""));
-  });
-})();
+});
 </script>
 </body>
 </html>

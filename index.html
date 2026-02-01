@@ -763,25 +763,14 @@ const FIREBASE_URL  = "https://dattta-6f497-default-rtdb.firebaseio.com";
 const FIREBASE_PATH = "subscriptions_shared"; // مسار مشترك في Firebase
 const LOCAL_BACKUP_KEY = "subs_local_backup_v3";
 
-function saveLocalBackupSafe(){
-  try{ localStorage.setItem(LOCAL_BACKUP_KEY, JSON.stringify(data)); }catch{}
-}
-function loadLocalBackupSafe(){
-  try{
-    const raw = localStorage.getItem(LOCAL_BACKUP_KEY);
-    const j = raw ? JSON.parse(raw) : null;
-    return Array.isArray(j) ? j : [];
-  }catch{ return []; }
-}
-
-
 let syncState = "idle";
 let lastSyncAt = null;
+let __syncDebounce = null;
 
 function getSyncText(){
   if(!navigator.onLine) return "📴 أوفلاين";
-  if(syncState === "saving") return "⏳ جارٍ المزامنة...";
-  if(syncState === "ok") return `✅ تمت المزامنة (${lastSyncAt || ""})`;
+  if(syncState === "saving") return "⏳ جارٍ الحفظ...";
+  if(syncState === "ok") return `✅ تم (${lastSyncAt || ""})`;
   if(syncState === "fail") return "🔴 فشل";
   return "—";
 }
@@ -827,7 +816,7 @@ async function firebasePush(){
 
 
 function scheduleAutoPush(){
-  // مزامنة تلقائية لكن بدون ضغط على Firebase (Debounce)
+  // مزامنة تلقائية مع Debounce لتقليل الضغط على Firebase أثناء التعديلات المتتالية
   if(__syncDebounce) clearTimeout(__syncDebounce);
   __syncDebounce = setTimeout(()=>{
     syncPushNow();
@@ -840,7 +829,8 @@ async function syncPushNow(){
   try{
     setSyncState("saving");
     await firebasePush();
-        setSyncState("ok");
+    lastSyncAt = nowHHMM();
+    setSyncState("ok");
   }catch{
     setSyncState("fail");
   }
@@ -852,7 +842,8 @@ async function syncPullNow(){
     setSyncState("saving");
     data = await firebasePull();
     saveLocalBackup();
-        setSyncState("ok");
+    lastSyncAt = nowHHMM();
+    setSyncState("ok");
     render();
   }catch{
     setSyncState("fail");
@@ -917,137 +908,32 @@ function status(endISO, alertDays){
   return {key:"active", label:"فعّال", cls:"ok", left};
 }
 
-
-// ===== Firebase Shared Sync (Simple) =====
-function fbUrl(path){ 
-  return `${FIREBASE_URL}/${path}.json`; 
-}
-
-// Fetch مع مهلة (حتى لا يعلق)
-async function fetchWithTimeout(url, options={}, timeoutMs=12000){
-  const controller = new AbortController();
-  const t = setTimeout(()=>controller.abort(), timeoutMs);
-  try{
-    return await fetch(url, {...options, signal: controller.signal, cache: 'no-store'});
-  } finally { clearTimeout(t); }
-}
-
-async function firebasePullShared(){
-  const res = await fetchWithTimeout(fbUrl(FIREBASE_PATH), {}, 12000);
-  if(!res.ok) throw new Error("Firebase pull failed: "+res.status);
-  const json = await res.json();
-  // نخزن كمصفوفة فقط
-  return Array.isArray(json) ? json : (json && Array.isArray(json.data) ? json.data : []);
-}
-
-async function firebasePushShared(payload){
-  const res = await fetchWithTimeout(fbUrl(FIREBASE_PATH), {
-    method: "PUT",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify(payload)
-  }, 12000);
-  if(!res.ok) throw new Error("Firebase push failed: "+res.status);
-}
-
-let syncState = "idle"; // idle | saving | ok | fail | offline
-let lastSyncAt = null;
-let __syncDebounce = null;
-
-function nowHHMM(){
-  const d = new Date();
-  return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
-}
-
-function getSyncText(){
-  if(!navigator.onLine) return "📴 أوفلاين";
-  if(syncState === "saving") return "⏳ جارٍ المزامنة...";
-  if(syncState === "ok") return `✅ تمت المزامنة (${lastSyncAt || ""})`;
-  if(syncState === "fail") return "🔴 فشل";
-  return "—";
-}
-function setSyncState(state){
-  syncState = state;
-  const el = document.getElementById("syncVal");
-  if(el) el.textContent = getSyncText();
-}
-
-window.addEventListener("online", ()=> setSyncState(syncState));
-window.addEventListener("offline", ()=> setSyncState("offline"));
-
-// نجعل المزامنة المشتركة تحتوي أيضًا على بيانات النسخ الاحتياطي/الإعدادات
-function buildSharedPayload(){
-  return {
-    version: 1,
-    exportedAt: new Date().toISOString(),
-    data,
-    settings: {
-      alertDays: getStoredAlertDays?.() || 7
-    }
-  };
-}
-
-async function syncPushNow(){
-  // حفظ محلي أولًا
-  saveLocalBackupSafe();
-    lastSyncAt = nowHHMM();
-  if(!navigator.onLine){ setSyncState("offline"); return; }
-  try{
-    setSyncState("saving");
-    await firebasePushShared(buildSharedPayload());
-    lastSyncAt = nowHHMM();
-        setSyncState("ok");
-  }catch(e){
-    setSyncState("fail");
-    try{ showToast("فشل الحفظ على Firebase", String(e?.message||e), "err"); }catch{}
-  }
-}
-
-async function syncPullNow(){
-  if(!navigator.onLine){ setSyncState("offline"); return; }
-  try{
-    setSyncState("saving");
-    const payload = await firebasePullShared();
-    // إذا كانت النتيجة مصفوفة مباشرة
-    if(Array.isArray(payload)){
-      data = payload;
-    }else if(payload && typeof payload === "object" && Array.isArray(payload.data)){
-      data = payload.data;
-      if(payload.settings && typeof payload.settings.alertDays === "number"){
-        try{ setStoredAlertDays(payload.settings.alertDays); }catch{}
-      }
-    }
-    saveLocalBackupSafe();
-        setSyncState("ok");
-    render();
-    try{ showToast("✅ تم الاسترجاع من Firebase", "", "ok"); }catch{}
-  }catch(e){
-    setSyncState("fail");
-    try{ showToast("فشل الاسترجاع من Firebase", String(e?.message||e), "err"); }catch{}
-  }
-}
-
 /* ===== Storage ===== */
-
-
 async function load(){
-  // تشغيل آمن: تحميل من النسخة المحلية فقط (بدون استرجاع تلقائي من Firebase)
-  data = loadLocalBackupSafe();
-  if(!navigator.onLine) setSyncState("offline");
-  else setSyncState(syncState);
+  if(navigator.onLine){
+    try{
+      setSyncState("saving");
+      data = await firebasePull();
+      saveLocalBackup();
+      lastSyncAt = nowHHMM();
+      setSyncState("ok");
+      return;
+    }catch{
+      setSyncState("fail");
+    }
+  }else{
+    setSyncState("offline");
+  }
+  data = loadLocalBackup();
+  setSyncState(syncState);
 }
-
-
-
-
 
 
 function save(){
-  // حفظ محلي + إرسال تلقائي إلى Firebase (بدون أزرار)
-  saveLocalBackupSafe();
-  try{ scheduleAutoPush(); }catch{}
+  // حفظ محلي + إرسال تلقائي إلى Firebase (Debounce)
+  saveLocalBackup();
+  scheduleAutoPush();
 }
-
-
 
 
 /* ===== Modals ===== */

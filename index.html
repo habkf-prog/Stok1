@@ -6,21 +6,16 @@
 <title>لوحة تسيير الاشتراكات</title>
 
 <style>
-/* =========================
-   Modern Pro Layout (RTL)
-   ========================= */
 :root{
   --bg0:#070a12;
   --bg1:#0b1020;
   --card: rgba(255,255,255,.06);
-  --card2: rgba(255,255,255,.04);
   --line: rgba(255,255,255,.10);
 
   --text:#eaf0ff;
   --muted: rgba(234,240,255,.70);
 
   --accent:#7c5cff;
-  --accent2:#22c55e;
   --warn:#f59e0b;
   --err:#ef4444;
 
@@ -29,7 +24,6 @@
 }
 
 *{box-sizing:border-box}
-html,body{height:100%}
 body{
   margin:0;
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial;
@@ -40,26 +34,11 @@ body{
     linear-gradient(180deg, var(--bg0), var(--bg1));
   padding: 18px;
 }
-
 .container{max-width:1200px;margin:0 auto}
-.header{
-  display:flex;
-  align-items:flex-start;
-  justify-content:space-between;
-  gap:14px;
-  margin-bottom:14px;
-}
-.titleBox h1{
-  margin:0;
-  font-size:20px;
-  letter-spacing:.2px;
-}
-.titleBox .sub{
-  margin-top:6px;
-  font-size:13px;
-  color: var(--muted);
-  line-height:1.7;
-}
+
+.header{margin-bottom:14px}
+.header h1{margin:0;font-size:20px}
+.header .sub{margin-top:6px;font-size:13px;color:var(--muted);line-height:1.7}
 
 .card{
   background: var(--card);
@@ -99,19 +78,13 @@ body{
   border-color: rgba(239,68,68,.55);
   background: linear-gradient(135deg, rgba(239,68,68,.35), rgba(239,68,68,.12));
 }
-
-/* أزرار داخل النسخ الاحتياطي */
 .btn.soft{
   border-color: rgba(255,255,255,.14);
   background: rgba(255,255,255,.04);
 }
 .btn.soft:hover{ background: rgba(255,255,255,.08); }
 
-.searchWrap{
-  flex:1;
-  min-width:240px;
-  position:relative;
-}
+.searchWrap{flex:1;min-width:240px}
 .searchWrap input{
   width:100%;
   padding:10px 12px;
@@ -126,12 +99,7 @@ body{
   box-shadow: 0 0 0 4px rgba(124,92,255,.14);
 }
 
-.pills{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-  margin-inline-start:auto;
-}
+.pills{margin-inline-start:auto;display:flex;gap:8px;flex-wrap:wrap}
 .pill{
   font-size:12px;
   font-weight:900;
@@ -169,7 +137,6 @@ tbody td{
 }
 tbody tr:hover{ background: rgba(255,255,255,.03); }
 
-/* Expired & Expiring rows */
 tr.expired-row{ background: rgba(239,68,68,.10); }
 tr.expiring-row{ background: rgba(245,158,11,.08); }
 tr.expired-row td:first-child{ box-shadow: inset 4px 0 0 rgba(239,68,68,.85); }
@@ -178,7 +145,6 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
 .badge{
   display:inline-flex;
   align-items:center;
-  gap:8px;
   padding:6px 10px;
   border-radius:999px;
   border:1px solid var(--line);
@@ -189,156 +155,6 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
 .badge.warn{ border-color: rgba(245,158,11,.45); color:#ffe2b3; }
 .badge.err{ border-color: rgba(239,68,68,.45); color:#ffd0d0; }
 
-/* Actions menu (⋯) */
-.menuWrap{ position:relative; display:inline-block; }
-.iconBtn{
-  width:42px; height:40px;
-  border-radius:14px;
-  border:1px solid var(--line);
-  background: rgba(0,0,0,.18);
-  color: var(--text);
-  cursor:pointer;
-  font-weight:900;
-}
-.iconBtn:hover{ background: rgba(255,255,255,.06); }
-.menu{
-  position:absolute;
-  inset:auto 0 0 auto;
-  transform: translateY(46px);
-  min-width:200px;
-  background: rgba(10,14,26,.98);
-  border:1px solid var(--line);
-  border-radius:16px;
-  padding:6px;
-  display:none;
-  z-index:1000;
-  box-shadow: 0 22px 70px rgba(0,0,0,.60);
-}
-.menu button{
-  width:100%;
-  padding:10px 10px;
-  border-radius:12px;
-  border:1px solid transparent;
-  background: transparent;
-  color: var(--text);
-  text-align:right;
-  cursor:pointer;
-  font-weight:900;
-}
-.menu button:hover{
-  background: rgba(255,255,255,.06);
-  border-color: rgba(255,255,255,.08);
-}
-.menu .danger{ color:#ffd0d0; }
-
-/* ======= Backup (NEW styling) ======= */
-.backup{
-  padding: 14px;
-  border-top:1px solid var(--line);
-  background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
-}
-
-.backCard{
-  border:1px solid rgba(255,255,255,.10);
-  background: rgba(0,0,0,.16);
-  border-radius:18px;
-  overflow:hidden;
-}
-
-.backHead{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  padding:12px 12px;
-  border-bottom:1px solid rgba(255,255,255,.08);
-}
-.backTitle{
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-}
-.backTitle .t{
-  font-weight:900;
-}
-.backTitle .d{
-  color:var(--muted);
-  font-size:12px;
-}
-
-.backToggle{
-  display:flex;
-  gap:8px;
-  align-items:center;
-  font-weight:900;
-  border:1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.04);
-  padding:8px 10px;
-  border-radius:14px;
-  cursor:pointer;
-}
-.chev{
-  display:inline-block;
-  transform: rotate(0deg);
-  transition: transform .15s ease;
-  opacity:.9;
-}
-.backCard.open .chev{ transform: rotate(180deg); }
-
-.backBody{
-  display:none;
-  padding:12px;
-}
-.backCard.open .backBody{ display:block; }
-
-.backGrid{
-  display:grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap:10px;
-}
-@media (max-width: 980px){
-  .backGrid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-.backItem{
-  border:1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.03);
-  border-radius:16px;
-  padding:12px;
-}
-.backItem .h{
-  font-weight:900;
-  margin:0 0 6px;
-  font-size:13px;
-}
-.backItem .p{
-  margin:0 0 10px;
-  color:var(--muted);
-  font-size:12px;
-  line-height:1.6;
-}
-.backItem .actions{
-  display:flex; gap:8px; flex-wrap:wrap;
-}
-
-.noteRow{
-  margin-top:10px;
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  align-items:flex-start;
-}
-.note{
-  flex:1;
-  min-width:260px;
-  border:1px dashed rgba(255,255,255,.14);
-  background: rgba(0,0,0,.14);
-  border-radius:16px;
-  padding:10px 12px;
-  color:var(--muted);
-  font-size:12px;
-  line-height:1.7;
-}
-
 /* ======= Modals ======= */
 .modal{
   position:fixed; inset:0;
@@ -348,8 +164,9 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
   z-index:9999;
   padding: 18px;
 }
+.modal[aria-hidden="false"]{ display:flex; }
 .modal .box{
-  width:min(820px, 100%);
+  width:min(860px, 100%);
   background: rgba(10,14,26,.96);
   border: 1px solid rgba(255,255,255,.10);
   border-radius: 22px;
@@ -367,6 +184,13 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
 .modalHeader h2{margin:0;font-size:16px}
 .modalHeader .hint{color:var(--muted);font-size:12px}
 .modalBody{ padding: 14px 16px; }
+.modalFooter{
+  padding:12px 16px;
+  border-top:1px solid rgba(255,255,255,.10);
+  display:flex; gap:10px; flex-wrap:wrap;
+  justify-content:flex-start;
+}
+
 .formGrid{
   display:grid;
   grid-template-columns: 1.2fr 1.2fr .9fr .9fr .9fr .9fr;
@@ -396,45 +220,143 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
   border-color: rgba(124,92,255,.6);
   box-shadow: 0 0 0 4px rgba(124,92,255,.14);
 }
-.modalFooter{
-  padding:12px 16px;
-  border-top:1px solid rgba(255,255,255,.10);
-  display:flex; gap:10px; flex-wrap:wrap;
-  justify-content:flex-start;
-}
-.kbd{
-  font-size:12px;
-  color: var(--muted);
-  margin-inline-start:auto;
-  display:flex; align-items:center; gap:8px;
-}
-.kbd span{
-  border:1px solid rgba(255,255,255,.12);
-  background: rgba(0,0,0,.18);
-  padding:4px 8px;
-  border-radius:10px;
-}
 
+/* Backup modal layout */
+.backGrid{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap:10px;
+}
+@media (max-width: 760px){
+  .backGrid{ grid-template-columns: 1fr; }
+}
+.backTile{
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.03);
+  border-radius:18px;
+  padding:12px;
+}
+.backTile .t{font-weight:900;margin-bottom:6px}
+.backTile .d{color:var(--muted);font-size:12px;line-height:1.6;margin-bottom:10px}
+.backTile .actions{display:flex;gap:10px;flex-wrap:wrap}
+
+.note{
+  margin-top:10px;
+  border:1px dashed rgba(255,255,255,.14);
+  background: rgba(0,0,0,.14);
+  border-radius:16px;
+  padding:10px 12px;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.7;
+}
 .hidden{display:none}
+
+/* ===== Actions Modal (للجدول فقط) ===== */
+.actionPill{
+  padding:10px 12px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04);
+  color: var(--text);
+  font-weight: 900;
+  cursor:pointer;
+}
+.actionPill:hover{ background: rgba(255,255,255,.08); }
+
+.actGrid{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap:12px;
+}
+@media (max-width: 640px){
+  .actGrid{ grid-template-columns: 1fr; }
+}
+.actBtn{
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04);
+  color: var(--text);
+  padding: 14px 14px;
+  border-radius: 18px;
+  font-weight: 900;
+  cursor:pointer;
+  min-height: 56px;
+}
+.actBtn:hover{ background: rgba(255,255,255,.08); }
+.actBtn:active{ transform: scale(.99); }
+.actBtn.danger{
+  border-color: rgba(239,68,68,.45);
+  background: rgba(239,68,68,.20);
+}
+.actBtn.danger:hover{ background: rgba(239,68,68,.28); }
+
+/* ===== Sync Modal UI (مثل الصورة) ===== */
+.syncSectionTitle{
+  font-weight: 900;
+  margin: 2px 0 10px;
+  color: var(--muted);
+}
+.syncGrid{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap:12px;
+}
+.syncBtn{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  padding:16px 14px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04);
+  color: var(--text);
+  font-weight: 900;
+  cursor:pointer;
+  text-decoration:none;
+}
+.syncBtn:hover{ background: rgba(255,255,255,.08); }
+.syncBtn:active{ transform: scale(.99); }
+.syncBtn.link{ cursor:pointer; }
+
+.syncHr{
+  height:1px;
+  background: rgba(255,255,255,.10);
+  margin: 14px 0;
+}
+.syncNote{
+  margin-top: 14px;
+  border:1px dashed rgba(255,255,255,.16);
+  background: rgba(0,0,0,.16);
+  border-radius:16px;
+  padding:10px 12px;
+  color: var(--muted);
+  font-size:12px;
+  line-height:1.7;
+}
 </style>
 </head>
 
 <body>
 <div class="container">
   <div class="header">
-    <div class="titleBox">
-      <h1>🧾 لوحة تسيير الاشتراكات</h1>
-      <div class="sub">واجهة أنظف: الإدخال يظهر فقط عند الضغط على “إضافة”. مع حفظ تلقائي، تنبيه قبل الانتهاء، ونسخ احتياطي JSON/CSV.</div>
-    </div>
+    <h1>🧾 لوحة تسيير الاشتراكات</h1>
+    <div class="sub">⚡ إجراءات للصف + ☁️ نافذة مزامنة/نسخ احتياطي.</div>
   </div>
 
   <div class="card">
     <div class="topbar">
-      <button class="btn primary" id="openAdd">➕ إضافة</button>
+      <button class="btn primary" id="openAdd" type="button">➕ إضافة</button>
+      <button class="btn soft" id="openBackup" type="button">📦 النسخ الاحتياطي</button>
+      <button class="btn soft" id="openSync" type="button">☁️ المزامنة</button>
+
       <div class="searchWrap">
         <input id="search" placeholder="بحث بالاسم أو الإيميل..." />
       </div>
-      <button class="btn danger" id="clearBtn">حذف الكل</button>
+
+      <button class="btn danger" id="clearBtn" type="button">حذف الكل</button>
+
       <div class="pills">
         <div class="pill" id="statsPill">—</div>
       </div>
@@ -451,75 +373,12 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
             <th>الانتهاء</th>
             <th>المتبقي</th>
             <th>الحالة</th>
-            <th>⋯</th>
+            <th>إجراء</th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
       </table>
     </div>
-
-    <!-- ✅ Backup Section (New design) -->
-    <div class="backup">
-      <div class="backCard" id="backCard">
-        <div class="backHead">
-          <div class="backTitle">
-            <div class="t">📦 النسخ الاحتياطي</div>
-            <div class="d">تصدير واستيراد (JSON / CSV) + لصق سريع</div>
-          </div>
-          <button class="backToggle" id="backToggle" type="button">
-            <span>إظهار الأدوات</span>
-            <span class="chev">▾</span>
-          </button>
-        </div>
-
-        <div class="backBody">
-          <div class="backGrid">
-            <div class="backItem">
-              <div class="h">⬇️ تصدير JSON</div>
-              <div class="p">أفضل خيار للنسخ الاحتياطي الكامل (يحفظ كل السجلات).</div>
-              <div class="actions">
-                <button class="btn soft" id="exportJsonBtn">تصدير</button>
-              </div>
-            </div>
-
-            <div class="backItem">
-              <div class="h">⬆️ استيراد ملف JSON</div>
-              <div class="p">استرجاع البيانات من ملف النسخة الاحتياطية.</div>
-              <div class="actions">
-                <button class="btn soft" id="importFileBtn">اختيار ملف</button>
-                <input id="fileInput" type="file" accept="application/json,.json" class="hidden">
-              </div>
-            </div>
-
-            <div class="backItem">
-              <div class="h">📋 لصق JSON</div>
-              <div class="p">لو عندك JSON في رسالة/ملاحظة، الصقه واستورد مباشرة.</div>
-              <div class="actions">
-                <button class="btn soft" id="importPasteBtn">فتح نافذة اللصق</button>
-              </div>
-            </div>
-
-            <div class="backItem">
-              <div class="h">⬇️ تصدير CSV</div>
-              <div class="p">ملف مناسب لـ Excel (عرض/مراجعة). ليس كامل مثل JSON.</div>
-              <div class="actions">
-                <button class="btn soft" id="exportCsvBtn">تصدير</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="noteRow">
-            <div class="note">
-              <b>نصيحة:</b> صدّر JSON مرة كل فترة. إذا غيرت المتصفح/الهاتف، استورد الملف وسترجع بياناتك.
-            </div>
-            <div class="note">
-              <b>ملاحظة:</b> عند الاستيراد يتم الدمج حسب الإيميل لتجنب التكرار.
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- /Backup -->
   </div>
 </div>
 
@@ -531,7 +390,7 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
         <h2 id="formTitle">إضافة اشتراك</h2>
         <div class="hint">املأ البيانات ثم اضغط حفظ</div>
       </div>
-      <button class="btn" id="closeForm">✕ إغلاق</button>
+      <button class="btn" id="closeForm" type="button">✕ إغلاق</button>
     </div>
 
     <div class="modalBody">
@@ -570,9 +429,66 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
     </div>
 
     <div class="modalFooter">
-      <button class="btn primary" id="saveBtn">💾 حفظ</button>
-      <button class="btn" id="cancelBtn">إلغاء</button>
-      <div class="kbd"><span>Esc</span> لإغلاق النافذة</div>
+      <button class="btn primary" id="saveBtn" type="button">💾 حفظ</button>
+      <button class="btn" id="cancelBtn" type="button">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Backup -->
+<div class="modal" id="backupModal" aria-hidden="true">
+  <div class="box" role="dialog" aria-modal="true">
+    <div class="modalHeader">
+      <div>
+        <h2>📦 النسخ الاحتياطي</h2>
+        <div class="hint">تصدير/استيراد JSON و CSV + لصق JSON</div>
+      </div>
+      <button class="btn" id="closeBackup" type="button">✕ إغلاق</button>
+    </div>
+
+    <div class="modalBody">
+      <div class="backGrid">
+        <div class="backTile">
+          <div class="t">⬇️ تصدير JSON</div>
+          <div class="d">أفضل خيار للنسخ الاحتياطي الكامل.</div>
+          <div class="actions">
+            <button class="btn soft" id="exportJsonBtn" type="button">تصدير</button>
+          </div>
+        </div>
+
+        <div class="backTile">
+          <div class="t">⬆️ استيراد ملف JSON</div>
+          <div class="d">استرجاع البيانات من ملف النسخة الاحتياطية.</div>
+          <div class="actions">
+            <button class="btn soft" id="importFileBtn" type="button">اختيار ملف</button>
+            <input id="fileInput" type="file" accept="application/json,.json" class="hidden">
+          </div>
+        </div>
+
+        <div class="backTile">
+          <div class="t">📋 لصق JSON</div>
+          <div class="d">الصق JSON واستورد مباشرة.</div>
+          <div class="actions">
+            <button class="btn soft" id="openPasteFromBackup" type="button">فتح نافذة اللصق</button>
+          </div>
+        </div>
+
+        <div class="backTile">
+          <div class="t">⬇️ تصدير CSV</div>
+          <div class="d">للعرض في Excel (مراجعة).</div>
+          <div class="actions">
+            <button class="btn soft" id="exportCsvBtn" type="button">تصدير</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="note">
+        <b>ملاحظة:</b> عند الاستيراد يتم الدمج حسب الإيميل لتجنب التكرار.
+      </div>
+    </div>
+
+    <div class="modalFooter">
+      <button class="btn" id="closeBackup2" type="button">إغلاق</button>
     </div>
   </div>
 </div>
@@ -583,9 +499,9 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
     <div class="modalHeader">
       <div>
         <h2>📋 استيراد باللصق (JSON)</h2>
-        <div class="hint">الصق JSON ثم اضغط استيراد (دمج حسب الإيميل)</div>
+        <div class="hint">الصق JSON ثم اضغط استيراد</div>
       </div>
-      <button class="btn" id="closePaste">✕ إغلاق</button>
+      <button class="btn" id="closePaste" type="button">✕ إغلاق</button>
     </div>
 
     <div class="modalBody">
@@ -596,8 +512,74 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
     </div>
 
     <div class="modalFooter">
-      <button class="btn primary" id="doPasteImport">استيراد</button>
-      <button class="btn" id="cancelPaste">إلغاء</button>
+      <button class="btn primary" id="doPasteImport" type="button">استيراد</button>
+      <button class="btn" id="cancelPaste" type="button">إلغاء</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal: إجراءات الجدول ===== -->
+<div class="modal" id="rowActionsModal" aria-hidden="true">
+  <div class="box" role="dialog" aria-modal="true" style="width:min(740px, 100%)">
+    <div class="modalHeader">
+      <div>
+        <h2>إجراءات</h2>
+        <div class="hint" id="rowActionsHint">—</div>
+      </div>
+      <button class="btn" id="closeRowActionsX" type="button">✕</button>
+    </div>
+
+    <div class="modalBody">
+      <div class="actGrid">
+        <button class="actBtn" id="actExtend" type="button">🔁 تجديد</button>
+        <button class="actBtn" id="actEdit" type="button">✏️ تعديل</button>
+        <button class="actBtn" id="actCopyEmail" type="button">📋 نسخ Email</button>
+        <button class="actBtn danger" id="actDelete" type="button">🗑️ حذف</button>
+      </div>
+    </div>
+
+    <div class="modalFooter">
+      <button class="btn" id="closeRowActions" type="button">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Modal: المزامنة والنسخ الاحتياطي ===== -->
+<div class="modal" id="syncModal" aria-hidden="true">
+  <div class="box" role="dialog" aria-modal="true" style="width:min(760px, 100%)">
+    <div class="modalHeader">
+      <div>
+        <h2>☁️ المزامنة والنسخ الاحتياطي</h2>
+        <div class="hint">النسخ والاسترجاع + خدمات التخزين</div>
+      </div>
+      <button class="btn" id="closeSyncX" type="button">✕</button>
+    </div>
+
+    <div class="modalBody">
+      <div class="syncSectionTitle">📦 النسخ والاسترجاع</div>
+
+      <div class="syncGrid">
+        <button class="syncBtn" id="syncBackupDownload" type="button">💾 Backup (تنزيل)</button>
+        <button class="syncBtn" id="syncBackupShare" type="button">📤 مشاركة Backup</button>
+        <button class="syncBtn" id="syncRestorePick" type="button">📥 Restore (اختيار ملف)</button>
+      </div>
+
+      <div class="syncHr"></div>
+
+      <div class="syncSectionTitle">☁️ خدمات التخزين</div>
+      <div class="syncGrid">
+        <a class="syncBtn link" href="https://drive.google.com/" target="_blank" rel="noopener">📂 فتح Google Drive</a>
+        <a class="syncBtn link" href="https://www.dropbox.com/" target="_blank" rel="noopener">📂 فتح Dropbox</a>
+      </div>
+
+      <div class="syncNote">
+        <b>ملاحظة:</b> المزامنة بدون سيرفر: أنشئ ملف <b>backup.json</b> ثم شاركه/ارفَعْه إلى Drive/Dropbox،
+        وعند الاسترجاع اختر الملف من جهازك.
+      </div>
+    </div>
+
+    <div class="modalFooter">
+      <button class="btn" id="closeSync" type="button">إغلاق</button>
     </div>
   </div>
 </div>
@@ -605,8 +587,8 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
 <script>
 const $ = (id)=>document.getElementById(id);
 
-const STORAGE_KEY = "subs_dashboard_clean_ui_v2";
-const SETTINGS_KEY = "subs_dashboard_clean_ui_settings_v2";
+const STORAGE_KEY = "subs_dashboard_actions_modal_v2";
+const SETTINGS_KEY = "subs_dashboard_actions_modal_settings_v2";
 
 let data = [];
 let editingId = null;
@@ -674,15 +656,35 @@ function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
 
 /* ===== Modals ===== */
 function openModal(id){
-  const m=$(id);
-  m.style.display="flex";
-  m.setAttribute("aria-hidden","false");
+  $(id).setAttribute("aria-hidden","false");
 }
 function closeModal(id){
-  const m=$(id);
-  m.style.display="none";
-  m.setAttribute("aria-hidden","true");
+  $(id).setAttribute("aria-hidden","true");
 }
+function closeAllModals(){
+  ["formModal","backupModal","pasteModal","rowActionsModal","syncModal"].forEach(closeModal);
+}
+
+/* close on background click */
+["formModal","backupModal","pasteModal","rowActionsModal","syncModal"].forEach(mid=>{
+  $(mid).addEventListener("click",(e)=>{
+    if(e.target.id===mid) closeModal(mid);
+  });
+});
+
+/* Esc closes */
+document.addEventListener("keydown",(e)=>{
+  if(e.key==="Escape"){
+    closeAllModals();
+  }
+});
+
+/* ===== vibration helper ===== */
+function vibrateLight(){
+  try{ if (navigator.vibrate) navigator.vibrate(20); }catch{}
+}
+
+/* ===== Form modal ===== */
 function resetForm(){
   $("name").value="";
   $("email").value="";
@@ -708,31 +710,28 @@ $("openAdd").onclick = ()=>{ resetForm(); openModal("formModal"); };
 $("closeForm").onclick = ()=> closeModal("formModal");
 $("cancelBtn").onclick = ()=> closeModal("formModal");
 
-$("importPasteBtn").onclick = ()=>{ $("pasteArea").value=""; openModal("pasteModal"); };
+$("quickPlan").onchange = ()=>{
+  const v = $("quickPlan").value;
+  if(v) $("months").value = v;
+};
+
+/* ===== Backup modal ===== */
+$("openBackup").onclick = ()=> openModal("backupModal");
+$("closeBackup").onclick = ()=> closeModal("backupModal");
+$("closeBackup2").onclick = ()=> closeModal("backupModal");
+
+/* ===== Sync modal ===== */
+$("openSync").onclick = ()=> openModal("syncModal");
+$("closeSyncX").onclick = ()=> closeModal("syncModal");
+$("closeSync").onclick  = ()=> closeModal("syncModal");
+
+/* ===== Paste modal ===== */
+$("openPasteFromBackup").onclick = ()=>{
+  $("pasteArea").value="";
+  openModal("pasteModal");
+};
 $("closePaste").onclick = ()=> closeModal("pasteModal");
 $("cancelPaste").onclick = ()=> closeModal("pasteModal");
-
-/* click outside closes */
-["formModal","pasteModal"].forEach(mid=>{
-  $(mid).addEventListener("click",(e)=>{
-    if(e.target.id===mid) closeModal(mid);
-  });
-});
-
-/* Esc closes */
-document.addEventListener("keydown",(e)=>{
-  if(e.key==="Escape"){
-    closeModal("formModal");
-    closeModal("pasteModal");
-    closeAllMenus();
-  }
-});
-
-/* ===== Backup Toggle ===== */
-const backCard = $("backCard");
-$("backToggle").onclick = ()=>{
-  backCard.classList.toggle("open");
-};
 
 /* ===== Top actions ===== */
 $("search").addEventListener("input", render);
@@ -740,12 +739,6 @@ $("search").addEventListener("input", render);
 $("clearBtn").onclick = ()=>{
   if(!confirm("حذف كل البيانات؟")) return;
   data=[]; save(); render();
-};
-
-/* quickPlan -> months */
-$("quickPlan").onchange = ()=>{
-  const v = $("quickPlan").value;
-  if(v) $("months").value = v;
 };
 
 /* ===== Upsert record (merge by email) ===== */
@@ -798,52 +791,7 @@ $("saveBtn").onclick = ()=>{
   closeModal("formModal");
 };
 
-/* ===== Menu ⋯ ===== */
-function closeAllMenus(){
-  document.querySelectorAll(".menu").forEach(m=>m.style.display="none");
-}
-document.addEventListener("click",(e)=>{
-  if(!e.target.closest(".menuWrap")) closeAllMenus();
-});
-
-$("tbody").addEventListener("click",(e)=>{
-  const icon = e.target.closest("[data-act='menu']");
-  if(icon){
-    const wrap = icon.closest(".menuWrap");
-    const menu = wrap.querySelector(".menu");
-    const isOpen = menu.style.display==="block";
-    closeAllMenus();
-    menu.style.display = isOpen ? "none" : "block";
-    return;
-  }
-
-  const btn = e.target.closest("button[data-act]");
-  if(!btn) return;
-
-  const act = btn.getAttribute("data-act");
-  const id = btn.getAttribute("data-id");
-  const rec = data.find(x=>x.id===id);
-  if(!rec) return;
-
-  closeAllMenus();
-
-  if(act==="del"){
-    if(!confirm("حذف هذا السجل؟")) return;
-    data = data.filter(x=>x.id!==id);
-    save(); render(); return;
-  }
-  if(act==="extend"){
-    rec.end = addMonths(rec.end, Number(rec.months));
-    save(); render(); return;
-  }
-  if(act==="edit"){
-    fillForm(rec);
-    openModal("formModal");
-    return;
-  }
-});
-
-/* ===== Backup ===== */
+/* ===== Backup helpers ===== */
 function downloadFile(filename, content, mime){
   const blob=new Blob([content],{type:mime});
   const url=URL.createObjectURL(blob);
@@ -853,13 +801,17 @@ function downloadFile(filename, content, mime){
   URL.revokeObjectURL(url);
 }
 
-$("exportJsonBtn").onclick = ()=>{
-  const payload = {
+function buildBackupPayload(){
+  return {
     version: 1,
     exportedAt: new Date().toISOString(),
     alertDays: getStoredAlertDays(),
     data
   };
+}
+
+$("exportJsonBtn").onclick = ()=>{
+  const payload = buildBackupPayload();
   downloadFile("subscriptions_backup.json", JSON.stringify(payload,null,2), "application/json;charset=utf-8");
 };
 
@@ -928,6 +880,118 @@ function csvCell(v){
   return s;
 }
 
+/* ===== Actions Modal (للجدول فقط) ===== */
+let currentRowId = null;
+
+function openRowActions(id){
+  currentRowId = id;
+  const rec = data.find(x => x.id === id);
+  if(!rec) return;
+  $("rowActionsHint").textContent = `${rec.name} — ${rec.email}`;
+  openModal("rowActionsModal");
+  vibrateLight();
+}
+function closeRowActions(){
+  closeModal("rowActionsModal");
+  currentRowId = null;
+}
+$("closeRowActionsX").onclick = closeRowActions;
+$("closeRowActions").onclick  = closeRowActions;
+
+$("actEdit").onclick = ()=>{
+  const rec = data.find(x => x.id === currentRowId);
+  if(!rec) return;
+  closeRowActions();
+  fillForm(rec);
+  openModal("formModal");
+};
+
+$("actExtend").onclick = ()=>{
+  const rec = data.find(x => x.id === currentRowId);
+  if(!rec) return;
+  rec.end = addMonths(rec.end, Number(rec.months));
+  save();
+  render();
+  closeRowActions();
+};
+
+$("actDelete").onclick = ()=>{
+  const rec = data.find(x => x.id === currentRowId);
+  if(!rec) return;
+
+  if(!confirm("هل تريد حذف هذا السجل؟")) return;
+  data = data.filter(x => x.id !== currentRowId);
+  save();
+  render();
+  closeRowActions();
+};
+
+$("actCopyEmail").onclick = async ()=>{
+  const rec = data.find(x => x.id === currentRowId);
+  if(!rec) return;
+
+  const text = rec.email || "";
+  try{
+    await navigator.clipboard.writeText(text);
+    vibrateLight();
+    alert("✅ تم نسخ الإيميل");
+  }catch{
+    const tmp = document.createElement("textarea");
+    tmp.value = text;
+    document.body.appendChild(tmp);
+    tmp.select();
+    document.execCommand("copy");
+    tmp.remove();
+    vibrateLight();
+    alert("✅ تم نسخ الإيميل");
+  }
+};
+
+/* ===== Sync modal buttons ===== */
+$("syncBackupDownload").onclick = ()=>{
+  // نفس التصدير
+  const payload = buildBackupPayload();
+  downloadFile("backup.json", JSON.stringify(payload,null,2), "application/json;charset=utf-8");
+};
+
+$("syncRestorePick").onclick = ()=>{
+  // يفتح اختيار ملف JSON
+  $("fileInput").click();
+};
+
+$("syncBackupShare").onclick = async ()=>{
+  const payload = buildBackupPayload();
+  const text = JSON.stringify(payload, null, 2);
+  const blob = new Blob([text], {type:"application/json"});
+  const file = new File([blob], "backup.json", {type:"application/json"});
+
+  try{
+    if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
+      await navigator.share({title:"Backup", text:"backup.json", files:[file]});
+      vibrateLight();
+      return;
+    }
+  }catch{}
+
+  // fallback: تنزيل
+  downloadFile("backup.json", text, "application/json;charset=utf-8");
+  alert("✅ تم إنشاء الملف (backup.json) وتنزيله");
+};
+
+/* ===== Table click handling ===== */
+$("tbody").addEventListener("click",(e)=>{
+  const btn = e.target.closest("button[data-act]");
+  if(!btn) return;
+
+  const act = btn.getAttribute("data-act");
+  const id  = btn.getAttribute("data-id");
+
+  if(act === "actions"){
+    openRowActions(id);
+    return;
+  }
+});
+
 /* ===== Render ===== */
 function render(){
   const q = ($("search").value||"").trim().toLowerCase();
@@ -948,7 +1012,6 @@ function render(){
 
   for(const r of rows){
     const st = status(r.end, alertDays);
-
     const tr = document.createElement("tr");
     if(st.key==="expired") tr.classList.add("expired-row");
     if(st.key==="expiring") tr.classList.add("expiring-row");
@@ -964,14 +1027,7 @@ function render(){
       <td>${leftTxt}</td>
       <td><span class="badge ${st.cls}">${st.label}</span></td>
       <td>
-        <span class="menuWrap">
-          <button class="iconBtn" data-act="menu" title="خيارات">⋯</button>
-          <div class="menu">
-            <button data-act="edit" data-id="${r.id}">✏️ تعديل</button>
-            <button data-act="extend" data-id="${r.id}">➕ تمديد نفس المدة</button>
-            <button class="danger" data-act="del" data-id="${r.id}">🗑️ حذف</button>
-          </div>
-        </span>
+        <button class="actionPill" data-act="actions" data-id="${r.id}" type="button">⚡ إجراءات</button>
       </td>
     `;
     tb.appendChild(tr);

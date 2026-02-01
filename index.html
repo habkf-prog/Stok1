@@ -415,6 +415,11 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
   cursor: pointer;
 }
 .toast .action:hover{ background: rgba(255,255,255,.10); }
+
+/* ===== Mobile Touch ===== */
+tr.touch-active{ outline: 1px solid rgba(124,92,255,.35); background: rgba(124,92,255,.06); }
+tr.touch-swipe{ will-change: transform; }
+
 </style>
 
 <!-- Firebase (Compat) for Auth UI -->
@@ -427,7 +432,7 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
 <div class="container">
   <div class="header">
     <h1>🧾 لوحة تسيير الاشتراكات</h1>
-    <div class="sub">⚡ إجراءات للصف + ☁️ نافذة مزامنة/نسخ احتياطي. <span style="opacity:.7;font-weight:800">(v1.4.5)</span></div>
+    <div class="sub">⚡ إجراءات للصف + ☁️ نافذة مزامنة/نسخ احتياطي. <span style="opacity:.7;font-weight:800">(v1.2.5)</span></div>
   </div>
 
   <div class="card">
@@ -1373,6 +1378,31 @@ $("syncBackupShare").onclick = async ()=>{
   alert("✅ تم إنشاء الملف (backup.json) وتنزيله");
 };
 
+
+// ===== Mobile quick actions helpers =====
+function findById(id){ return (data||[]).find(x=>x.id===id); }
+
+function deleteById(id){
+  const rec = findById(id);
+  if(!rec) return;
+  if(!confirm("هل تريد حذف هذا السجل؟")) return;
+  data = (data||[]).filter(x=>x.id !== id);
+  save();
+  render();
+  haptic("ok");
+  showToast("🗑️ تم حذف السجل", rec.email || "", "ok");
+}
+
+function extendById(id){
+  const rec = findById(id);
+  if(!rec) return;
+  rec.end = addMonths(rec.end, Number(rec.months||1));
+  save();
+  render();
+  haptic("ok");
+  showToast("🔁 تم التجديد", rec.email || "", "ok");
+}
+
 /* ===== Table click handling ===== */
 $("tbody").addEventListener("click",(e)=>{
   const btn = e.target.closest("button[data-act]");
@@ -1448,6 +1478,7 @@ function render(){
   for(const r of rows){
     const st = status(r.end, alertDays);
     const tr = document.createElement("tr");
+    tr.setAttribute("data-rowid", r.id);
     if(st.key==="expired") tr.classList.add("expired-row");
     if(st.key==="expiring") tr.classList.add("expiring-row");
 
@@ -1493,7 +1524,116 @@ function render(){
   try{ updateStats(rows.length); }catch{}
 }
 
+
+// ===== Mobile Touch (tap / long-press / swipe) =====
+function bindMobileTouch(){
+  const tb = $("tbody");
+  if(!tb) return;
+
+  let startX=0, startY=0, rowEl=null, rowId=null;
+  let longPressTimer=null;
+  let moved=false, swiped=false;
+
+  const clearTimers = ()=>{ if(longPressTimer){ clearTimeout(longPressTimer); longPressTimer=null; } };
+
+  const getRow = (target)=>{
+    const tr = target && target.closest ? target.closest("tr[data-rowid]") : null;
+    if(!tr) return null;
+    const id = tr.getAttribute("data-rowid");
+    if(!id) return null;
+    return {tr, id};
+  };
+
+  tb.addEventListener("pointerdown",(e)=>{
+    // لا نتدخل مع الأزرار
+    if(e.target && e.target.closest && e.target.closest("button")) return;
+
+    const row = getRow(e.target);
+    if(!row) return;
+
+    rowEl = row.tr;
+    rowId = row.id;
+    startX = e.clientX;
+    startY = e.clientY;
+    moved = false;
+    swiped = false;
+
+    rowEl.classList.add("touch-active","touch-swipe");
+
+    clearTimers();
+    longPressTimer = setTimeout(()=>{
+      if(moved || swiped) return;
+      try{ openRowActions(rowId); }catch{}
+      haptic("light");
+    }, 520);
+
+    try{ rowEl.setPointerCapture(e.pointerId); }catch{}
+  }, {passive:true});
+
+  tb.addEventListener("pointermove",(e)=>{
+    if(!rowEl || !rowId) return;
+
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+
+    if(Math.abs(dx) > 10 || Math.abs(dy) > 10) moved = true;
+
+    // لو الاتجاه عمودي أكثر -> تجاهل السحب
+    if(Math.abs(dy) > Math.abs(dx)) return;
+
+    // سحب أفقي بسيط (نحرك الصف بصرياً)
+    rowEl.style.transform = `translateX(${dx}px)`;
+
+    if(Math.abs(dx) > 70){
+      swiped = true;
+      clearTimers();
+    }
+  }, {passive:true});
+
+  const endGesture = ()=>{
+    if(!rowEl || !rowId) return;
+
+    const transform = rowEl.style.transform || "";
+    const m = /translateX\(([-0-9.]+)px\)/.exec(transform);
+    const dx = m ? Number(m[1]) : 0;
+
+    // رجّع الصف لمكانه
+    rowEl.style.transform = "";
+    rowEl.classList.remove("touch-active");
+
+    // سحب يمين: تجديد
+    if(swiped && dx > 70){
+      extendById(rowId);
+    }
+    // سحب يسار: حذف
+    else if(swiped && dx < -70){
+      deleteById(rowId);
+    }
+    // نقرة عادية: فتح إجراءات (اختياري)
+    else if(!swiped){
+      // نقرة قصيرة على الصف تفتح إجراءات
+      try{ openRowActions(rowId); }catch{}
+      haptic("light");
+    }
+
+    rowEl = null; rowId = null;
+    swiped = false; moved = false;
+    clearTimers();
+  };
+
+  tb.addEventListener("pointerup", endGesture, {passive:true});
+  tb.addEventListener("pointercancel", ()=>{
+    clearTimers();
+    if(rowEl){
+      rowEl.style.transform = "";
+      rowEl.classList.remove("touch-active");
+    }
+    rowEl=null; rowId=null; swiped=false; moved=false;
+  }, {passive:true});
+}
+
 /* init */
+bindMobileTouch();
 (async ()=>{
   await load();
   render();

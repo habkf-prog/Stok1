@@ -415,6 +415,30 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
   cursor: pointer;
 }
 .toast .action:hover{ background: rgba(255,255,255,.10); }
+/* ===== Print Mode ===== */
+@media print{
+  body{ padding:0 !important; background:#fff !important; color:#000 !important; }
+  .container{ max-width:none !important; }
+  .topbar, .btn, .toast, .modal{ display:none !important; }
+  .card{ box-shadow:none !important; border:0 !important; background:#fff !important; }
+  .tableWrap{ overflow:visible !important; }
+  table{ min-width:0 !important; width:100% !important; }
+  thead th{ position:static !important; background:#fff !important; color:#000 !important; border-bottom:1px solid #ccc !important; }
+  tbody td{ border-bottom:1px solid #e5e5e5 !important; }
+  tr.expired-row, tr.expiring-row{ background:transparent !important; }
+  .printHeader{ display:block !important; }
+  a[href]:after{ content:""; }
+}
+.printHeader{
+  display:none;
+  padding: 10px 0 14px;
+  border-bottom: 1px solid rgba(0,0,0,.15);
+  margin-bottom: 10px;
+  color:#000;
+  font: 14px/1.5 system-ui, Arial;
+}
+.printHeader .t{ font-weight:900; font-size:16px; }
+.printHeader .m{ font-size:12px; opacity:.75; margin-top:4px; }
 </style>
 
 <!-- Firebase (Compat) for Auth UI -->
@@ -425,6 +449,10 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
 
 <body>
 <div class="container">
+  <div class="printHeader" id="printHeader">
+    <div class="t">🧾 تقرير الاشتراكات</div>
+    <div class="m" id="printMeta">—</div>
+  </div>
   <div class="header">
     <h1>🧾 لوحة تسيير الاشتراكات</h1>
     <div class="sub">⚡ إجراءات للصف + ☁️ نافذة مزامنة/نسخ احتياطي. <span style="opacity:.7;font-weight:800">(v1.4.5)</span></div>
@@ -442,6 +470,8 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
         <input id="search" placeholder="بحث بالاسم أو الإيميل..." />
       </div>
 
+      <button class="btn soft" id="shareBtn" type="button">📤 مشاركة</button>
+      <button class="btn soft" id="printBtn" type="button">🖨️ طباعة</button>
       <button class="btn danger" id="clearBtn" type="button">حذف الكل</button>
 
       <div class="pills" id="statsBar"></div>
@@ -1326,6 +1356,101 @@ $("cancelPaste").onclick = ()=> closeModal("pasteModal");
 $("search").addEventListener("input", render);
 
 /* ✅ حذف الكل: الآن مع Undo */
+// ===== Print + Share =====
+function formatMoney(r){
+  const p = (r && r.price != null) ? Number(r.price) : 0;
+  const c = (r && r.currency) ? r.currency : (typeof getCurrency === "function" ? getCurrency() : "");
+  const sym = (typeof currencyLabel === "function") ? currencyLabel(c) : c;
+  if(!Number.isFinite(p)) return "";
+  return `${p} ${sym}`.trim();
+}
+
+function buildShareText(list){
+  const lines = [];
+  lines.push("الاسم,الإيميل,المدة,السعر,البداية,الانتهاء,الحالة");
+  const alertDays = (typeof getStoredAlertDays === "function") ? getStoredAlertDays() : 7;
+  for(const r of (list||[])){
+    const st = (typeof status === "function") ? status(r.end, alertDays) : {label:""};
+    const row = [
+      (r.name||"").replaceAll(",", " "),
+      (r.email||"").replaceAll(",", " "),
+      `${r.months||""}`,
+      formatMoney(r).replaceAll(",", " "),
+      (r.start||""),
+      (r.end||""),
+      (st.label||"")
+    ];
+    lines.push(row.join(","));
+  }
+  return lines.join("\n");
+}
+
+async function doShare(){
+  try{
+    const q = ($("search").value||"").trim().toLowerCase();
+    const list = (typeof data !== "undefined" ? data : []).filter(r=>{
+      if(!q) return true;
+      const n=(r.name||"").toLowerCase();
+      const e=(r.email||"").toLowerCase();
+      return n.includes(q) || e.includes(q);
+    });
+
+    if(!list.length){
+      showToast("لا توجد بيانات للمشاركة", "", "warn");
+      return;
+    }
+
+    const text = buildShareText(list);
+    const title = "تقرير الاشتراكات";
+
+    // Web Share (أفضل على الهاتف)
+    if(navigator.share){
+      try{
+        await navigator.share({ title, text });
+        showToast("تمت المشاركة ✅", "", "ok");
+        return;
+      }catch(e){
+        // المستخدم ألغى المشاركة أو فشل
+      }
+    }
+
+    // fallback: نسخ للحافظة
+    try{
+      await navigator.clipboard.writeText(text);
+      showToast("تم النسخ ✅", "تم نسخ التقرير إلى الحافظة", "ok");
+    }catch{
+      // fallback: تنزيل ملف CSV
+      if(typeof downloadFile === "function"){
+        downloadFile("subscriptions_report.csv", text, "text/csv;charset=utf-8");
+        showToast("تم التنزيل ✅", "subscriptions_report.csv", "ok");
+      }else{
+        alert(text);
+      }
+    }
+  }catch(e){
+    showToast("فشلت المشاركة", String(e?.message||e), "err");
+  }
+}
+
+function doPrint(){
+  try{
+    const d = new Date();
+    const meta = document.getElementById("printMeta");
+    const total = (typeof data !== "undefined") ? data.length : 0;
+    const shown = (()=>{
+      const q = ($("search").value||"").trim().toLowerCase();
+      if(!q) return total;
+      return (data||[]).filter(r=> (r.name||"").toLowerCase().includes(q) || (r.email||"").toLowerCase().includes(q)).length;
+    })();
+    if(meta){
+      meta.textContent = `التاريخ: ${d.toLocaleDateString()} — الوقت: ${d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} — الإجمالي: ${total} — المعروض: ${shown}`;
+    }
+    window.print();
+  }catch(e){
+    showToast("فشلت الطباعة", String(e?.message||e), "err");
+  }
+}
+
 $("clearBtn").onclick = ()=>{
   if(!data.length){
     showToast("لا توجد بيانات للحذف", "", "warn");
@@ -1343,6 +1468,10 @@ $("clearBtn").onclick = ()=>{
   showUndoToast("تم حذف الكل", `عدد السجلات: ${count}`, ()=> restoreFromUndo());
   haptic("fail");
 };
+
+$("printBtn").onclick = ()=> doPrint();
+$("shareBtn").onclick = ()=> doShare();
+
 
 /* ===== Upsert record (merge by email) ===== */
 function upsert(rec){

@@ -254,16 +254,6 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
 }
 
 /* Backup modal layout */
-
-/* Backup buttons wrap nicely on mobile */
-.backTile .actions{ gap:10px; }
-.backTile .actions .btn{ flex: 1 1 auto; min-width: 120px; text-align:center; }
-@media (max-width: 520px){
-  .backTile{ padding:14px; }
-  .backTile .actions{ flex-direction: column; }
-  .backTile .actions .btn{ width:100%; }
-}
-
 .backGrid{
   display:grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -547,7 +537,6 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
           <div class="d">أفضل خيار للنسخ الاحتياطي الكامل.</div>
           <div class="actions">
             <button class="btn soft" id="exportJsonBtn" type="button">تصدير</button>
-            <button class="btn soft" id="copyJsonBtn" type="button">نسخ JSON</button>
           </div>
         </div>
 
@@ -770,23 +759,6 @@ window.addEventListener('unhandledrejection', (e)=>{
 });
 
 const $ = (id)=>document.getElementById(id);
-
-// قراءة قوية لحقول النموذج (مهم إذا وُجدت عناصر مكررة بالـ id أو المتصفح يتصرف بغرابة)
-function getFieldEl(id){
-  // الأفضل: العنصر داخل نافذة النموذج
-  const inModal = document.querySelector(`#formModal input#${id}, #formModal select#${id}, #formModal textarea#${id}`);
-  if(inModal) return inModal;
-  // احتياط: أي عنصر مطابق
-  const any = document.querySelector(`input#${id}, select#${id}, textarea#${id}`);
-  if(any) return any;
-  return $(id);
-}
-function getFieldValue(id){
-  const el = getFieldEl(id);
-  if(!el) return "";
-  return (typeof el.value === "string") ? el.value : "";
-}
-
 const FIREBASE_URL  = "https://dattta-6f497-default-rtdb.firebaseio.com";
 const FIREBASE_PATH = "subscriptions";
 const LOCAL_BACKUP_KEY = "subs_local_backup_v3";
@@ -916,7 +888,7 @@ function setStoredAlertDays(n){
   localStorage.setItem(SETTINGS_KEY, JSON.stringify({alertDays:n}));
 }
 function getAlertDaysFromForm(){
-  const n = Number(getFieldValue("alertDays") || formState.alertDays);
+  const n = Number($("alertDays").value);
   return (n && n>0) ? n : 7;
 }
 function status(endISO, alertDays){
@@ -1068,69 +1040,6 @@ function restoreFromUndo(){
 /* ===== نهاية Undo ===== */
 
 /* ===== Form modal ===== */
-// ===== Mobile input commit helper (cache live values) =====
-const formState = { name:"", email:"", months:"", start:"", alertDays:"" };
-let __formPollTimer = null;
-function startFormPolling(){
-  stopFormPolling();
-  __formPollTimer = setInterval(()=>{
-    try{
-      ["name","email","months","start","alertDays"].forEach(id=>{
-        const el = getFieldEl(id) || document.getElementById(id);
-        if(el && typeof el.value === "string"){
-          formState[id] = el.value;
-        }
-      });
-    }catch{}
-  }, 250);
-}
-function stopFormPolling(){
-  if(__formPollTimer){ clearInterval(__formPollTimer); __formPollTimer = null; }
-}
-
-function bindFormState(){
-  const ids = ["name","email","months","start","alertDays"];
-  ids.forEach(id=>{
-    const el = $(id);
-    if(!el) return;
-    const pull = ()=>{ formState[id] = el.value; };
-    // init
-    pull();
-    el.addEventListener("input", pull);
-    el.addEventListener("change", pull);
-    el.addEventListener("blur", pull);
-  });
-}
-
-function syncFormStateNow(){
-  try{
-    ["name","email","months","start","alertDays"].forEach(id=>{
-      const el = document.getElementById(id);
-      if(el) formState[id] = el.value;
-    });
-  }catch{}
-}
-
-// تحديث مباشر عند أي إدخال (حل قوي لمشاكل لوحة مفاتيح الهاتف)
-document.addEventListener("input", (e)=>{
-  const id = e && e.target && e.target.id;
-  if(id && formState.hasOwnProperty(id)){
-    formState[id] = e.target.value;
-  }
-}, true);
-document.addEventListener("keyup", (e)=>{
-  const id = e && e.target && e.target.id;
-  if(id && formState.hasOwnProperty(id)){
-    formState[id] = e.target.value;
-  }
-}, true);
-document.addEventListener("compositionend", (e)=>{
-  const id = e && e.target && e.target.id;
-  if(id && formState.hasOwnProperty(id)){
-    formState[id] = e.target.value;
-  }
-}, true);
-
 function resetForm(){
   $("name").value="";
   $("email").value="";
@@ -1152,9 +1061,9 @@ function fillForm(rec){
   $("alertDays").value = getStoredAlertDays();
 }
 
-$("openAdd").onclick = ()=>{ resetForm(); openModal("formModal"); startFormPolling(); };
-$("closeForm").onclick = ()=>{ stopFormPolling(); closeModal("formModal"); };
-$("cancelBtn").onclick = ()=>{ stopFormPolling(); closeModal("formModal"); };
+$("openAdd").onclick = ()=>{ resetForm(); openModal("formModal"); };
+$("closeForm").onclick = ()=> closeModal("formModal");
+$("cancelBtn").onclick = ()=> closeModal("formModal");
 
 $("quickPlan").onchange = ()=>{ const v = $("quickPlan").value; if(v) $("months").value = v; };
 
@@ -1243,30 +1152,16 @@ function upsert(rec){
 }
 
 function handleSaveClick(){
-  const _nameRaw = (getFieldValue("name") || formState.name || "").trim();
-  const _emailRaw = (getFieldValue("email") || formState.email || "");
-  const _monthsRaw = (getFieldValue("months") || formState.months || "");
-  const _startRaw = (getFieldValue("start") || formState.start || "");
-
-  const name = _nameRaw;
-  const email = normalizeEmail(_emailRaw);
-  const months = Number(_monthsRaw);
-  const start = _startRaw;
+  const name = $("name").value.trim();
+  const email = normalizeEmail($("email").value);
+  const months = Number($("months").value);
+  const start = $("start").value;
   const alertDays = getAlertDaysFromForm();
 
-  // DEBUG_READ_VALUES: إذا استمرت مشكلة الهاتف، نعرض ما قرأته الصفحة فعلياً
-  try{
-    if(!name || !email || !months){
-      // لا نزعج المستخدم دائماً، فقط في حالة القراءة الفارغة
-      // يمكن حذف هذا لاحقاً بعد التأكد
-      // showToast("قراءة الحقول", `name:${name||"∅"} | email:${email||"∅"} | months:${months||"∅"}`, "warn");
-    }
-  }catch{}
-
-  if(!name) haptic("light"); showToast("أدخل الاسم", "", "warn"); return;
-  if(!email || !validateEmail(email)) haptic("fail"); showToast("الإيميل غير صحيح", "", "err"); return;
-  if(!start) haptic("light"); showToast("اختر تاريخ البداية", "", "warn"); return;
-  if(!months || months<1) haptic("light"); showToast("أدخل عدد الأشهر", "", "warn"); return;
+  if(!name) return alert("أدخل الاسم");
+  if(!email || !validateEmail(email)) return alert("الإيميل غير صحيح");
+  if(!start) return alert("اختر تاريخ البداية");
+  if(!months || months<1) return alert("أدخل عدد الأشهر");
 
   const existsIndex = data.findIndex(r => normalizeEmail(r.email) === email);
   const isDuplicate = existsIndex >= 0 && (!editingId || data[existsIndex].id !== editingId);
@@ -1294,28 +1189,9 @@ function handleSaveClick(){
 (function bindSaveButton(){
   const btn = $("saveBtn");
   if(!btn) return;
-
-  let lastFire = 0;
-  const fire = (e)=>{
-    try{ e.preventDefault(); e.stopPropagation(); }catch{}
-    const now = Date.now();
-    if(now - lastFire < 700) return;
-    lastFire = now;
-
-    // التقط القيم فوراً (حتى لو لم تُثبت لوحة المفاتيح)
-    try{ syncFormStateNow(); }catch{}
-    try{ formState.name = getFieldValue("name"); formState.email = getFieldValue("email"); formState.months = getFieldValue("months"); formState.start = getFieldValue("start"); formState.alertDays = getFieldValue("alertDays"); }catch{}
-
-    // على الهاتف أحياناً قيمة الحقول لا "تُثبت" إلا بعد فقدان التركيز
-    try{ document.activeElement && document.activeElement.blur && document.activeElement.blur(); }catch{}
-
-    // نفّذ بعد لحظة صغيرة حتى تُحدَّث قيم الإدخال
-    setTimeout(()=>{ try{ handleSaveClick(); }catch(err){ try{ showToast("خطأ أثناء الحفظ", String(err?.message||err), "err"); }catch{} } }, 120);
-  };
-
-  // استخدم pointerup إن وُجد (أفضل للموبايل)، مع click كاحتياط
-  btn.addEventListener("pointerup", fire);
+  const fire = (e)=>{ try{ e.preventDefault(); }catch{} handleSaveClick(); };
   btn.addEventListener("click", fire);
+  btn.addEventListener("touchend", (e)=>{ fire(e); }, {passive:false});
 })();
 
 /* ===== Backup helpers ===== */
@@ -1336,31 +1212,6 @@ $("exportJsonBtn").onclick = ()=>{
   downloadFile("subscriptions_backup.json", JSON.stringify(payload,null,2), "application/json;charset=utf-8");
 };
 
-$("copyJsonBtn").onclick = async ()=>{
-  const payload = buildBackupPayload();
-  const text = JSON.stringify(payload, null, 2);
-  try{
-    await navigator.clipboard.writeText(text);
-    haptic("ok");
-    showToast("تم نسخ JSON ✅", "يمكنك لصقه أينما تريد", "ok");
-  }catch(e){
-    try{
-      const tmp = document.createElement("textarea");
-      tmp.value = text;
-      document.body.appendChild(tmp);
-      tmp.select();
-      document.execCommand("copy");
-      tmp.remove();
-      haptic("ok");
-      showToast("تم نسخ JSON ✅", "", "ok");
-    }catch{
-      haptic("fail");
-      showToast("تعذر نسخ JSON", "", "err");
-    }
-  }
-};
-
-
 $("importFileBtn").onclick = ()=> $("fileInput").click();
 $("fileInput").addEventListener("change", async ()=>{
   const f=$("fileInput").files[0];
@@ -1369,35 +1220,18 @@ $("fileInput").addEventListener("change", async ()=>{
   importFromText(await f.text());
 });
 
-(function bindPasteImport(){
-  const b = $("doPasteImport");
-  if(!b) return;
-
-  let lastFire = 0;
-  const fire = (e)=>{
-    try{ e.preventDefault(); e.stopPropagation(); }catch{}
-    const now = Date.now();
-    if(now - lastFire < 700) return;
-    lastFire = now;
-
-    try{ document.activeElement && document.activeElement.blur && document.activeElement.blur(); }catch{}
-    setTimeout(()=>{ importFromText($("pasteArea").value); }, 120);
-  };
-
-  b.addEventListener("pointerup", fire);
-  b.addEventListener("click", fire);
-})();
+$("doPasteImport").onclick = ()=> importFromText($("pasteArea").value);
 
 function importFromText(text){
   const raw=(text||"").trim();
-  if(!raw) haptic("light"); showToast("لا يوجد JSON", "", "warn"); return;
+  if(!raw) return alert("لا يوجد JSON");
 
   let incoming;
   try{ incoming = JSON.parse(raw); }
-  catch{ haptic("fail"); showToast("JSON غير صالح", "", "err"); return; }
+  catch{ alert("JSON غير صالح"); return; }
 
   const importedData = Array.isArray(incoming) ? incoming : incoming.data;
-  if(!Array.isArray(importedData)){ haptic("fail"); showToast("لا توجد بيانات", "", "err"); return; }
+  if(!Array.isArray(importedData)){ alert("لا توجد بيانات"); return; }
 
   if(incoming && typeof incoming.alertDays==="number" && incoming.alertDays>0){
     setStoredAlertDays(incoming.alertDays);
@@ -1426,7 +1260,7 @@ function importFromText(text){
 
   save(); render();
   closeModal("pasteModal");
-  showToast("تم الاستيراد ✅", `إضافة: ${added} — تحديث: ${updated}`, "ok");
+  alert(`تم الاستيراد ✅\nإضافة: ${added}\nتحديث: ${updated}`);
 }
 
 $("exportCsvBtn").onclick = ()=>{
@@ -1467,7 +1301,6 @@ $("actEdit").onclick = ()=>{
   closeRowActions();
   fillForm(rec);
   openModal("formModal");
-  startFormPolling();
 };
 
 $("actExtend").onclick = ()=>{
@@ -1505,7 +1338,7 @@ $("actCopyEmail").onclick = async ()=>{
   try{
     await navigator.clipboard.writeText(text);
     vibrateLight();
-    showToast("✅ تم نسخ الإيميل", "", "ok");
+    alert("✅ تم نسخ الإيميل");
   }catch{
     const tmp = document.createElement("textarea");
     tmp.value = text;
@@ -1514,7 +1347,7 @@ $("actCopyEmail").onclick = async ()=>{
     document.execCommand("copy");
     tmp.remove();
     vibrateLight();
-    showToast("✅ تم نسخ الإيميل", "", "ok");
+    alert("✅ تم نسخ الإيميل");
   }
 };
 
@@ -1537,7 +1370,7 @@ $("syncBackupShare").onclick = async ()=>{
   }catch{}
 
   downloadFile("backup.json", text, "application/json;charset=utf-8");
-  showToast("✅ تم إنشاء الملف وتنزيله", "backup.json", "ok");
+  alert("✅ تم إنشاء الملف (backup.json) وتنزيله");
 };
 
 /* ===== Table click handling ===== */
@@ -1555,6 +1388,46 @@ $("tbody").addEventListener("click",(e)=>{
 });
 
 /* ===== Render ===== */
+
+// ===== Stats =====
+function updateStats(filteredCount){
+  const bar = document.getElementById("statsBar");
+  if(!bar) return;
+
+  // حاول قراءة alertDays إن وُجد، وإلا 7 أيام كافتراضي
+  let alertDays = 7;
+  try{
+    const raw = localStorage.getItem("subs_dashboard_actions_modal_settings_v2") || localStorage.getItem("subs_settings") || "";
+    const j = raw ? JSON.parse(raw) : null;
+    if(j && Number(j.alertDays)>0) alertDays = Number(j.alertDays);
+  }catch{}
+
+  const now = new Date(); now.setHours(0,0,0,0);
+  const daysLeft = (endISO)=>{
+    const end = new Date(String(endISO||"") + "T00:00:00"); end.setHours(0,0,0,0);
+    return Math.round((end - now) / (1000*60*60*24));
+  };
+
+  let active=0, expiring=0, expired=0;
+  (data||[]).forEach(r=>{
+    const left = daysLeft(r.end);
+    if(left < 0) expired++;
+    else if(left <= alertDays) expiring++;
+    else active++;
+  });
+
+  const shown = (typeof filteredCount==="number") ? filteredCount : (data||[]).length;
+
+  bar.innerHTML = `
+    <div class="statChip"><span class="k">المعروض</span><span>${shown}</span></div>
+    <div class="statChip"><span class="k">الإجمالي</span><span>${(data||[]).length}</span></div>
+    <div class="statChip ok"><span class="k">فعّال</span><span>${active}</span></div>
+    <div class="statChip warn"><span class="k">قريب</span><span>${expiring}</span></div>
+    <div class="statChip err"><span class="k">منتهي</span><span>${expired}</span></div>
+  `;
+}
+
+
 function render(){
   const q = ($("search").value||"").trim().toLowerCase();
   const tb = $("tbody");
@@ -1616,10 +1489,11 @@ function render(){
       <div class="statChip sync"><span class="ico">☁️</span><span class="k">مزامنة</span><span class="v" id="syncVal">${getSyncText()}</span></div>
     `;
   }
+
+  try{ updateStats(rows.length); }catch{}
 }
 
 /* init */
-bindFormState();
 (async ()=>{
   await load();
   render();

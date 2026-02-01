@@ -760,86 +760,61 @@ window.addEventListener('unhandledrejection', (e)=>{
 
 const $ = (id)=>document.getElementById(id);
 const FIREBASE_URL  = "https://dattta-6f497-default-rtdb.firebaseio.com";
-const FIREBASE_PATH = "subscriptions_shared"; // مسار مشترك في Firebase
-const CLOUD_REV_KEY = "subs_cloud_revision_v1";
-const PENDING_SYNC_KEY = "subs_pending_sync_v1";
-const LAST_SYNC_HASH_KEY = "subs_last_sync_hash_v1";
-const LOCAL_BACKUP_KEY = "subs_local_backup_v3";
+const FIREBASE_PATH = "subscriptions"; // مسار التخزين المشترك في Firebase
 
-let syncState = "idle";
-let cloudRevision = 0;
+const LOCAL_BACKUP_KEY   = "subs_local_backup_v3";
+const PENDING_SYNC_KEY   = "subs_pending_sync_v1";
+
+let syncState = "idle"; // idle | saving | ok | fail | offline
 let lastSyncAt = null;
-let __syncDebounce = null;
-let __lastResyncAttempt = 0;
-let __lastResyncToastAt = 0;
+let syncTimer = null;
 
+function nowHHMM(){
+  const d = new Date();
+  return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+}
 
 function getSyncText(){
   if(!navigator.onLine) return "📴 أوفلاين";
-  if(syncState === "saving") return "⏳ جارٍ الحفظ...";
-  if(syncState === "ok") return `✅ تم (${lastSyncAt || ""})`;
+  if(syncState === "saving") return "⏳ جارٍ المزامنة...";
+  if(syncState === "ok") return `✅ تمت (${lastSyncAt || ""})`;
   if(syncState === "fail") return "🔴 فشل";
-  if(pendingSync && navigator.onLine) return "🟡 بانتظار المزامنة (سيتم الإرسال تلقائياً)";
   return "—";
 }
+
 function setSyncState(state){
   syncState = state;
   const el = document.getElementById("syncVal");
   if(el) el.textContent = getSyncText();
-}
-
-
-
-let pendingSync = false;
-function loadPendingSync(){
-  try{ return localStorage.getItem(PENDING_SYNC_KEY) === "1"; }catch{ return false; }
-}
-function setPendingSync(v){
-  pendingSync = !!v;
-  try{ localStorage.setItem(PENDING_SYNC_KEY, pendingSync ? "1" : "0"); }catch{}
-}
-function computeDataHash(){
-  // hash بسيط وخفيف لتمييز التغييرات (بدون مكتبات)
-  try{
-    const s = JSON.stringify(data || []);
-    let h = 5381;
-    for(let i=0;i<s.length;i++){
-      h = ((h << 5) + h) + s.charCodeAt(i); // djb2
-      h = h >>> 0;
-    }
-    return String(h);
-  }catch{ return String(Date.now()); }
-}
-function getLastSyncHash(){
-  try{ return localStorage.getItem(LAST_SYNC_HASH_KEY) || ""; }catch{ return ""; }
-}
-function setLastSyncHash(v){
-  try{ localStorage.setItem(LAST_SYNC_HASH_KEY, String(v||"")); }catch{}
-}
-function ensurePendingIfDirty(){
-  const cur = computeDataHash();
-  const last = getLastSyncHash();
-  if(cur && cur !== last){
-    setPendingSync(true);
+  const chip = document.getElementById("syncChip");
+  if(chip){
+    chip.classList.remove("ok","warn","err","syncing","offline");
+    if(!navigator.onLine) chip.classList.add("offline");
+    else if(state==="saving") chip.classList.add("syncing");
+    else if(state==="ok") chip.classList.add("ok");
+    else if(state==="fail") chip.classList.add("err");
   }
 }
 
-
-function loadCloudRevision(){
+// Fetch مع مهلة + منع الكاش (حتى لا يعلق)
+async function fetchWithTimeout(url, options={}, timeoutMs=25000){
+  const controller = new AbortController();
+  const t = setTimeout(()=>controller.abort(), timeoutMs);
   try{
-    const n = Number(localStorage.getItem(CLOUD_REV_KEY));
-    return Number.isFinite(n) && n>=0 ? n : 0;
-  }catch{ return 0; }
-}
-function saveCloudRevision(n){
-  try{ localStorage.setItem(CLOUD_REV_KEY, String(n||0)); }catch{}
+    return await fetch(url, {
+      ...options,
+      signal: controller.signal,
+      cache: "no-store",
+      headers: { ...(options.headers||{}), "Cache-Control":"no-store" }
+    });
+  } finally { clearTimeout(t); }
 }
 
-function nowHHMM(){
-  const d = new Date();
-  const hh = String(d.getHours()).padStart(2,"0");
-  const mm = String(d.getMinutes()).padStart(2,"0");
-  return `${hh}:${mm}`;
+function markPendingSync(on){
+  try{ localStorage.setItem(PENDING_SYNC_KEY, on ? "1" : "0"); }catch{}
+}
+function hasPendingSync(){
+  try{ return localStorage.getItem(PENDING_SYNC_KEY) === "1"; }catch{ return false; }
 }
 
 function saveLocalBackup(){
@@ -854,194 +829,124 @@ function loadLocalBackup(){
 }
 
 async function firebasePull(){
-  const res = await fetchWithTimeout(`${FIREBASE_URL}/${FIREBASE_PATH}.json`, {});
-  if(!res.ok) throw new Error("Firebase pull failed");
+  const url = `${FIREBASE_URL}/${FIREBASE_PATH}.json`;
+  const res = await fetchWithTimeout(url, {}, 25000);
+  if(!res.ok){
+    const txt = await res.text().catch(()=> "");
+    throw new Error(`Firebase pull failed (${res.status}) ${txt}`.trim());
+  }
   const json = await res.json();
-  return Array.isArray(json) ? json : (json ? json : []);
+  // نخزن "مصفوفة" بشكل مباشر في المسار
+  return Array.isArray(json) ? json : [];
 }
 
-async function firebasePush(){
-  const res = await fetchWithTimeout(`${FIREBASE_URL}/${FIREBASE_PATH}.json`, {
+async function firebasePushOnce(){
+  const url = `${FIREBASE_URL}/${FIREBASE_PATH}.json`;
+  const res = await fetchWithTimeout(url, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data)
-  });
-  if(!res.ok) throw new Error("Firebase push failed");
+  }, 25000);
+
+  if(!res.ok){
+    const txt = await res.text().catch(()=> "");
+    throw new Error(`Firebase push failed (${res.status}) ${txt}`.trim());
+  }
 }
 
-
-function scheduleAutoPush(){
-  // مزامنة تلقائية مع Debounce لتقليل الضغط على Firebase أثناء التعديلات المتتالية
-  if(__syncDebounce) clearTimeout(__syncDebounce);
-  __syncDebounce = setTimeout(()=>{
-    syncPushNow();
-  }, 900);
+// محاولة دفع مع إعادة محاولة بسيطة
+async function firebasePushRetry(maxTries=3){
+  let lastErr = null;
+  for(let i=1;i<=maxTries;i++){
+    try{
+      await firebasePushOnce();
+      return true;
+    }catch(e){
+      lastErr = e;
+      // backoff بسيط
+      await new Promise(r=>setTimeout(r, 500*i));
+    }
+  }
+  throw lastErr || new Error("Firebase push failed");
 }
 
-
-
-function syncPushNowDebounced(){
-  clearTimeout(__syncDebounce);
-  __syncDebounce = setTimeout(()=>{ try{ syncPushNow(); }catch{} }, 900);
+// دفع فوري (يُستدعى عند أي تعديل)
+function scheduleSyncPush(delayMs=600){
+  if(syncTimer) clearTimeout(syncTimer);
+  syncTimer = setTimeout(()=>syncPushNow(), delayMs);
 }
 
 async function syncPushNow(){
-  // حفظ محلي أولًا
-  saveLocalBackupSafe();
-  if(!navigator.onLine){ setSyncState("offline"); setPendingSync(true); return; }
+  saveLocalBackup();
+  markPendingSync(true);
 
-  try{
-    setSyncState("saving");
-
-    // 1) افحص هل هناك تعديل من جهاز آخر منذ آخر مرة رأينا السحابة
-    let remote = null;
-    try{
-      remote = await firebaseGetRemoteMeta();
-      const remoteRev = Number(remote.revision)||0;
-      if(remoteRev > (Number(cloudRevision)||0)){
-        // خيار A: تحذير فقط
-        try{ showToast("⚠️ تم تعديل البيانات من جهاز آخر", "سنقوم بالمزامنة على أي حال", "warn"); }catch{}
-      }
-    }catch(e){
-      // إذا فشل الفحص، نكمل الإرسال (لا نمنع المستخدم)
-      // لكن لا نعتبرها مزامنة ناجحة قبل التأكد
-    }
-
-    // 2) ارفع النسخة الحالية بRevision جديد
-    cloudRevision = (Number(cloudRevision)||0) + 1;
-    saveCloudRevision(cloudRevision);
-
-    const payload = buildSharedPayload();
-    payload.revision = cloudRevision;
-    payload.updatedAt = new Date().toISOString();
-
-    await firebasePushShared(payload);
-
-    lastSyncAt = nowHHMM();
-    setSyncState("ok");
-    setPendingSync(false);
-    try{ setLastSyncHash(computeDataHash()); }catch{}
-  }catch(e){
-    setSyncState("fail");
-    setPendingSync(true);
-    try{ showToast("فشل الحفظ على Firebase", (e && e.message) ? e.message : String(e||""), "err"); }catch{}
-  }
-}
-
-
-
-async function syncPullNow(){
-  if(!navigator.onLine){ setSyncState("offline"); setPendingSync(true); return; }
-  try{
-    setSyncState("saving");
-
-    const res = await fetchWithTimeout(fbUrl(FIREBASE_PATH), {}, 12000);
-    if(!res.ok) throw new Error("Firebase pull failed: "+res.status);
-    const json = await res.json();
-
-    if(Array.isArray(json)){
-      data = json;
-      // لا يوجد revision في الشكل القديم
-    }else if(json && typeof json === "object"){
-      if(Array.isArray(json.data)) data = json.data;
-      else data = [];
-
-      const remoteRev = Number(json.revision)||0;
-      if(remoteRev > 0){
-        cloudRevision = remoteRev;
-        saveCloudRevision(cloudRevision);
-      }
-
-      if(json.settings && typeof json.settings.alertDays === "number"){
-        try{ setStoredAlertDays(json.settings.alertDays); }catch{}
-      }
-    }else{
-      data = [];
-    }
-
-    saveLocalBackupSafe();
-    lastSyncAt = nowHHMM();
-    setSyncState("ok");
-    setPendingSync(false);
-    render();
-    try{ showToast("✅ تم الاسترجاع من Firebase", "", "ok"); }catch{}
-  }catch(e){
-    setSyncState("fail");
-    try{ showToast("فشل الاسترجاع من Firebase", String(e?.message||e), "err"); }catch{}
-  }
-}
-
-
-window.addEventListener("online", ()=>{
-  try{ ensurePendingIfDirty(); }catch{}
-  // عند عودة الإنترنت: حاول المزامنة مباشرة
-  try{ tryAutoResync("online"); }catch{ try{ syncPushNow(); }catch{} }
-});
-
-
-// RESYNC_WATCHDOG: طبقة أمان إضافية إذا لم يلتقط المتصفح حدث online
-async function checkFirebaseReachability(){
-  // فحص اتصال حقيقي بفايربيس + تمييز (شبكة) vs (صلاحيات)
-  const url = fbUrl(FIREBASE_PATH);
-  try{
-    const res = await fetchWithTimeout(url, {}, 9000);
-    if(res.ok){
-      return { ok:true, kind:"ok", status:res.status, message:"" };
-    }
-    let body = "";
-    try{ body = await res.text(); }catch{}
-    const msg = `HTTP ${res.status} ${res.statusText}${body ? " — " + body.slice(0,180) : ""}`;
-    if(res.status === 401 || res.status === 403){
-      return { ok:false, kind:"permission", status:res.status, message: msg };
-    }
-    return { ok:false, kind:"http", status:res.status, message: msg };
-  }catch(e){
-    return { ok:false, kind:"network", status:0, message: String(e?.message || e || "") };
-  }
-}
-
-async function tryAutoResync(reason){
-  // RESYNC_WATCHDOG: طبقة أمان إضافية إذا لم يلتقط المتصفح حدث online
-  if(!pendingSync){ try{ ensurePendingIfDirty(); }catch{} }
-  if(!pendingSync) return;
-
-  const now = Date.now();
-  // لا نحاول بشكل مزعج
-  if(now - __lastResyncAttempt < 5000) return;
-  __lastResyncAttempt = now;
-
-  // إذا كنا بالفعل في وضع المزامنة، لا نكرر
-  if(syncState === "saving") return;
-
-  // تحقق اتصال حقيقي بفايربيس
-  const probe = await checkFirebaseReachability();
-  const ok = probe.ok;
-  if(!ok){
-    setSyncState("fail");
-    // توست خفيف كل 45 ثانية كحد أقصى (بدون إزعاج)
-    if(now - __lastResyncToastAt > 45000){
-      __lastResyncToastAt = now;
-      try{
-          const detail = (probe.kind==="permission") ? "صلاحيات Firebase تمنع القراءة/الكتابة (Rules)" : (probe.kind==="network") ? "مشكلة شبكة/حجب/‏VPN" : "استجابة غير متوقعة";
-          showToast("🟡 بانتظار المزامنة", detail, "warn");
-        }catch{}
-    }
+  if(!navigator.onLine){
+    setSyncState("offline");
     return;
   }
 
-  try{ syncPushNow(); }catch{}
+  try{
+    setSyncState("saving");
+    await firebasePushRetry(3);
+    lastSyncAt = nowHHMM();
+    setSyncState("ok");
+    markPendingSync(false);
+  }catch(e){
+    setSyncState("fail");
+    // نترك pending = true ليُعاد الإرسال لاحقًا
+    try{ showToast("تعذر الاتصال بـ Firebase", String(e?.message || e), "err"); }catch{}
+  }
 }
 
-// فحص دوري خفيف (كل 20 ثانية) إذا كانت هناك تغييرات معلّقة
-setInterval(()=>{ tryAutoResync("interval"); }, 12000);
+// عند فتح الصفحة: إن كان لا يوجد تعديل محلي معلّق، اسحب من Firebase.
+// إذا يوجد تعديل معلّق (عملت أوفلاين)، نُبقي المحلي ونحاول دفعه فور توفر النت.
+async function initialLoad(){
+  if(navigator.onLine){
+    if(hasPendingSync()){
+      // لدينا تغييرات محلية لم تُرفع بعد
+      data = loadLocalBackup();
+      setSyncState("offline"); // يظهر أنه سيُزامن عند توفر النت
+      scheduleSyncPush(0);
+      return;
+    }
+    try{
+      setSyncState("saving");
+      data = await firebasePull();
+      saveLocalBackup();
+      lastSyncAt = nowHHMM();
+      setSyncState("ok");
+      return;
+    }catch(e){
+      setSyncState("fail");
+      data = loadLocalBackup();
+      try{ showToast("تعذر جلب البيانات من Firebase", "تم تحميل النسخة المحلية", "warn"); }catch{}
+      return;
+    }
+  }else{
+    setSyncState("offline");
+    data = loadLocalBackup();
+  }
+}
 
-// عند الرجوع للتبويب أو فتح الصفحة مجددًا
-window.addEventListener("focus", ()=>{ tryAutoResync("focus"); });
-document.addEventListener("visibilitychange", ()=>{
-  if(document.visibilityState === "visible") tryAutoResync("visible");
-});
+// مراقبة عودة النت: أعد الإرسال تلقائياً إن كان هناك pending
+function onOnlineMaybeSync(){
+  if(hasPendingSync()){
+    scheduleSyncPush(0);
+  }else{
+    // لا يوجد pending: فقط حدّث الشيب
+    setSyncState(syncState);
+  }
+}
 
+window.addEventListener("online", onOnlineMaybeSync);
 window.addEventListener("offline", ()=> setSyncState("offline"));
+
+// Watchdog: بعض الهواتف لا تُطلق online بشكل موثوق
+setInterval(()=>{
+  if(navigator.onLine && hasPendingSync() && syncState !== "saving"){
+    scheduleSyncPush(0);
+  }
+}, 15000);
 
 const SETTINGS_KEY = "subs_dashboard_actions_modal_settings_v2";
 
@@ -1100,29 +1005,14 @@ function status(endISO, alertDays){
 
 /* ===== Storage ===== */
 async function load(){
-  if(navigator.onLine){
-    try{
-      setSyncState("saving");
-      data = await firebasePull();
-      saveLocalBackup();
-      lastSyncAt = nowHHMM();
-      setSyncState("ok");
-      return;
-    }catch{
-      setSyncState("fail");
-    }
-  }else{
-    setSyncState("offline");
-  }
-  data = loadLocalBackup();
-  setSyncState(syncState);
+  await initialLoad();
 }
 
 
 function save(){
-  // حفظ محلي + إرسال تلقائي إلى Firebase (Debounce)
+  // حفظ محلي + مزامنة تلقائية
   saveLocalBackup();
-  scheduleAutoPush();
+  scheduleSyncPush(0);
 }
 
 
@@ -1131,11 +1021,6 @@ function openModal(id){ $(id).setAttribute("aria-hidden","false"); }
 function closeModal(id){ $(id).setAttribute("aria-hidden","true"); }
 function closeAllModals(){
   ["formModal","backupModal","pasteModal","rowActionsModal","syncModal","authModal"].forEach((m)=>{ try{ closeModal(m); }catch{} });
-
-// USER_INTERACTION_RESYNC: أي لمسة/نقرة تحاول إرسال التغييرات المعلقة (مفيد على الموبايل)
-document.addEventListener("click", ()=>{ tryAutoResync("click"); }, {passive:true});
-document.addEventListener("touchstart", ()=>{ tryAutoResync("touch"); }, {passive:true});
-
 }
 
 ["formModal","backupModal","pasteModal","rowActionsModal","syncModal","authModal"].forEach(mid=>{
@@ -1703,15 +1588,6 @@ function render(){
 
 /* init */
 (async ()=>{
-  cloudRevision = loadCloudRevision();
-  pendingSync = loadPendingSync();
-  // إذا كانت البيانات موجودة ولم نحدد hash سابقًا، أنشئه
-  try{ if(!getLastSyncHash()) setLastSyncHash(computeDataHash()); }catch{}
-  // إذا يوجد اختلاف، فعّل pending
-  try{ ensurePendingIfDirty(); }catch{}
-
-  // تحديث الحالة المرئية
-  if(pendingSync && navigator.onLine) setSyncState("fail");
   await load();
   render();
 })();

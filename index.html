@@ -1067,6 +1067,35 @@ function bindFormState(){
   });
 }
 
+function syncFormStateNow(){
+  try{
+    ["name","email","months","start","alertDays"].forEach(id=>{
+      const el = document.getElementById(id);
+      if(el) formState[id] = el.value;
+    });
+  }catch{}
+}
+
+// تحديث مباشر عند أي إدخال (حل قوي لمشاكل لوحة مفاتيح الهاتف)
+document.addEventListener("input", (e)=>{
+  const id = e && e.target && e.target.id;
+  if(id && formState.hasOwnProperty(id)){
+    formState[id] = e.target.value;
+  }
+}, true);
+document.addEventListener("keyup", (e)=>{
+  const id = e && e.target && e.target.id;
+  if(id && formState.hasOwnProperty(id)){
+    formState[id] = e.target.value;
+  }
+}, true);
+document.addEventListener("compositionend", (e)=>{
+  const id = e && e.target && e.target.id;
+  if(id && formState.hasOwnProperty(id)){
+    formState[id] = e.target.value;
+  }
+}, true);
+
 function resetForm(){
   $("name").value="";
   $("email").value="";
@@ -1229,11 +1258,14 @@ function handleSaveClick(){
     if(now - lastFire < 700) return;
     lastFire = now;
 
+    // التقط القيم فوراً (حتى لو لم تُثبت لوحة المفاتيح)
+    try{ syncFormStateNow(); }catch{}
+
     // على الهاتف أحياناً قيمة الحقول لا "تُثبت" إلا بعد فقدان التركيز
     try{ document.activeElement && document.activeElement.blur && document.activeElement.blur(); }catch{}
 
     // نفّذ بعد لحظة صغيرة حتى تُحدَّث قيم الإدخال
-    setTimeout(()=>{ try{ handleSaveClick(); }catch(err){ try{ showToast("خطأ أثناء الحفظ", String(err?.message||err), "err"); }catch{} } }, 60);
+    setTimeout(()=>{ try{ handleSaveClick(); }catch(err){ try{ showToast("خطأ أثناء الحفظ", String(err?.message||err), "err"); }catch{} } }, 120);
   };
 
   // استخدم pointerup إن وُجد (أفضل للموبايل)، مع click كاحتياط
@@ -1304,7 +1336,7 @@ $("fileInput").addEventListener("change", async ()=>{
     lastFire = now;
 
     try{ document.activeElement && document.activeElement.blur && document.activeElement.blur(); }catch{}
-    setTimeout(()=>{ importFromText($("pasteArea").value); }, 60);
+    setTimeout(()=>{ importFromText($("pasteArea").value); }, 120);
   };
 
   b.addEventListener("pointerup", fire);

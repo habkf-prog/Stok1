@@ -435,6 +435,7 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
       <button class="btn primary" id="openAdd" type="button">➕ إضافة</button>
       <button class="btn soft" id="openBackup" type="button">📦 النسخ الاحتياطي</button>
       <button class="btn soft" id="openSync" type="button">☁️ المزامنة</button>
+      <button class="btn soft" id="envToggle" type="button">🧪 وضع الاختبار</button>
       <button class="btn soft" id="openAuth" type="button">👤 حساب</button>
 
       <div class="searchWrap">
@@ -760,10 +761,29 @@ window.addEventListener('unhandledrejection', (e)=>{
 
 const $ = (id)=>document.getElementById(id);
 const FIREBASE_URL  = "https://dattta-6f497-default-rtdb.firebaseio.com";
-const FIREBASE_PATH = "subscriptions"; // مسار التخزين المشترك في Firebase
+const ENV_KEY = "subs_sync_env_v1"; // "test" | "prod"
+const FIREBASE_PATH_PROD = "subscriptions_shared";
+const FIREBASE_PATH_TEST = "subscriptions_shared_test";
 
 const LOCAL_BACKUP_KEY   = "subs_local_backup_v3";
 const PENDING_SYNC_KEY   = "subs_pending_sync_v1";
+
+let syncEnv = "test"; // default safer
+function loadEnv(){
+  try{
+    const v = localStorage.getItem(ENV_KEY);
+    if(v === "prod" || v === "test") return v;
+  }catch{}
+  return "test";
+}
+function saveEnv(v){
+  syncEnv = (v === "prod") ? "prod" : "test";
+  try{ localStorage.setItem(ENV_KEY, syncEnv); }catch{}
+  updateEnvUI();
+}
+function getFirebasePath(){
+  return (syncEnv === "prod") ? FIREBASE_PATH_PROD : FIREBASE_PATH_TEST;
+}
 
 let syncState = "idle"; // idle | saving | ok | fail | offline
 let lastSyncAt = null;
@@ -780,6 +800,22 @@ function getSyncText(){
   if(syncState === "ok") return `✅ تمت (${lastSyncAt || ""})`;
   if(syncState === "fail") return "🔴 فشل";
   return "—";
+}
+
+function updateEnvUI(){
+  const btn = document.getElementById("envToggle");
+  const chip = document.getElementById("envChip");
+  const envLabel = (syncEnv === "prod") ? "PROD" : "TEST";
+  const envText  = (syncEnv === "prod") ? "🟢 PROD" : "🧪 TEST";
+  if(btn){
+    btn.textContent = (syncEnv === "prod") ? "🧪 تحويل إلى TEST" : "🟢 تحويل إلى PROD";
+  }
+  if(chip){
+    chip.textContent = envText;
+    chip.className = "statChip " + ((syncEnv === "prod") ? "ok" : "warn");
+  }
+  // تحديث مؤشر المزامنة كذلك
+  try{ const el=document.getElementById("syncVal"); if(el) el.textContent=getSyncText(); }catch{}
 }
 
 function setSyncState(state){
@@ -829,7 +865,7 @@ function loadLocalBackup(){
 }
 
 async function firebasePull(){
-  const url = `${FIREBASE_URL}/${FIREBASE_PATH}.json`;
+  const url = `${FIREBASE_URL}/${getFirebasePath()}.json`;
   const res = await fetchWithTimeout(url, {}, 25000);
   if(!res.ok){
     const txt = await res.text().catch(()=> "");
@@ -841,7 +877,7 @@ async function firebasePull(){
 }
 
 async function firebasePushOnce(){
-  const url = `${FIREBASE_URL}/${FIREBASE_PATH}.json`;
+  const url = `${FIREBASE_URL}/${getFirebasePath()}.json`;
   const res = await fetchWithTimeout(url, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
@@ -1579,6 +1615,7 @@ function render(){
       <div class="statChip ok"><span class="ico">✅</span><span class="k">فعّال</span><span class="v">${allCounts.active}</span></div>
       <div class="statChip warn"><span class="ico">⏰</span><span class="k">قريب</span><span class="v">${allCounts.expiring}</span></div>
       <div class="statChip err"><span class="ico">❌</span><span class="k">منتهي</span><span class="v">${allCounts.expired}</span></div>
+      <div class="statChip warn" id="envChip">🧪 TEST</div>
       <div class="statChip sync"><span class="ico">☁️</span><span class="k">مزامنة</span><span class="v" id="syncVal">${getSyncText()}</span></div>
     `;
   }
@@ -1588,6 +1625,8 @@ function render(){
 
 /* init */
 (async ()=>{
+  syncEnv = loadEnv();
+  updateEnvUI();
   await load();
   render();
 })();

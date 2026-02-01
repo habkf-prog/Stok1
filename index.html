@@ -1265,11 +1265,7 @@ function render(){
   // تحديث شريط الإحصائيات
   const bar = document.getElementById("statsBar");
   if(bar){
-    bar.inn
-
-<!-- Toast -->
-<div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>
-erHTML = `
+    bar.innerHTML = `
       <div class="statChip"><span class="ico">👁️</span><span class="k">المعروض</span><span class="v">${rows.length}</span></div>
       <div class="statChip"><span class="ico">📦</span><span class="k">الإجمالي</span><span class="v">${data.length}</span></div>
       <div class="statChip ok"><span class="ico">✅</span><span class="k">فعّال</span><span class="v">${allCounts.active}</span></div>
@@ -1287,5 +1283,9 @@ erHTML = `
   render();
 })();
 </script>
+
+<!-- Toast -->
+<div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>
+
 </body>
 </html>

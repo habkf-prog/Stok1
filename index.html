@@ -381,7 +381,6 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
   line-height:1.7;
 }
 
-
 /* ===== Toast ===== */
 .toast{
   position: fixed;
@@ -415,6 +414,7 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
 .toast.warn{ border-color: rgba(245,158,11,.40); }
 .toast .msg{ font-weight: 900; }
 .toast .sub{ color: var(--muted); font-weight: 800; }
+
 </style>
 </head>
 
@@ -867,6 +867,38 @@ function vibrateLight(){
   try{ if (navigator.vibrate) navigator.vibrate(20); }catch{}
 }
 
+
+// ===== Toast + Haptics =====
+let toastTimer = null;
+
+function haptic(type="light"){
+  try{
+    if(!navigator.vibrate) return;
+    if(type==="light") navigator.vibrate(12);
+    else if(type==="ok") navigator.vibrate([12, 30, 12]);
+    else if(type==="fail") navigator.vibrate([28, 40, 28]);
+    else navigator.vibrate(15);
+  }catch{}
+}
+
+function showToast(message, detail="", kind="warn"){
+  const t = document.getElementById("toast");
+  if(!t) return;
+
+  t.className = `toast ${kind}`;
+  t.innerHTML = `
+    <span class="ico">${kind==="err" ? "❌" : kind==="ok" ? "✅" : "⚠️"}</span>
+    <div>
+      <div class="msg">${message}</div>
+      ${detail ? `<div class="sub">${detail}</div>` : ``}
+    </div>
+  `;
+
+  clearTimeout(toastTimer);
+  t.classList.add("show");
+  toastTimer = setTimeout(()=> t.classList.remove("show"), 2200);
+}
+
 /* ===== Form modal ===== */
 function resetForm(){
   $("name").value="";
@@ -914,38 +946,7 @@ $("openPasteFromBackup").onclick = ()=>{
   openModal("pasteModal");
 };
 $("closePaste").onclick = ()=> closeModal("pasteModal");
-$("cancelPaste").onclick = ()=> closeModal("pasteModal"// ===== Toast + Haptics =====
-let toastTimer = null;
-
-function haptic(type="light"){
-  try{
-    if(!navigator.vibrate) return;
-    if(type==="light") navigator.vibrate(12);
-    else if(type==="ok") navigator.vibrate([12, 30, 12]);
-    else if(type==="fail") navigator.vibrate([28, 40, 28]);
-    else navigator.vibrate(15);
-  }catch{}
-}
-
-function showToast(message, detail="", kind="warn"){
-  const t = document.getElementById("toast");
-  if(!t) return;
-
-  t.className = `toast ${kind}`;
-  t.innerHTML = `
-    <span class="ico">${kind==="err" ? "❌" : kind==="ok" ? "✅" : "⚠️"}</span>
-    <div>
-      <div class="msg">${message}</div>
-      ${detail ? `<div class="sub">${detail}</div>` : ``}
-    </div>
-  `;
-
-  clearTimeout(toastTimer);
-  t.classList.add("show");
-  toastTimer = setTimeout(()=> t.classList.remove("show"), 2200);
-}
-
-);
+$("cancelPaste").onclick = ()=> closeModal("pasteModal");
 
 /* ===== Top actions ===== */
 $("search").addEventListener("input", render);
@@ -991,8 +992,6 @@ function handleSaveClick(){
   if(!start) return alert("اختر تاريخ البداية");
   if(!months || months<1) return alert("أدخل عدد الأشهر");
 
-  setStoredAlertDays(alertDays);
-
   // ===== منع تكرار الإيميل =====
   const existsIndex = data.findIndex(r => normalizeEmail(r.email) === email);
   const isDuplicate = existsIndex >= 0 && (!editingId || data[existsIndex].id !== editingId);
@@ -1002,6 +1001,9 @@ function handleSaveClick(){
     try{ $("email").focus(); }catch{}
     return;
   }
+
+
+  setStoredAlertDays(alertDays);
 
   const end = addMonths(start, months);
   const rec = {

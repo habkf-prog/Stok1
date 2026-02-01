@@ -1200,9 +1200,19 @@ function handleSaveClick(){
 (function bindSaveButton(){
   const btn = $("saveBtn");
   if(!btn) return;
-  const fire = (e)=>{ try{ e.preventDefault(); }catch{} handleSaveClick(); };
+
+  let lastFire = 0;
+  const fire = (e)=>{
+    try{ e.preventDefault(); e.stopPropagation(); }catch{}
+    const now = Date.now();
+    // منع التكرار (بعض هواتف أندرويد تطلق click + touchend)
+    if(now - lastFire < 700) return;
+    lastFire = now;
+    handleSaveClick();
+  };
+
   btn.addEventListener("click", fire);
-  btn.addEventListener("touchend", (e)=>{ fire(e); }, {passive:false});
+  btn.addEventListener("touchend", fire, {passive:false});
 })();
 
 /* ===== Backup helpers ===== */
@@ -1256,9 +1266,20 @@ $("fileInput").addEventListener("change", async ()=>{
   importFromText(await f.text());
 });
 
-$("doPasteImport").onclick = ()=> importFromText($("pasteArea").value);
-
-function importFromText(text){
+(function bindPasteImport(){
+  const b = $("doPasteImport");
+  if(!b) return;
+  let lastFire = 0;
+  const fire = (e)=>{
+    try{ e.preventDefault(); e.stopPropagation(); }catch{}
+    const now = Date.now();
+    if(now - lastFire < 700) return;
+    lastFire = now;
+    importFromText($("pasteArea").value);
+  };
+  b.addEventListener("click", fire);
+  b.addEventListener("touchend", fire, {passive:false});
+})();function importFromText(text){
   const raw=(text||"").trim();
   if(!raw) haptic("light"); showToast("لا يوجد JSON", "", "warn"); return;
 

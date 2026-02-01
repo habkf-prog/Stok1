@@ -110,6 +110,13 @@ body{
   color: var(--muted);
 }
 
+.pill.sync-idle{ color: var(--muted); }
+.pill.sync-saving{ border-color: rgba(124,92,255,.55); color: var(--text); }
+.pill.sync-ok{ border-color: rgba(34,197,94,.55); color: #c8f7d9; }
+.pill.sync-fail{ border-color: rgba(239,68,68,.55); color: #ffd0d0; }
+.pill.sync-offline{ border-color: rgba(245,158,11,.55); color: #ffe2b3; }
+
+
 /* ======= Table ======= */
 .tableWrap{ overflow:auto; }
 table{
@@ -359,6 +366,7 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
 
       <div class="pills">
         <div class="pill" id="statsPill">—</div>
+        <div class="pill sync-idle" id="syncPill">☁️ جاهز</div>
       </div>
     </div>
 
@@ -644,15 +652,143 @@ function status(endISO, alertDays){
   return {key:"active", label:"فعّال", cls:"ok", left};
 }
 
-/* ===== Storage ===== */
-function load(){
-  try{
-    const raw = localStorage.getItem(STORAGE_KEY);
-    data = raw ? JSON.parse(raw) : [];
-    if(!Array.isArray(data)) data=[];
-  }catch{ data=[]; }
+/* ===== Storage (Firebase Sync) =====
+const FIREBASE_URL  = "https://dattta-6f497-default-rtdb.firebaseio.com";
+const FIREBASE_PATH = "subscriptions";  // مسار البيانات داخل قاعدة Firebase
+
+// نسخة محلية احتياطية (تُستخدم عند انقطاع الإنترنت أو فشل Firebase)
+const LOCAL_BACKUP_KEY = "subs_local_backup_v3";
+
+let isSyncing = false;
+
+function setSync(state, text){
+  const el = $("syncPill");
+  if(!el) return;
+
+  el.classList.remove("sync-idle","sync-saving","sync-ok","sync-fail","sync-offline");
+
+  if(state === "saving"){
+    el.classList.add("sync-saving");
+    el.textContent = "⏳ جارٍ الحفظ...";
+  } else if(state === "ok"){
+    el.classList.add("sync-ok");
+    el.textContent = text || "✅ تم";
+  } else if(state === "fail"){
+    el.classList.add("sync-fail");
+    el.textContent = "🔴 فشل";
+  } else if(state === "offline"){
+    el.classList.add("sync-offline");
+    el.textContent = "📴 أوفلاين";
+  } else {
+    el.classList.add("sync-idle");
+    el.textContent = "☁️ جاهز";
+  }
 }
-function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
+
+function timeHHMM(){
+  const d = new Date();
+  const hh = String(d.getHours()).padStart(2,"0");
+  const mm = String(d.getMinutes()).padStart(2,"0");
+  return `${hh}:${mm}`;
+}
+
+function saveLocalBackup(){
+  try{ localStorage.setItem(LOCAL_BACKUP_KEY, JSON.stringify(data)); }catch{}
+}
+
+function loadLocalBackup(){
+  try{
+    const raw = localStorage.getItem(LOCAL_BACKUP_KEY);
+    const j = raw ? JSON.parse(raw) : null;
+    return Array.isArray(j) ? j : [];
+  }catch{
+    return [];
+  }
+}
+
+// سحب من Firebase
+async function firebasePull(){
+  const res = await fetch(`${FIREBASE_URL}/${FIREBASE_PATH}.json`, { method: "GET" });
+  if(!res.ok) throw new Error("firebasePull failed");
+  const json = await res.json();
+  return Array.isArray(json) ? json : [];
+}
+
+// رفع إلى Firebase (مزامنة فورية بدون تأخير)
+async function firebasePush(){
+  const res = await fetch(`${FIREBASE_URL}/${FIREBASE_PATH}.json`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  });
+  if(!res.ok) throw new Error("firebasePush failed");
+}
+
+// تحميل البيانات عند فتح الصفحة
+async function load(){
+  // 1) جرّب Firebase أولاً
+  if(navigator.onLine){
+    try{
+      setSync("saving");
+      data = await firebasePull();
+      saveLocalBackup();
+      setSync("ok", `✅ تم (${timeHHMM()})`);
+      return;
+    }catch{
+      // فشل السحب → نستخدم المحلي
+      setSync("fail");
+    }
+  } else {
+    setSync("offline");
+  }
+
+  // 2) fallback: محلي
+  data = loadLocalBackup();
+}
+
+// حفظ البيانات (تُستدعى من كل العمليات: إضافة/تعديل/حذف/تمديد/استيراد...)
+function save(){
+  saveLocalBackup();
+
+  if(!navigator.onLine){
+    setSync("offline");
+    return;
+  }
+
+  // مزامنة فورية (لكن نتجنب طلبات متداخلة)
+  if(isSyncing) return;
+
+  isSyncing = true;
+  setSync("saving");
+
+  firebasePush()
+    .then(()=> setSync("ok", `✅ تم (${timeHHMM()})`))
+    .catch(()=> setSync("fail"))
+    .finally(()=> { isSyncing = false; });
+}
+
+// مزامنة الآن (سحب/رفع) لاستخدامها في زر ☁️ المزامنة
+async function syncPullNow(){
+  if(!navigator.onLine){ setSync("offline"); return; }
+  try{
+    setSync("saving");
+    data = await firebasePull();
+    saveLocalBackup();
+    setSync("ok", `✅ تم (${timeHHMM()})`);
+    render();
+  }catch{
+    setSync("fail");
+  }
+}
+
+function syncPushNow(){
+  save(); // نفس الحفظ الفوري
+}
+
+// عند رجوع الإنترنت: ادفع آخر نسخة محلية تلقائياً
+window.addEventListener("online", ()=> { setSync("idle"); syncPushNow(); });
+window.addEventListener("offline", ()=> setSync("offline"));
+
 
 /* ===== Modals ===== */
 function openModal(id){
@@ -948,16 +1084,9 @@ $("actCopyEmail").onclick = async ()=>{
 };
 
 /* ===== Sync modal buttons ===== */
-$("syncBackupDownload").onclick = ()=>{
-  // نفس التصدير
-  const payload = buildBackupPayload();
-  downloadFile("backup.json", JSON.stringify(payload,null,2), "application/json;charset=utf-8");
-};
+$("syncBackupDownload").onclick = ()=> syncPushNow();
 
-$("syncRestorePick").onclick = ()=>{
-  // يفتح اختيار ملف JSON
-  $("fileInput").click();
-};
+$("syncRestorePick").onclick = ()=> syncPullNow();
 
 $("syncBackupShare").onclick = async ()=>{
   const payload = buildBackupPayload();
@@ -1038,8 +1167,10 @@ function render(){
 }
 
 /* init */
-load();
-render();
+(async ()=>{
+  await load();
+  render();
+})();
 </script>
 </body>
 </html>

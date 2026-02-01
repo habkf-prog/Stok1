@@ -254,6 +254,16 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
 }
 
 /* Backup modal layout */
+
+/* Backup buttons wrap nicely on mobile */
+.backTile .actions{ gap:10px; }
+.backTile .actions .btn{ flex: 1 1 auto; min-width: 120px; text-align:center; }
+@media (max-width: 520px){
+  .backTile{ padding:14px; }
+  .backTile .actions{ flex-direction: column; }
+  .backTile .actions .btn{ width:100%; }
+}
+
 .backGrid{
   display:grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -415,6 +425,28 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
   cursor: pointer;
 }
 .toast .action:hover{ background: rgba(255,255,255,.10); }
+
+/* ===== Stats Bar (better UI) ===== */
+#statsBar{
+  display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+}
+.statChip{
+  display:inline-flex; align-items:center; gap:8px;
+  padding:8px 10px; border-radius:999px;
+  border:1px solid var(--line);
+  background: rgba(0,0,0,.18);
+  font-size:12px; font-weight:900;
+  white-space:nowrap;
+}
+.statChip .k{ color: var(--muted); }
+.statChip.ok{ border-color: rgba(34,197,94,.40); }
+.statChip.warn{ border-color: rgba(245,158,11,.40); }
+.statChip.err{ border-color: rgba(239,68,68,.40); }
+@media (max-width: 650px){
+  #statsBar{ width:100%; }
+  .statChip{ flex:1 1 auto; justify-content:center; }
+}
+
 </style>
 
 <!-- Firebase (Compat) for Auth UI -->
@@ -537,6 +569,7 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
           <div class="d">أفضل خيار للنسخ الاحتياطي الكامل.</div>
           <div class="actions">
             <button class="btn soft" id="exportJsonBtn" type="button">تصدير</button>
+            <button class="btn soft" id="copyJsonBtn" type="button">نسخ JSON</button>
           </div>
         </div>
 
@@ -834,7 +867,23 @@ async function syncPullNow(){
     saveLocalBackup();
     lastSyncAt = nowHHMM();
     setSyncState("ok");
-    render();
+    
+  // ===== Stats =====
+  const counts = { ok:0, err:0 };
+  data.forEach(r=>{
+    const s = status(r.end);
+    if(s==="ok") counts.ok++; else counts.err++;
+  });
+  const bar = document.getElementById("statsBar");
+  if(bar){
+    bar.innerHTML = `
+      <div class="statChip"><span class="k">الإجمالي</span> <span>${data.length}</span></div>
+      <div class="statChip ok"><span class="k">فعّال</span> <span>${counts.ok}</span></div>
+      <div class="statChip err"><span class="k">منتهي</span> <span>${counts.err}</span></div>
+    `;
+  }
+
+render();
   }catch{
     setSyncState("fail");
   }
@@ -1158,10 +1207,10 @@ function handleSaveClick(){
   const start = $("start").value;
   const alertDays = getAlertDaysFromForm();
 
-  if(!name) return alert("أدخل الاسم");
-  if(!email || !validateEmail(email)) return alert("الإيميل غير صحيح");
-  if(!start) return alert("اختر تاريخ البداية");
-  if(!months || months<1) return alert("أدخل عدد الأشهر");
+  if(!name) return haptic("light"); showToast("أدخل الاسم", "", "warn");
+  if(!email || !validateEmail(email)) return haptic("fail"); showToast("الإيميل غير صحيح", "", "err");
+  if(!start) return haptic("light"); showToast("اختر تاريخ البداية", "", "warn");
+  if(!months || months<1) return haptic("light"); showToast("أدخل عدد الأشهر", "", "warn");
 
   const existsIndex = data.findIndex(r => normalizeEmail(r.email) === email);
   const isDuplicate = existsIndex >= 0 && (!editingId || data[existsIndex].id !== editingId);
@@ -1212,6 +1261,32 @@ $("exportJsonBtn").onclick = ()=>{
   downloadFile("subscriptions_backup.json", JSON.stringify(payload,null,2), "application/json;charset=utf-8");
 };
 
+$("copyJsonBtn").onclick = async ()=>{
+  const payload = buildBackupPayload();
+  const text = JSON.stringify(payload, null, 2);
+  try{
+    await navigator.clipboard.writeText(text);
+    haptic("ok");
+    showToast("تم نسخ JSON ✅", "يمكنك لصقه أينما تريد", "ok");
+  }catch(e){
+    // fallback: textarea
+    try{
+      const tmp = document.createElement("textarea");
+      tmp.value = text;
+      document.body.appendChild(tmp);
+      tmp.select();
+      document.execCommand("copy");
+      tmp.remove();
+      haptic("ok");
+      showToast("تم نسخ JSON ✅", "fallback", "ok");
+    }catch{
+      haptic("fail");
+      showToast("تعذر نسخ JSON", "", "err");
+    }
+  }
+};
+
+
 $("importFileBtn").onclick = ()=> $("fileInput").click();
 $("fileInput").addEventListener("change", async ()=>{
   const f=$("fileInput").files[0];
@@ -1224,14 +1299,14 @@ $("doPasteImport").onclick = ()=> importFromText($("pasteArea").value);
 
 function importFromText(text){
   const raw=(text||"").trim();
-  if(!raw) return alert("لا يوجد JSON");
+  if(!raw) return haptic("light"); showToast("لا يوجد JSON", "", "warn");
 
   let incoming;
   try{ incoming = JSON.parse(raw); }
-  catch{ alert("JSON غير صالح"); return; }
+  catch{ haptic("fail"); showToast("JSON غير صالح", "", "err"); return; }
 
   const importedData = Array.isArray(incoming) ? incoming : incoming.data;
-  if(!Array.isArray(importedData)){ alert("لا توجد بيانات"); return; }
+  if(!Array.isArray(importedData)){ haptic("fail"); showToast("لا توجد بيانات", "", "err"); return; }
 
   if(incoming && typeof incoming.alertDays==="number" && incoming.alertDays>0){
     setStoredAlertDays(incoming.alertDays);
@@ -1260,7 +1335,7 @@ function importFromText(text){
 
   save(); render();
   closeModal("pasteModal");
-  alert(`تم الاستيراد ✅\nإضافة: ${added}\nتحديث: ${updated}`);
+  showToast("تم الاستيراد ✅", `إضافة: ${added} — تحديث: ${updated}`, "ok");
 }
 
 $("exportCsvBtn").onclick = ()=>{
@@ -1338,7 +1413,7 @@ $("actCopyEmail").onclick = async ()=>{
   try{
     await navigator.clipboard.writeText(text);
     vibrateLight();
-    alert("✅ تم نسخ الإيميل");
+    showToast("✅ تم نسخ الإيميل", "", "ok");
   }catch{
     const tmp = document.createElement("textarea");
     tmp.value = text;
@@ -1347,7 +1422,7 @@ $("actCopyEmail").onclick = async ()=>{
     document.execCommand("copy");
     tmp.remove();
     vibrateLight();
-    alert("✅ تم نسخ الإيميل");
+    showToast("✅ تم نسخ الإيميل", "", "ok");
   }
 };
 
@@ -1370,7 +1445,7 @@ $("syncBackupShare").onclick = async ()=>{
   }catch{}
 
   downloadFile("backup.json", text, "application/json;charset=utf-8");
-  alert("✅ تم إنشاء الملف (backup.json) وتنزيله");
+  showToast("✅ تم إنشاء الملف وتنزيله", "backup.json", "ok");
 };
 
 /* ===== Table click handling ===== */

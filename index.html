@@ -1205,14 +1205,19 @@ function handleSaveClick(){
   const fire = (e)=>{
     try{ e.preventDefault(); e.stopPropagation(); }catch{}
     const now = Date.now();
-    // منع التكرار (بعض هواتف أندرويد تطلق click + touchend)
     if(now - lastFire < 700) return;
     lastFire = now;
-    handleSaveClick();
+
+    // على الهاتف أحياناً قيمة الحقول لا "تُثبت" إلا بعد فقدان التركيز
+    try{ document.activeElement && document.activeElement.blur && document.activeElement.blur(); }catch{}
+
+    // نفّذ بعد لحظة صغيرة حتى تُحدَّث قيم الإدخال
+    setTimeout(()=>{ try{ handleSaveClick(); }catch(err){ try{ showToast("خطأ أثناء الحفظ", String(err?.message||err), "err"); }catch{} } }, 0);
   };
 
+  // استخدم pointerup إن وُجد (أفضل للموبايل)، مع click كاحتياط
+  btn.addEventListener("pointerup", fire);
   btn.addEventListener("click", fire);
-  btn.addEventListener("touchend", fire, {passive:false});
 })();
 
 /* ===== Backup helpers ===== */
@@ -1269,17 +1274,23 @@ $("fileInput").addEventListener("change", async ()=>{
 (function bindPasteImport(){
   const b = $("doPasteImport");
   if(!b) return;
+
   let lastFire = 0;
   const fire = (e)=>{
     try{ e.preventDefault(); e.stopPropagation(); }catch{}
     const now = Date.now();
     if(now - lastFire < 700) return;
     lastFire = now;
-    importFromText($("pasteArea").value);
+
+    try{ document.activeElement && document.activeElement.blur && document.activeElement.blur(); }catch{}
+    setTimeout(()=>{ importFromText($("pasteArea").value); }, 0);
   };
+
+  b.addEventListener("pointerup", fire);
   b.addEventListener("click", fire);
-  b.addEventListener("touchend", fire, {passive:false});
-})();function importFromText(text){
+})();
+
+function importFromText(text){
   const raw=(text||"").trim();
   if(!raw) haptic("light"); showToast("لا يوجد JSON", "", "warn"); return;
 

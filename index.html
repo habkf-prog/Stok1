@@ -439,13 +439,7 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
 }
 .printHeader .t{ font-weight:900; font-size:16px; }
 .printHeader .m{ font-size:12px; opacity:.75; margin-top:4px; }
-/* ===== Share Modal ===== */
-.shareGrid{
-  display:grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap:12px;
-  margin-top: 10px;
-}
+
 @media (max-width: 560px){
   .shareGrid{ grid-template-columns: 1fr; }
 }
@@ -1321,32 +1315,67 @@ if(__restoreBtn){
 
 /* ===== Sync modal ===== */
 $("openSync").onclick = ()=> openModal("syncModal");
+// ===== Totals (💰 المجموع) =====
+function getFilteredRows(){
+  const q = ($("search").value||"").trim().toLowerCase();
+  return (data||[]).filter(r=>{
+    if(!q) return true;
+    return (r.name||"").toLowerCase().includes(q) || (r.email||"").toLowerCase().includes(q);
+  });
+}
+
+function computeTotalsGroups(list){
+  const groups = {};
+  for(const r of (list||[])){
+    const c = r.currency || getCurrency();
+    const p = Number(r.price ?? 0);
+    if(!Number.isFinite(p) || p<=0) continue;
+    groups[c] = (groups[c]||0) + p;
+  }
+  return groups;
+}
+
+function groupsToLines(groups){
+  const keys = Object.keys(groups);
+  if(keys.length===0) return ["0"];
+  return keys.map(k=>{
+    const v = groups[k];
+    const num = v.toFixed(2).replace(/\.00$/,"");
+    return `${num} ${currencyLabel(k)}`;
+  });
+}
+
+function renderTotalsModal(){
+  const box = $("totalsBody");
+  if(!box) return;
+  const filtered = getFilteredRows();
+  const gShown = computeTotalsGroups(filtered);
+  const gAll = computeTotalsGroups(data||[]);
+
+  const shownLines = groupsToLines(gShown);
+  const allLines = groupsToLines(gAll);
+
+  box.innerHTML = `
+    <div style="font-weight:900;margin-bottom:8px">👁️ مجموع المعروض</div>
+    <div style="line-height:1.9">${shownLines.map(x=>`• ${escapeHtml(x)}`).join("<br>")}</div>
+    <div style="height:1px;background:rgba(255,255,255,.10);margin:12px 0"></div>
+    <div style="font-weight:900;margin-bottom:8px">📦 مجموع الكل</div>
+    <div style="line-height:1.9">${allLines.map(x=>`• ${escapeHtml(x)}`).join("<br>")}</div>
+  `;
+}
+
+$("openTotals").onclick = ()=>{
+  renderTotalsModal();
+  openModal("totalsModal");
+};
+$("closeTotalsX").onclick = ()=> closeModal("totalsModal");
+$("closeTotals").onclick  = ()=> closeModal("totalsModal");
+
 $("closeSyncX").onclick = ()=> closeModal("syncModal");
 $("closeSync").onclick  = ()=> closeModal("syncModal");
 /* ===== Share modal ===== */
 (function bindShareModal(){
-  const csx = $("closeShareX");
-  if(csx) csx.onclick = ()=> closeModal("shareModal");
-
-  const cs  = $("closeShare");
-  if(cs) cs.onclick = ()=> closeModal("shareModal");
-
-  const cp  = $("shareCopy");
-  if(cp) cp.onclick = async ()=>{
-    try{
-      const q = ($("search").value||"").trim().toLowerCase();
-      const list = (data||[]).filter(r=>{
-        if(!q) return true;
-        return (r.name||"").toLowerCase().includes(q) || (r.email||"").toLowerCase().includes(q);
-      });
-      if(!list.length){ showToast("لا توجد بيانات للنسخ", "", "warn"); return; }
-      const txt = buildShareText(list);
-      await navigator.clipboard.writeText(txt);
-      showToast("تم النسخ ✅", "انسخ والصقه في أي تطبيق", "ok");
-    }catch(e){
-      showToast("فشل النسخ", String(e?.message||e), "err");
-    }
-  };
+  const csx = 
 
   // اغلاق عند الضغط خارج النافذة
   const sm = $("shareModal");
@@ -1422,30 +1451,30 @@ function buildShareText(list){
 async function doShare(){
   try{
     const q = ($("search").value||"").trim().toLowerCase();
-    const list = (typeof data !== "undefined" ? data : []).filter(r=>{
+    const list = (data||[]).filter(r=>{
       if(!q) return true;
-      const n=(r.name||"").toLowerCase();
-      const e=(r.email||"").toLowerCase();
-      return n.includes(q) || e.includes(q);
+      return (r.name||"").toLowerCase().includes(q) || (r.email||"").toLowerCase().includes(q);
     });
-
     if(!list.length){
       showToast("لا توجد بيانات للمشاركة", "", "warn");
       return;
     }
-
     const text = buildShareText(list);
     const title = "تقرير الاشتراكات";
 
-    
-// Web Share (أفضل على الهاتف)
-if(navigator.share){
-  try{
-    await navigator.share({ title, text });
-    showToast("تمت المشاركة ✅", "", "ok");
-    return;
+    if(navigator.share){
+      navigator.share({ title, text })
+        .then(()=> showToast("تمت المشاركة ✅", "", "ok"))
+        .catch(()=>{}); // المستخدم ألغى
+      return;
+    }
+
+    // fallback: copy to clipboard
+    navigator.clipboard.writeText(text)
+      .then(()=> showToast("تم النسخ ✅", "تم نسخ التقرير إلى الحافظة", "ok"))
+      .catch(()=> showToast("تعذر النسخ", "", "err"));
   }catch(e){
-    // المستخدم ألغى أو المتصفح رفض -> نعرض نافذة بدائل
+    showToast("فشلت المشاركة", String(e?.message||e), "err");
   }
 }
 
@@ -2009,35 +2038,7 @@ $("authLogout").onclick = async ()=>{
 };
 </script>
 
-<!-- Modal: Share -->
-<div class="modal" id="shareModal" aria-hidden="true">
-  <div class="box" role="dialog" aria-modal="true" style="width:min(760px, 100%)">
-    <div class="modalHeader">
-      <div>
-        <h2>📤 مشاركة</h2>
-        <div class="hint">اختر التطبيق أو انسخ التقرير</div>
-      </div>
-      <button class="btn" id="closeShareX" type="button">✕</button>
-    </div>
 
-    <div class="modalBody">
-      <div class="shareGrid">
-        <a class="shareBtn" id="shareWhatsApp" target="_blank" rel="noopener">🟢 WhatsApp</a>
-        <a class="shareBtn" id="shareTelegram" target="_blank" rel="noopener">🔵 Telegram</a>
-        <a class="shareBtn" id="shareEmail" target="_blank" rel="noopener">✉️ Email (Gmail)</a>
-        <button class="shareBtn primary" id="shareCopy" type="button">📋 نسخ التقرير</button>
-      </div>
-
-      <div class="shareMini" id="shareNote">
-        إذا لم تظهر نافذة المشاركة الأصلية، استخدم الأزرار أعلاه.
-      </div>
-    </div>
-
-    <div class="modalFooter">
-      <button class="btn" id="closeShare" type="button">إغلاق</button>
-    </div>
-  </div>
-</div>
 
 <!-- Toast -->
 <div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>

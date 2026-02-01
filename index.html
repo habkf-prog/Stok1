@@ -1412,6 +1412,15 @@ function render(){
     `;
     tb.appendChild(tr);
   }
+  // صف توضيحي إذا لا توجد نتائج (حتى يظهر الجدول دائماً)
+  if(rows.length === 0){
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="8" style="text-align:center;color:rgba(234,240,255,.70);padding:18px">
+      لا توجد سجلات لعرضها
+    </td>`;
+    tb.appendChild(tr);
+  }
+
   setSyncState(syncState);
   // تحديث شريط الإحصائيات
   const bar = document.getElementById("statsBar");

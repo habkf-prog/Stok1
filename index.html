@@ -100,6 +100,13 @@ body{
   background: linear-gradient(135deg, rgba(239,68,68,.35), rgba(239,68,68,.12));
 }
 
+/* أزرار داخل النسخ الاحتياطي */
+.btn.soft{
+  border-color: rgba(255,255,255,.14);
+  background: rgba(255,255,255,.04);
+}
+.btn.soft:hover{ background: rgba(255,255,255,.08); }
+
 .searchWrap{
   flex:1;
   min-width:240px;
@@ -224,33 +231,112 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
 }
 .menu .danger{ color:#ffd0d0; }
 
-/* Backup area (clean) */
+/* ======= Backup (NEW styling) ======= */
 .backup{
-  padding: 12px 14px;
+  padding: 14px;
   border-top:1px solid var(--line);
-  background: var(--card2);
+  background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
 }
-details{
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:16px;
-  padding:10px 12px;
+
+.backCard{
+  border:1px solid rgba(255,255,255,.10);
   background: rgba(0,0,0,.16);
+  border-radius:18px;
+  overflow:hidden;
 }
-summary{
-  cursor:pointer;
+
+.backHead{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:12px 12px;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.backTitle{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.backTitle .t{
   font-weight:900;
-  color: var(--text);
-  list-style:none;
 }
-summary::-webkit-details-marker{display:none}
-.summaryRow{
-  display:flex; align-items:center; justify-content:space-between;
+.backTitle .d{
+  color:var(--muted);
+  font-size:12px;
+}
+
+.backToggle{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  font-weight:900;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04);
+  padding:8px 10px;
+  border-radius:14px;
+  cursor:pointer;
+}
+.chev{
+  display:inline-block;
+  transform: rotate(0deg);
+  transition: transform .15s ease;
+  opacity:.9;
+}
+.backCard.open .chev{ transform: rotate(180deg); }
+
+.backBody{
+  display:none;
+  padding:12px;
+}
+.backCard.open .backBody{ display:block; }
+
+.backGrid{
+  display:grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap:10px;
 }
-.summaryHint{font-size:12px;color:var(--muted)}
-.backRow{
-  display:flex; gap:10px; flex-wrap:wrap;
+@media (max-width: 980px){
+  .backGrid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.backItem{
+  border:1px solid rgba(255,255,255,.10);
+  background: rgba(255,255,255,.03);
+  border-radius:16px;
+  padding:12px;
+}
+.backItem .h{
+  font-weight:900;
+  margin:0 0 6px;
+  font-size:13px;
+}
+.backItem .p{
+  margin:0 0 10px;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.6;
+}
+.backItem .actions{
+  display:flex; gap:8px; flex-wrap:wrap;
+}
+
+.noteRow{
   margin-top:10px;
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  align-items:flex-start;
+}
+.note{
+  flex:1;
+  min-width:260px;
+  border:1px dashed rgba(255,255,255,.14);
+  background: rgba(0,0,0,.14);
+  border-radius:16px;
+  padding:10px 12px;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.7;
 }
 
 /* ======= Modals ======= */
@@ -329,7 +415,6 @@ summary::-webkit-details-marker{display:none}
   border-radius:10px;
 }
 
-/* Small helper */
 .hidden{display:none}
 </style>
 </head>
@@ -373,24 +458,68 @@ summary::-webkit-details-marker{display:none}
       </table>
     </div>
 
+    <!-- ✅ Backup Section (New design) -->
     <div class="backup">
-      <details>
-        <summary>
-          <div class="summaryRow">
-            <div>📦 نسخ احتياطي (تصدير/استيراد)</div>
-            <div class="summaryHint">JSON / CSV / لصق</div>
+      <div class="backCard" id="backCard">
+        <div class="backHead">
+          <div class="backTitle">
+            <div class="t">📦 النسخ الاحتياطي</div>
+            <div class="d">تصدير واستيراد (JSON / CSV) + لصق سريع</div>
           </div>
-        </summary>
-        <div class="backRow">
-          <button class="btn" id="exportJsonBtn">⬇️ تصدير JSON</button>
-          <button class="btn" id="importFileBtn">⬆️ استيراد ملف</button>
-          <button class="btn" id="importPasteBtn">📋 لصق JSON</button>
-          <button class="btn" id="exportCsvBtn">⬇️ تصدير CSV</button>
-          <input id="fileInput" type="file" accept="application/json,.json" class="hidden">
+          <button class="backToggle" id="backToggle" type="button">
+            <span>إظهار الأدوات</span>
+            <span class="chev">▾</span>
+          </button>
         </div>
-        <div class="sub" style="margin-top:10px">نصيحة: صدّر JSON من حين لآخر حتى لا تضيع بياناتك عند تغيير المتصفح/الهاتف.</div>
-      </details>
+
+        <div class="backBody">
+          <div class="backGrid">
+            <div class="backItem">
+              <div class="h">⬇️ تصدير JSON</div>
+              <div class="p">أفضل خيار للنسخ الاحتياطي الكامل (يحفظ كل السجلات).</div>
+              <div class="actions">
+                <button class="btn soft" id="exportJsonBtn">تصدير</button>
+              </div>
+            </div>
+
+            <div class="backItem">
+              <div class="h">⬆️ استيراد ملف JSON</div>
+              <div class="p">استرجاع البيانات من ملف النسخة الاحتياطية.</div>
+              <div class="actions">
+                <button class="btn soft" id="importFileBtn">اختيار ملف</button>
+                <input id="fileInput" type="file" accept="application/json,.json" class="hidden">
+              </div>
+            </div>
+
+            <div class="backItem">
+              <div class="h">📋 لصق JSON</div>
+              <div class="p">لو عندك JSON في رسالة/ملاحظة، الصقه واستورد مباشرة.</div>
+              <div class="actions">
+                <button class="btn soft" id="importPasteBtn">فتح نافذة اللصق</button>
+              </div>
+            </div>
+
+            <div class="backItem">
+              <div class="h">⬇️ تصدير CSV</div>
+              <div class="p">ملف مناسب لـ Excel (عرض/مراجعة). ليس كامل مثل JSON.</div>
+              <div class="actions">
+                <button class="btn soft" id="exportCsvBtn">تصدير</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="noteRow">
+            <div class="note">
+              <b>نصيحة:</b> صدّر JSON مرة كل فترة. إذا غيرت المتصفح/الهاتف، استورد الملف وسترجع بياناتك.
+            </div>
+            <div class="note">
+              <b>ملاحظة:</b> عند الاستيراد يتم الدمج حسب الإيميل لتجنب التكرار.
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+    <!-- /Backup -->
   </div>
 </div>
 
@@ -476,8 +605,8 @@ summary::-webkit-details-marker{display:none}
 <script>
 const $ = (id)=>document.getElementById(id);
 
-const STORAGE_KEY = "subs_dashboard_clean_ui_v1";
-const SETTINGS_KEY = "subs_dashboard_clean_ui_settings_v1";
+const STORAGE_KEY = "subs_dashboard_clean_ui_v2";
+const SETTINGS_KEY = "subs_dashboard_clean_ui_settings_v2";
 
 let data = [];
 let editingId = null;
@@ -598,6 +727,12 @@ document.addEventListener("keydown",(e)=>{
     closeAllMenus();
   }
 });
+
+/* ===== Backup Toggle ===== */
+const backCard = $("backCard");
+$("backToggle").onclick = ()=>{
+  backCard.classList.toggle("open");
+};
 
 /* ===== Top actions ===== */
 $("search").addEventListener("input", render);
@@ -801,7 +936,6 @@ function render(){
 
   const alertDays = getStoredAlertDays();
 
-  // counts on all
   const allCounts={active:0, expiring:0, expired:0};
   for(const r of data){
     allCounts[status(r.end, alertDays).key]++;

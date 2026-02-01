@@ -1526,13 +1526,16 @@ function render(){
 
 
 // ===== Mobile Touch (tap / long-press / swipe) =====
+
 function bindMobileTouch(){
   const tb = $("tbody");
+  const wrap = document.querySelector(".tableWrap");
   if(!tb) return;
 
   let startX=0, startY=0, rowEl=null, rowId=null;
   let longPressTimer=null;
-  let moved=false, swiped=false;
+  let swipeArmed=false;   // لا تفعل السحب إلا بعد ضغط مطوّل
+  let swiped=false;
 
   const clearTimers = ()=>{ if(longPressTimer){ clearTimeout(longPressTimer); longPressTimer=null; } };
 
@@ -1555,16 +1558,17 @@ function bindMobileTouch(){
     rowId = row.id;
     startX = e.clientX;
     startY = e.clientY;
-    moved = false;
+    swipeArmed = false;
     swiped = false;
 
     rowEl.classList.add("touch-active","touch-swipe");
 
     clearTimers();
     longPressTimer = setTimeout(()=>{
-      if(moved || swiped) return;
-      try{ openRowActions(rowId); }catch{}
+      // بعد ضغط مطوّل: نُفعّل السحب فقط (حتى لا نمنع تمرير الجدول يمين/يسار)
+      swipeArmed = true;
       haptic("light");
+      try{ showToast("🟣 وضع السحب", "اسحب يمين للتجديد • يسار للحذف", "warn"); }catch{}
     }, 520);
 
     try{ rowEl.setPointerCapture(e.pointerId); }catch{}
@@ -1576,12 +1580,13 @@ function bindMobileTouch(){
     const dx = e.clientX - startX;
     const dy = e.clientY - startY;
 
-    if(Math.abs(dx) > 10 || Math.abs(dy) > 10) moved = true;
+    // إذا لم يتم تفعيل السحب بعد، دع الجدول يمرر طبيعيًا
+    if(!swipeArmed) return;
 
-    // لو الاتجاه عمودي أكثر -> تجاهل السحب
+    // لو الاتجاه عمودي أكثر -> تجاهل
     if(Math.abs(dy) > Math.abs(dx)) return;
 
-    // سحب أفقي بسيط (نحرك الصف بصرياً)
+    // سحب أفقي بصرياً
     rowEl.style.transform = `translateX(${dx}px)`;
 
     if(Math.abs(dx) > 70){
@@ -1594,30 +1599,34 @@ function bindMobileTouch(){
     if(!rowEl || !rowId) return;
 
     const transform = rowEl.style.transform || "";
-    const m = /translateX\(([-0-9.]+)px\)/.exec(transform);
-    const dx = m ? Number(m[1]) : 0;
+    const mm = /translateX\(([-0-9.]+)px\)/.exec(transform);
+    const dx = mm ? Number(mm[1]) : 0;
 
     // رجّع الصف لمكانه
     rowEl.style.transform = "";
     rowEl.classList.remove("touch-active");
 
-    // سحب يمين: تجديد
-    if(swiped && dx > 70){
-      extendById(rowId);
-    }
-    // سحب يسار: حذف
-    else if(swiped && dx < -70){
-      deleteById(rowId);
-    }
-    // نقرة عادية: فتح إجراءات (اختياري)
-    else if(!swiped){
-      // نقرة قصيرة على الصف تفتح إجراءات
+    // إذا لم نفعل السحب: نقرة/ضغط مطول يفتح الإجراءات
+    if(!swipeArmed){
       try{ openRowActions(rowId); }catch{}
       haptic("light");
+    }else{
+      // سحب يمين: تجديد
+      if(swiped && dx > 70){
+        extendById(rowId);
+      }
+      // سحب يسار: حذف
+      else if(swiped && dx < -70){
+        deleteById(rowId);
+      }else{
+        // إذا لم يصل حد السحب، فقط افتح الإجراءات
+        try{ openRowActions(rowId); }catch{}
+        haptic("light");
+      }
     }
 
     rowEl = null; rowId = null;
-    swiped = false; moved = false;
+    swipeArmed = false; swiped = false;
     clearTimers();
   };
 
@@ -1628,9 +1637,10 @@ function bindMobileTouch(){
       rowEl.style.transform = "";
       rowEl.classList.remove("touch-active");
     }
-    rowEl=null; rowId=null; swiped=false; moved=false;
+    rowEl=null; rowId=null; swipeArmed=false; swiped=false;
   }, {passive:true});
 }
+
 
 /* init */
 bindMobileTouch();

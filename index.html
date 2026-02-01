@@ -6,23 +6,20 @@
 <title>لوحة تسيير الاشتراكات</title>
 
 <style>
+/* ====== THEME ====== */
 :root{
   --bg0:#070a12;
   --bg1:#0b1020;
   --card: rgba(255,255,255,.06);
   --line: rgba(255,255,255,.10);
-
   --text:#eaf0ff;
   --muted: rgba(234,240,255,.70);
-
   --accent:#7c5cff;
   --warn:#f59e0b;
   --err:#ef4444;
-
   --radius:18px;
   --shadow: 0 18px 45px rgba(0,0,0,.45);
 }
-
 *{box-sizing:border-box}
 body{
   margin:0;
@@ -35,11 +32,6 @@ body{
   padding: 18px;
 }
 .container{max-width:1200px;margin:0 auto}
-
-.header{margin-bottom:14px}
-.header h1{margin:0;font-size:20px}
-.header .sub{margin-top:6px;font-size:13px;color:var(--muted);line-height:1.7}
-
 .card{
   background: var(--card);
   border: 1px solid var(--line);
@@ -49,439 +41,78 @@ body{
   overflow:hidden;
 }
 
-.topbar{
-  padding:14px;
-  border-bottom:1px solid var(--line);
-  display:flex;
-  align-items:center;
-  gap:10px;
-  flex-wrap:wrap;
+/* ===== TABLE ===== */
+.tableWrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;border-collapse:separate;border-spacing:0;min-width:920px}
+thead th{
+  position:sticky;top:0;z-index:5;
+  background:rgba(0,0,0,.22);
+  color:var(--muted);
+  font-size:12px;font-weight:900;
+  padding:12px;border-bottom:1px solid var(--line)
 }
+tbody td{padding:12px;border-bottom:1px solid rgba(255,255,255,.07)}
+tbody tr:hover{background:rgba(255,255,255,.03)}
+.badge{padding:6px 10px;border-radius:999px;border:1px solid var(--line);font-weight:900;font-size:12px}
+.badge.ok{color:#c8f7d9;border-color:rgba(34,197,94,.45)}
+.badge.warn{color:#ffe2b3;border-color:rgba(245,158,11,.45)}
+.badge.err{color:#ffd0d0;border-color:rgba(239,68,68,.45)}
 
+/* ===== BUTTONS ===== */
 .btn{
+  padding:10px 12px;border-radius:14px;
   border:1px solid var(--line);
-  background: rgba(0,0,0,.18);
-  color: var(--text);
-  padding:10px 12px;
-  border-radius:14px;
-  font-weight:900;
-  cursor:pointer;
-  transition: transform .08s ease, background .15s ease, border-color .15s ease;
+  background:rgba(0,0,0,.18);
+  color:var(--text);font-weight:900;cursor:pointer
 }
-.btn:hover{ background: rgba(255,255,255,.06); }
-.btn:active{ transform: scale(.98); }
 .btn.primary{
-  border-color: rgba(124,92,255,.55);
-  background: linear-gradient(135deg, rgba(124,92,255,.55), rgba(124,92,255,.15));
+  background:linear-gradient(135deg,rgba(124,92,255,.55),rgba(124,92,255,.15));
+  border-color:rgba(124,92,255,.55)
 }
 .btn.danger{
-  border-color: rgba(239,68,68,.55);
-  background: linear-gradient(135deg, rgba(239,68,68,.35), rgba(239,68,68,.12));
-}
-.btn.soft{
-  border-color: rgba(255,255,255,.14);
-  background: rgba(255,255,255,.04);
-}
-.btn.soft:hover{ background: rgba(255,255,255,.08); }
-
-.searchWrap{flex:1;min-width:240px}
-.searchWrap input{
-  width:100%;
-  padding:10px 12px;
-  border-radius:14px;
-  border:1px solid var(--line);
-  background: rgba(0,0,0,.18);
-  color: var(--text);
-  outline:none;
-}
-.searchWrap input:focus{
-  border-color: rgba(124,92,255,.6);
-  box-shadow: 0 0 0 4px rgba(124,92,255,.14);
+  background:linear-gradient(135deg,rgba(239,68,68,.35),rgba(239,68,68,.12));
+  border-color:rgba(239,68,68,.55)
 }
 
-/* ===== Stats Bar ===== */
-#statsBar{
-  margin-inline-start:auto;
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-  align-items:center;
-}
-.statChip{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  padding:8px 10px;
-  border-radius:999px;
-  border:1px solid var(--line);
-  background: rgba(0,0,0,.18);
-  font-size:12px;
-  font-weight:900;
-  color: var(--text);
-  white-space:nowrap;
-}
-.statChip .k{ color: var(--muted); font-weight:900; }
-.statChip .v{ font-weight:900; }
-.statChip.ok{ border-color: rgba(34,197,94,.40); }
-.statChip.warn{ border-color: rgba(245,158,11,.40); }
-.statChip.err{ border-color: rgba(239,68,68,.40); }
-.statChip.sync{
-  border-color: rgba(124,92,255,.45);
-  background: rgba(124,92,255,.10);
-}
-.statChip .ico{ font-size:14px; line-height:1; }
-.statChip.ok .ico{ color:#22c55e; }
-.statChip.warn .ico{ color:#f59e0b; }
-.statChip.err .ico{ color:#ef4444; }
-.statChip.sync .ico{ color:#7c5cff; }
-
-@media (max-width: 650px){
-  #statsBar{ width:100%; margin-inline-start:0; }
-  .statChip{ flex: 1 1 auto; justify-content:center; }
-}
-
-/* ======= Table ======= */
-.tableWrap{ overflow:auto; }
-table{
-  width:100%;
-  border-collapse:separate;
-  border-spacing:0;
-  min-width: 920px;
-}
-thead th{
-  position:sticky; top:0;
-  z-index:5;
-  background: rgba(0,0,0,.22);
-  color: var(--muted);
-  text-align:right;
-  font-size:12px;
-  font-weight:900;
-  padding:12px 12px;
-  border-bottom:1px solid var(--line);
-}
-tbody td{
-  padding:12px 12px;
-  border-bottom:1px solid rgba(255,255,255,.07);
-  white-space:nowrap;
-  vertical-align:middle;
-}
-tbody tr:hover{ background: rgba(255,255,255,.03); }
-
-tr.expired-row{ background: rgba(239,68,68,.10); }
-tr.expiring-row{ background: rgba(245,158,11,.08); }
-tr.expired-row td:first-child{ box-shadow: inset 4px 0 0 rgba(239,68,68,.85); }
-tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); }
-
-.badge{
-  display:inline-flex;
-  align-items:center;
-  padding:6px 10px;
-  border-radius:999px;
-  border:1px solid var(--line);
-  font-size:12px;
-  font-weight:900;
-}
-.badge.ok{ border-color: rgba(34,197,94,.45); color:#c8f7d9; }
-.badge.warn{ border-color: rgba(245,158,11,.45); color:#ffe2b3; }
-.badge.err{ border-color: rgba(239,68,68,.45); color:#ffd0d0; }
-
-/* ======= Modals ======= */
-.modal{
-  position:fixed; inset:0;
-  display:none;
-  align-items:center; justify-content:center;
-  background: rgba(0,0,0,.62);
-  z-index:9999;
-  padding: 18px;
-}
-.modal[aria-hidden="false"]{ display:flex; }
-.modal .box{
-  width:min(860px, 100%);
-  background: rgba(10,14,26,.96);
-  border: 1px solid rgba(255,255,255,.10);
-  border-radius: 22px;
-  box-shadow: 0 30px 90px rgba(0,0,0,.65);
-  overflow:hidden;
-  animation: pop .14s ease-out;
-}
-@keyframes pop{ from{ transform: translateY(8px); opacity:.0 } to{ transform: translateY(0); opacity:1 } }
-.modalHeader{
-  padding:14px 16px;
-  border-bottom:1px solid rgba(255,255,255,.10);
-  display:flex; align-items:center; justify-content:space-between;
-  gap:10px;
-}
-.modalHeader h2{margin:0;font-size:16px}
-.modalHeader .hint{color:var(--muted);font-size:12px}
-.modalBody{ padding: 14px 16px; }
-.modalFooter{
-  padding:12px 16px;
-  border-top:1px solid rgba(255,255,255,.10);
-  display:flex; gap:10px; flex-wrap:wrap;
-  justify-content:flex-start;
-}
-
-.formGrid{
-  display:grid;
-  grid-template-columns: 1.2fr 1.2fr .9fr .9fr .9fr .9fr;
-  gap:10px;
-}
-@media (max-width: 980px){
-  table{min-width: 860px}
-  .formGrid{ grid-template-columns: 1fr 1fr; }
-}
-.field label{
-  display:block;
-  font-weight:900;
-  font-size:12px;
-  color: var(--muted);
-  margin-bottom:6px;
-}
-.field input, .field select, .field textarea{
-  width:100%;
-  padding:10px 12px;
-  border-radius:14px;
-  border:1px solid rgba(255,255,255,.10);
-  background: rgba(0,0,0,.22);
-  color: var(--text);
-  outline:none;
-}
-.field input:focus, .field select:focus, .field textarea:focus{
-  border-color: rgba(124,92,255,.6);
-  box-shadow: 0 0 0 4px rgba(124,92,255,.14);
-}
-
-/* Backup modal layout */
-.backGrid{
-  display:grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap:10px;
-}
-@media (max-width: 760px){
-  .backGrid{ grid-template-columns: 1fr; }
-}
-.backTile{
-  border:1px solid rgba(255,255,255,.10);
-  background: rgba(255,255,255,.03);
-  border-radius:18px;
-  padding:12px;
-}
-.backTile .t{font-weight:900;margin-bottom:6px}
-.backTile .d{color:var(--muted);font-size:12px;line-height:1.6;margin-bottom:10px}
-.backTile .actions{display:flex;gap:10px;flex-wrap:wrap}
-
-.note{
-  margin-top:10px;
-  border:1px dashed rgba(255,255,255,.14);
-  background: rgba(0,0,0,.14);
-  border-radius:16px;
-  padding:10px 12px;
-  color:var(--muted);
-  font-size:12px;
-  line-height:1.7;
-}
-.hidden{display:none}
-
-/* ===== Actions Modal (للجدول فقط) ===== */
-.actionPill{
-  padding:10px 12px;
-  border-radius:16px;
-  border:1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.04);
-  color: var(--text);
-  font-weight: 900;
-  cursor:pointer;
-}
-.actionPill:hover{ background: rgba(255,255,255,.08); }
-
-.actGrid{
-  display:grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap:12px;
-}
-@media (max-width: 640px){
-  .actGrid{ grid-template-columns: 1fr; }
-}
-.actBtn{
-  border:1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.04);
-  color: var(--text);
-  padding: 14px 14px;
-  border-radius: 18px;
-  font-weight: 900;
-  cursor:pointer;
-  min-height: 56px;
-}
-.actBtn:hover{ background: rgba(255,255,255,.08); }
-.actBtn:active{ transform: scale(.99); }
-.actBtn.danger{
-  border-color: rgba(239,68,68,.45);
-  background: rgba(239,68,68,.20);
-}
-.actBtn.danger:hover{ background: rgba(239,68,68,.28); }
-
-/* ===== Sync Modal UI ===== */
-.syncSectionTitle{
-  font-weight: 900;
-  margin: 2px 0 10px;
-  color: var(--muted);
-}
-.syncGrid{
-  display:grid;
-  grid-template-columns: 1fr;
-  gap:12px;
-}
-.syncBtn{
-  width:100%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:10px;
-  padding:16px 14px;
-  border-radius:18px;
-  border:1px solid rgba(255,255,255,.12);
-  background: rgba(255,255,255,.04);
-  color: var(--text);
-  font-weight: 900;
-  cursor:pointer;
-  text-decoration:none;
-}
-.syncBtn:hover{ background: rgba(255,255,255,.08); }
-.syncBtn:active{ transform: scale(.99); }
-.syncBtn.link{ cursor:pointer; }
-
-.syncHr{
-  height:1px;
-  background: rgba(255,255,255,.10);
-  margin: 14px 0;
-}
-.syncNote{
-  margin-top: 14px;
-  border:1px dashed rgba(255,255,255,.16);
-  background: rgba(0,0,0,.16);
-  border-radius:16px;
-  padding:10px 12px;
-  color: var(--muted);
-  font-size:12px;
-  line-height:1.7;
-}
-
-/* ===== Toast ===== */
+/* ===== TOAST ===== */
 .toast{
-  position: fixed;
-  left: 50%;
-  bottom: 18px;
-  transform: translateX(-50%) translateY(20px);
-  min-width: min(520px, calc(100% - 28px));
-  max-width: 720px;
-  padding: 12px 14px;
-  border-radius: 16px;
-  border: 1px solid rgba(255,255,255,.12);
-  background: rgba(10,14,26,.92);
-  box-shadow: 0 18px 45px rgba(0,0,0,.55);
-  color: var(--text);
-  font-weight: 900;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .18s ease, transform .18s ease;
-  z-index: 10000;
+  position:fixed;
+  left:50%;bottom:18px;
+  transform:translateX(-50%) translateY(20px);
+  min-width:min(520px,calc(100% - 28px));
+  padding:12px 14px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(10,14,26,.92);
+  box-shadow:0 18px 45px rgba(0,0,0,.55);
+  color:var(--text);
+  font-weight:900;
+  display:flex;gap:10px;align-items:center;
+  opacity:0;pointer-events:none;
+  transition:.18s;z-index:10000
 }
-.toast.show{
-  opacity: 1;
-  transform: translateX(-50%) translateY(0);
-}
-.toast .ico{ font-size: 16px; }
-.toast.err{ border-color: rgba(239,68,68,.45); }
-.toast.ok{ border-color: rgba(34,197,94,.40); }
-.toast.warn{ border-color: rgba(245,158,11,.40); }
-.toast .msg{ font-weight: 900; }
-.toast .sub{ color: var(--muted); font-weight: 800; }
-
-/* ===== Auth modal small UI (كان ناقص) ===== */
-.iconBtn{
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:auto}
+.toast .action{
+  margin-inline-start:auto;
+  padding:8px 10px;
+  border-radius:12px;
   border:1px solid rgba(255,255,255,.14);
-  background: rgba(255,255,255,.04);
-  color: var(--text);
-  padding:10px 12px;
-  border-radius:14px;
-  font-weight:900;
-  cursor:pointer;
-}
-.iconBtn:hover{ background: rgba(255,255,255,.08); }
-.grid2{
-  padding: 14px 16px;
-  display:grid;
-  grid-template-columns: 1fr 1fr;
-  gap:10px;
-}
-.grid2 label{
-  display:block;
-  font-weight:900;
-  font-size:12px;
-  color: var(--muted);
-  margin-bottom:6px;
-}
-.grid2 input{
-  width:100%;
-  padding:10px 12px;
-  border-radius:14px;
-  border:1px solid rgba(255,255,255,.10);
-  background: rgba(0,0,0,.22);
-  color: var(--text);
-  outline:none;
-}
-.grid2 input:focus{
-  border-color: rgba(124,92,255,.6);
-  box-shadow: 0 0 0 4px rgba(124,92,255,.14);
-}
-.rowBtns{
-  padding: 0 16px 16px;
-  display:flex;
-  gap:10px;
-  align-items:center;
-}
-.mini{
-  padding: 0 16px 16px;
-  color: var(--muted);
-  font-size:12px;
-  line-height:1.7;
-}
-@media (max-width: 760px){
-  .grid2{ grid-template-columns: 1fr; }
+  background:rgba(255,255,255,.06);
+  color:var(--text);font-weight:900;cursor:pointer
 }
 
+/* ===== MISC ===== */
+.topbar{padding:14px;display:flex;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.actionPill{padding:8px 12px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.05);cursor:pointer}
 </style>
-
-<!-- Firebase (Compat) for Auth -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 </head>
 
 <body>
-
 <div class="container">
-  <div class="header">
-    <h1>🧾 لوحة تسيير الاشتراكات</h1>
-    <div class="sub">⚡ إجراءات للصف + ☁️ نافذة مزامنة/نسخ احتياطي. <span style="opacity:.7;font-weight:800">(v1.2.5)</span></div>
-  </div>
-
   <div class="card">
     <div class="topbar">
-      <button class="btn primary" id="openAdd" type="button">➕ إضافة</button>
-      <button class="btn soft" id="openBackup" type="button">📦 النسخ الاحتياطي</button>
-      <button class="btn soft" id="openSync" type="button">☁️ المزامنة</button>
-      <button class="btn soft" id="openAuth" type="button">👤 حساب</button>
-
-      <div class="searchWrap">
-        <input id="search" placeholder="بحث بالاسم أو الإيميل..." />
-      </div>
-
-      <button class="btn danger" id="clearBtn" type="button">حذف الكل</button>
-
-      <div class="pills" id="statsBar"></div>
+      <button class="btn primary" id="add">➕ إضافة</button>
+      <button class="btn danger" id="clear">🗑️ حذف الكل</button>
     </div>
 
     <div class="tableWrap">
@@ -490,10 +121,7 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
           <tr>
             <th>الاسم</th>
             <th>الإيميل</th>
-            <th>المدة</th>
-            <th>البداية</th>
             <th>الانتهاء</th>
-            <th>المتبقي</th>
             <th>الحالة</th>
             <th>إجراء</th>
           </tr>
@@ -504,946 +132,93 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
   </div>
 </div>
 
-<!-- Modal: Add/Edit -->
-<div class="modal" id="formModal" aria-hidden="true">
-  <div class="box" role="dialog" aria-modal="true">
-    <div class="modalHeader">
-      <div>
-        <h2 id="formTitle">إضافة اشتراك</h2>
-        <div class="hint">املأ البيانات ثم اضغط حفظ</div>
-      </div>
-      <button class="btn" id="closeForm" type="button">✕ إغلاق</button>
-    </div>
-
-    <div class="modalBody">
-      <div class="formGrid">
-        <div class="field">
-          <label>الاسم</label>
-          <input id="name" placeholder="مثال: Ahmed">
-        </div>
-        <div class="field">
-          <label>الإيميل</label>
-          <input id="email" placeholder="name@example.com" inputmode="email">
-        </div>
-        <div class="field">
-          <label>اختيار سريع</label>
-          <select id="quickPlan">
-            <option value="">— اختر —</option>
-            <option value="1">1 شهر</option>
-            <option value="3">3 أشهر</option>
-            <option value="6">6 أشهر</option>
-            <option value="12">12 شهر</option>
-          </select>
-        </div>
-        <div class="field">
-          <label>عدد الأشهر (أي رقم)</label>
-          <input id="months" type="number" min="1" step="1" placeholder="مثال: 2 / 5 / 18">
-        </div>
-        <div class="field">
-          <label>تاريخ البداية</label>
-          <input id="start" type="date">
-        </div>
-        <div class="field">
-          <label>تنبيه قبل الانتهاء (أيام)</label>
-          <input id="alertDays" type="number" min="1" step="1" placeholder="مثال: 7">
-        </div>
-      </div>
-    </div>
-
-    <div class="modalFooter">
-      <button class="btn primary" id="saveBtn" type="button">💾 حفظ</button>
-      <button class="btn" id="cancelBtn" type="button">إلغاء</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: Backup -->
-<div class="modal" id="backupModal" aria-hidden="true">
-  <div class="box" role="dialog" aria-modal="true">
-    <div class="modalHeader">
-      <div>
-        <h2>📦 النسخ الاحتياطي</h2>
-        <div class="hint">تصدير/استيراد JSON و CSV + لصق JSON</div>
-      </div>
-      <button class="btn" id="closeBackup" type="button">✕ إغلاق</button>
-    </div>
-
-    <div class="modalBody">
-      <div class="backGrid">
-        <div class="backTile">
-          <div class="t">⬇️ تصدير JSON</div>
-          <div class="d">أفضل خيار للنسخ الاحتياطي الكامل.</div>
-          <div class="actions">
-            <button class="btn soft" id="exportJsonBtn" type="button">تصدير</button>
-          </div>
-        </div>
-
-        <div class="backTile">
-          <div class="t">⬆️ استيراد ملف JSON</div>
-          <div class="d">استرجاع البيانات من ملف النسخة الاحتياطية.</div>
-          <div class="actions">
-            <button class="btn soft" id="importFileBtn" type="button">اختيار ملف</button>
-            <input id="fileInput" type="file" accept="application/json,.json" class="hidden">
-          </div>
-        </div>
-
-        <div class="backTile">
-          <div class="t">📋 لصق JSON</div>
-          <div class="d">الصق JSON واستورد مباشرة.</div>
-          <div class="actions">
-            <button class="btn soft" id="openPasteFromBackup" type="button">فتح نافذة اللصق</button>
-          </div>
-        </div>
-
-        <div class="backTile">
-          <div class="t">⬇️ تصدير CSV</div>
-          <div class="d">للعرض في Excel (مراجعة).</div>
-          <div class="actions">
-            <button class="btn soft" id="exportCsvBtn" type="button">تصدير</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="note">
-        <b>ملاحظة:</b> عند الاستيراد يتم الدمج حسب الإيميل لتجنب التكرار.
-      </div>
-    </div>
-
-    <div class="modalFooter">
-      <button class="btn" id="closeBackup2" type="button">إغلاق</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: Paste JSON -->
-<div class="modal" id="pasteModal" aria-hidden="true">
-  <div class="box" role="dialog" aria-modal="true">
-    <div class="modalHeader">
-      <div>
-        <h2>📋 استيراد باللصق (JSON)</h2>
-        <div class="hint">الصق JSON ثم اضغط استيراد</div>
-      </div>
-      <button class="btn" id="closePaste" type="button">✕ إغلاق</button>
-    </div>
-
-    <div class="modalBody">
-      <div class="field">
-        <label>JSON</label>
-        <textarea id="pasteArea" rows="10" style="min-height:220px"></textarea>
-      </div>
-    </div>
-
-    <div class="modalFooter">
-      <button class="btn primary" id="doPasteImport" type="button">استيراد</button>
-      <button class="btn" id="cancelPaste" type="button">إلغاء</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: إجراءات الجدول -->
-<div class="modal" id="rowActionsModal" aria-hidden="true">
-  <div class="box" role="dialog" aria-modal="true" style="width:min(740px, 100%)">
-    <div class="modalHeader">
-      <div>
-        <h2>إجراءات</h2>
-        <div class="hint" id="rowActionsHint">—</div>
-      </div>
-      <button class="btn" id="closeRowActionsX" type="button">✕</button>
-    </div>
-
-    <div class="modalBody">
-      <div class="actGrid">
-        <button class="actBtn" id="actExtend" type="button">🔁 تجديد</button>
-        <button class="actBtn" id="actEdit" type="button">✏️ تعديل</button>
-        <button class="actBtn" id="actCopyEmail" type="button">📋 نسخ Email</button>
-        <button class="actBtn danger" id="actDelete" type="button">🗑️ حذف</button>
-      </div>
-    </div>
-
-    <div class="modalFooter">
-      <button class="btn" id="closeRowActions" type="button">إغلاق</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: المزامنة والنسخ الاحتياطي -->
-<div class="modal" id="syncModal" aria-hidden="true">
-  <div class="box" role="dialog" aria-modal="true" style="width:min(760px, 100%)">
-    <div class="modalHeader">
-      <div>
-        <h2>☁️ المزامنة والنسخ الاحتياطي</h2>
-        <div class="hint">النسخ والاسترجاع + خدمات التخزين</div>
-      </div>
-      <button class="btn" id="closeSyncX" type="button">✕</button>
-    </div>
-
-    <div class="modalBody">
-      <div class="syncSectionTitle">📦 النسخ والاسترجاع</div>
-
-      <div class="syncGrid">
-        <button class="syncBtn" id="syncBackupDownload" type="button">💾 Backup (تنزيل)</button>
-        <button class="syncBtn" id="syncBackupShare" type="button">📤 مشاركة Backup</button>
-        <button class="syncBtn" id="syncRestorePick" type="button">📥 Restore (اختيار ملف)</button>
-      </div>
-
-      <div class="syncHr"></div>
-
-      <div class="syncSectionTitle">☁️ خدمات التخزين</div>
-      <div class="syncGrid">
-        <a class="syncBtn link" href="https://drive.google.com/" target="_blank" rel="noopener">📂 فتح Google Drive</a>
-        <a class="syncBtn link" href="https://www.dropbox.com/" target="_blank" rel="noopener">📂 فتح Dropbox</a>
-      </div>
-
-      <div class="syncNote">
-        <b>ملاحظة:</b> المزامنة بدون سيرفر: أنشئ ملف <b>backup.json</b> ثم شاركه/ارفَعْه إلى Drive/Dropbox،
-        وعند الاسترجاع اختر الملف من جهازك.
-      </div>
-    </div>
-
-    <div class="modalFooter">
-      <button class="btn" id="closeSync" type="button">إغلاق</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal: Auth -->
-<div class="modal" id="authModal" aria-hidden="true">
-  <div class="box" role="dialog" aria-modal="true">
-    <div class="modalHeader">
-      <div>
-        <h2>👤 الحساب</h2>
-        <div class="hint">المرحلة 1: تسجيل الدخول/إنشاء حساب فقط (بدون ربط البيانات بالحساب بعد)</div>
-      </div>
-      <button class="iconBtn" id="closeAuth" type="button" aria-label="إغلاق">✕</button>
-    </div>
-
-    <div class="grid2">
-      <div>
-        <label>الإيميل</label>
-        <input id="authEmail" type="email" inputmode="email" placeholder="name@example.com" autocomplete="email">
-      </div>
-      <div>
-        <label>كلمة المرور</label>
-        <input id="authPass" type="password" placeholder="••••••••" autocomplete="current-password">
-      </div>
-    </div>
-
-    <div class="rowBtns">
-      <button class="btn primary" id="authLogin" type="button">تسجيل الدخول</button>
-      <button class="btn soft" id="authRegister" type="button">إنشاء حساب</button>
-      <button class="btn danger" id="authLogout" type="button" style="margin-inline-start:auto">تسجيل خروج</button>
-    </div>
-
-    <div class="mini" id="authStateText">—</div>
-
-    <div class="mini" style="color:var(--muted)">
-      ملاحظة: إذا واجهت خطأ “authDomain / apiKey”، تأكد أنك سجلت تطبيق Web في Firebase وأخذت الإعدادات الصحيحة.
-    </div>
-  </div>
-</div>
-
-<!-- Toast -->
-<div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>
+<div id="toast" class="toast"></div>
 
 <script>
-'use strict';
+/* ===== DATA ===== */
+let data = JSON.parse(localStorage.getItem("subs_data")||"[]");
 
-const APP_VERSION = 'v1.2.5 – Hardened';
-const DEBUG = false;
-const log = (...a)=>{ if(DEBUG) console.log('[APP]', ...a); };
-
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyAQPzqeazhj4rjyY1dbcGZ9YEAv8ZhLQbQ",
-  authDomain: "dattta-6f497.firebaseapp.com",
-  databaseURL: "https://dattta-6f497-default-rtdb.firebaseio.com",
-  projectId: "dattta-6f497",
-  storageBucket: "dattta-6f497.firebasestorage.app",
-  messagingSenderId: "804914291938",
-  appId: "1:804914291938:web:7a7d3fe8a5ebb28a306abb"
-};
-
-const $ = (id)=>document.getElementById(id);
-
-const FIREBASE_URL  = "https://dattta-6f497-default-rtdb.firebaseio.com";
-const FIREBASE_PATH = "subscriptions";
-const LOCAL_BACKUP_KEY = "subs_local_backup_v3";
-const SETTINGS_KEY = "subs_dashboard_actions_modal_settings_v2";
-
-let data = [];
-let editingId = null;
-
-let authReady = false;
-let currentUser = null;
-
-let syncState = "idle"; // idle | saving | ok | fail | offline
-let lastSyncAt = null;
-
-function nowHHMM(){
-  const d = new Date();
-  return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
-}
-
-function getSyncText(){
-  if(!navigator.onLine) return "📴 أوفلاين";
-  if(syncState === "saving") return "⏳ جارٍ الحفظ...";
-  if(syncState === "ok") return `✅ تم (${lastSyncAt || ""})`;
-  if(syncState === "fail") return "🔴 فشل";
-  return "—";
-}
-function setSyncState(state){
-  syncState = state;
-  const el = document.getElementById("syncVal");
-  if(el) el.textContent = getSyncText();
-}
-
-/* Toast */
+/* ===== TOAST ===== */
 let toastTimer=null;
-function haptic(type="light"){
-  try{
-    if(!navigator.vibrate) return;
-    if(type==="light") navigator.vibrate(12);
-    else if(type==="ok") navigator.vibrate([12, 30, 12]);
-    else if(type==="fail") navigator.vibrate([28, 40, 28]);
-    else navigator.vibrate(15);
-  }catch{}
-}
-function showToast(message, detail="", kind="warn"){
-  const t = $("toast");
-  if(!t) return;
-  t.className = `toast ${kind}`;
-  t.innerHTML = `
-    <span class="ico">${kind==="err" ? "❌" : kind==="ok" ? "✅" : "⚠️"}</span>
-    <div>
-      <div class="msg">${message}</div>
-      ${detail ? `<div class="sub">${detail}</div>` : ``}
-    </div>
-  `;
-  clearTimeout(toastTimer);
+function showToast(html,withUndo=false,onUndo=null){
+  const t=document.getElementById("toast");
+  t.innerHTML=html+(withUndo?'<button class="action" id="undo">↩️ تراجع</button>':"");
   t.classList.add("show");
-  toastTimer = setTimeout(()=> t.classList.remove("show"), 2200);
-}
-
-/* Auth */
-function initAuth(){
-  try{
-    if(!window.firebase || !firebase.initializeApp) return false;
-    if(!firebase.apps || firebase.apps.length === 0){
-      firebase.initializeApp(FIREBASE_CONFIG);
-    }
-    const auth = firebase.auth();
-    auth.onAuthStateChanged((u)=>{
-      currentUser = u || null;
-      updateAuthUI();
-    });
-    authReady = true;
-    updateAuthUI();
-    return true;
-  }catch(e){
-    authReady = false;
-    currentUser = null;
-    setSyncState('fail');
-    showToast("تعذر تهيئة الحساب", String(e?.message || e), "err");
-    return false;
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove("show"),7000);
+  if(withUndo){
+    document.getElementById("undo").onclick=()=>{onUndo&&onUndo();t.classList.remove("show")}
   }
 }
-function updateAuthUI(){
-  const t = $("authStateText");
-  const logoutBtn = $("authLogout");
-  if(!t || !logoutBtn) return;
 
-  if(!authReady){
-    t.textContent = "⚠️ Firebase Auth غير جاهز (تحقق من الإعدادات/الاتصال).";
-    logoutBtn.disabled = true;
+/* ===== UNDO BACKUP (SAFE) ===== */
+const UNDO_KEY="subs_undo_v1";
+function snapshot(){
+  localStorage.setItem(UNDO_KEY,JSON.stringify(data));
+}
+function undo(){
+  const b=localStorage.getItem(UNDO_KEY);
+  if(!b)return;
+  data=JSON.parse(b);
+  save();render();
+  showToast("✅ تم التراجع بنجاح");
+}
+
+/* ===== HELPERS ===== */
+function save(){
+  localStorage.setItem("subs_data",JSON.stringify(data));
+}
+function status(d){
+  return new Date(d)<new Date()?"err":"ok";
+}
+
+/* ===== RENDER ===== */
+function render(){
+  const tb=document.getElementById("tbody");
+  tb.innerHTML="";
+  if(!data.length){
+    tb.innerHTML='<tr><td colspan="5" style="text-align:center;opacity:.7">لا توجد بيانات</td></tr>';
     return;
   }
-  if(currentUser){
-    t.textContent = `✅ مسجل دخول: ${currentUser.email || "—"}`;
-    logoutBtn.disabled = false;
-  }else{
-    t.textContent = "🔒 غير مسجل دخول.";
-    logoutBtn.disabled = true;
-  }
-}
-
-/* Fetch with timeout */
-async function fetchWithTimeout(url, options={}, timeoutMs=12000){
-  const controller = new AbortController();
-  const t = setTimeout(()=>controller.abort(), timeoutMs);
-  try{
-    return await fetch(url, {...options, signal: controller.signal, cache: 'no-store'});
-  } finally {
-    clearTimeout(t);
-  }
-}
-
-/* Local backup */
-function saveLocalBackup(){
-  try{ localStorage.setItem(LOCAL_BACKUP_KEY, JSON.stringify(data)); }catch{}
-}
-function loadLocalBackup(){
-  try{
-    const raw = localStorage.getItem(LOCAL_BACKUP_KEY);
-    const j = raw ? JSON.parse(raw) : null;
-    return Array.isArray(j) ? j : [];
-  }catch{ return []; }
-}
-
-/* Firebase RTDB */
-async function firebasePull(){
-  const res = await fetchWithTimeout(`${FIREBASE_URL}/${FIREBASE_PATH}.json`, {});
-  if(!res.ok) throw new Error("Firebase pull failed");
-  const json = await res.json();
-  return Array.isArray(json) ? json : (json ? json : []);
-}
-async function firebasePush(){
-  const res = await fetchWithTimeout(`${FIREBASE_URL}/${FIREBASE_PATH}.json`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data)
-  });
-  if(!res.ok) throw new Error("Firebase push failed");
-}
-async function syncPushNow(){
-  saveLocalBackup();
-  if(!navigator.onLine){ setSyncState("offline"); return; }
-  try{
-    setSyncState("saving");
-    await firebasePush();
-    lastSyncAt = nowHHMM();
-    setSyncState("ok");
-  }catch{
-    setSyncState("fail");
-  }
-}
-async function syncPullNow(){
-  if(!navigator.onLine){ setSyncState("offline"); return; }
-  try{
-    setSyncState("saving");
-    data = await firebasePull();
-    saveLocalBackup();
-    lastSyncAt = nowHHMM();
-    setSyncState("ok");
-    render();
-  }catch{
-    setSyncState("fail");
-  }
-}
-
-window.addEventListener("online", ()=> setSyncState(syncState));
-window.addEventListener("offline", ()=> setSyncState("offline"));
-
-/* Utils */
-function todayISO(){
-  const d=new Date(); d.setHours(0,0,0,0);
-  return d.toISOString().slice(0,10);
-}
-function toDate(iso){
-  const d=new Date(iso+"T00:00:00"); d.setHours(0,0,0,0);
-  return d;
-}
-function addMonths(dateISO, m){
-  const d=toDate(dateISO);
-  const day=d.getDate();
-  d.setMonth(d.getMonth()+m);
-  if(d.getDate() < day) d.setDate(0);
-  return d.toISOString().slice(0,10);
-}
-function normalizeEmail(e){ return (e||"").trim().toLowerCase(); }
-function validateEmail(e){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
-function escapeHtml(s){
-  return (s||"").replace(/[&<>"']/g, m => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-  }[m]));
-}
-function daysLeft(endISO){
-  const now=toDate(todayISO());
-  const end=toDate(endISO);
-  return Math.round((end-now)/(1000*60*60*24));
-}
-function getStoredAlertDays(){
-  try{
-    const s = JSON.parse(localStorage.getItem(SETTINGS_KEY)||"{}");
-    const a = Number(s.alertDays);
-    return (a && a>0) ? a : 7;
-  }catch{ return 7; }
-}
-function setStoredAlertDays(n){
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify({alertDays:n}));
-}
-function getAlertDaysFromForm(){
-  const n = Number($("alertDays").value);
-  return (n && n>0) ? n : 7;
-}
-function status(endISO, alertDays){
-  const left=daysLeft(endISO);
-  if(left < 0) return {key:"expired", label:"منتهي", cls:"err", left};
-  if(left <= alertDays) return {key:"expiring", label:"قريب ينتهي", cls:"warn", left};
-  return {key:"active", label:"فعّال", cls:"ok", left};
-}
-
-/* Load */
-async function load(){
-  if(navigator.onLine){
-    try{
-      setSyncState("saving");
-      data = await firebasePull();
-      saveLocalBackup();
-      lastSyncAt = nowHHMM();
-      setSyncState("ok");
-      return;
-    }catch{
-      setSyncState("fail");
-    }
-  }else{
-    setSyncState("offline");
-  }
-  data = loadLocalBackup();
-  setSyncState(syncState);
-}
-function save(){
-  syncPushNow();
-}
-
-/* Modals */
-function openModal(id){ $(id).setAttribute("aria-hidden","false"); }
-function closeModal(id){ $(id).setAttribute("aria-hidden","true"); }
-function closeAllModals(){
-  ["formModal","backupModal","pasteModal","rowActionsModal","syncModal","authModal"].forEach((x)=>{ const el=$(x); if(el) closeModal(x); });
-}
-
-/* Upsert */
-function upsert(rec){
-  const idxByEmail = data.findIndex(r=>normalizeEmail(r.email)===normalizeEmail(rec.email));
-
-  if(editingId){
-    const idxById = data.findIndex(r=>r.id===editingId);
-    if(idxById>=0){
-      if(idxByEmail>=0 && idxByEmail!==idxById){
-        data[idxByEmail] = {...data[idxByEmail], ...rec, id:data[idxByEmail].id};
-        data.splice(idxById,1);
-      }else{
-        data[idxById] = {...data[idxById], ...rec, id:editingId};
-      }
-      return;
-    }
-  }
-  if(idxByEmail>=0){
-    data[idxByEmail] = {...data[idxByEmail], ...rec, id:data[idxByEmail].id};
-  }else{
-    data.unshift(rec);
-  }
-}
-
-/* Backup helpers */
-function downloadFile(filename, content, mime){
-  const blob=new Blob([content],{type:mime});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement("a");
-  a.href=url; a.download=filename;
-  document.body.appendChild(a); a.click(); a.remove();
-  URL.revokeObjectURL(url);
-}
-function buildBackupPayload(){
-  return {
-    version: 1,
-    exportedAt: new Date().toISOString(),
-    alertDays: getStoredAlertDays(),
-    data
-  };
-}
-function csvCell(v){
-  const s=String(v??"");
-  if(/[,"\n]/.test(s)) return `"${s.replace(/"/g,'""')}"`;
-  return s;
-}
-
-/* Actions modal */
-let currentRowId = null;
-function openRowActions(id){
-  currentRowId = id;
-  const rec = data.find(x => x.id === id);
-  if(!rec) return;
-  $("rowActionsHint").textContent = `${rec.name} — ${rec.email}`;
-  openModal("rowActionsModal");
-  try{ if(navigator.vibrate) navigator.vibrate(20); }catch{}
-}
-function closeRowActions(){
-  closeModal("rowActionsModal");
-  currentRowId = null;
-}
-
-/* Render */
-function render(){
-  const q = ($("search").value||"").trim().toLowerCase();
-  const tb = $("tbody");
-  tb.innerHTML="";
-
-  const alertDays = getStoredAlertDays();
-
-  const allCounts={active:0, expiring:0, expired:0};
   for(const r of data){
-    allCounts[status(r.end, alertDays).key]++;
+    tb.innerHTML+=`
+      <tr>
+        <td>${r.name}</td>
+        <td>${r.email}</td>
+        <td>${r.end}</td>
+        <td><span class="badge ${status(r.end)}">${status(r.end)==="ok"?"فعّال":"منتهي"}</span></td>
+        <td><button class="actionPill" onclick="del('${r.id}')">🗑️</button></td>
+      </tr>`;
   }
-
-  const rows = data.filter(r=>{
-    if(!q) return true;
-    return (r.name||"").toLowerCase().includes(q) || normalizeEmail(r.email).includes(q);
-  });
-
-  for(const r of rows){
-    const st = status(r.end, alertDays);
-    const tr = document.createElement("tr");
-    if(st.key==="expired") tr.classList.add("expired-row");
-    if(st.key==="expiring") tr.classList.add("expiring-row");
-
-    const leftTxt = st.left < 0 ? `انتهى منذ ${Math.abs(st.left)} يوم` : `${st.left} يوم`;
-
-    tr.innerHTML = `
-      <td>${escapeHtml(r.name)}</td>
-      <td>${escapeHtml(r.email)}</td>
-      <td>${r.months} شهر</td>
-      <td>${r.start}</td>
-      <td>${r.end}</td>
-      <td>${leftTxt}</td>
-      <td><span class="badge ${st.cls}">${st.label}</span></td>
-      <td>
-        <button class="actionPill" data-act="actions" data-id="${r.id}" type="button">⚡ إجراءات</button>
-      </td>
-    `;
-    tb.appendChild(tr);
-  }
-
-  if(rows.length === 0){
-    const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="8" style="text-align:center;color:rgba(234,240,255,.70);padding:18px">
-      لا توجد سجلات لعرضها
-    </td>`;
-    tb.appendChild(tr);
-  }
-
-  const bar = $("statsBar");
-  if(bar){
-    bar.innerHTML = `
-      <div class="statChip"><span class="ico">👁️</span><span class="k">المعروض</span><span class="v">${rows.length}</span></div>
-      <div class="statChip"><span class="ico">📦</span><span class="k">الإجمالي</span><span class="v">${data.length}</span></div>
-      <div class="statChip ok"><span class="ico">✅</span><span class="k">فعّال</span><span class="v">${allCounts.active}</span></div>
-      <div class="statChip warn"><span class="ico">⏰</span><span class="k">قريب</span><span class="v">${allCounts.expiring}</span></div>
-      <div class="statChip err"><span class="ico">❌</span><span class="k">منتهي</span><span class="v">${allCounts.expired}</span></div>
-      <div class="statChip sync"><span class="ico">☁️</span><span class="k">مزامنة</span><span class="v" id="syncVal">${getSyncText()}</span></div>
-    `;
-  }
-
-  setSyncState(syncState);
 }
 
-/* Bind after DOM ready (هذا هو المفتاح) */
-document.addEventListener("DOMContentLoaded", async ()=>{
+/* ===== ACTIONS ===== */
+document.getElementById("add").onclick=()=>{
+  const name=prompt("الاسم"); if(!name)return;
+  const email=prompt("الإيميل"); if(!email)return;
+  const end=prompt("تاريخ الانتهاء (YYYY-MM-DD)"); if(!end)return;
+  data.unshift({id:Date.now(),name,email,end});
+  save();render();
+};
 
-  // close on background click
-  ["formModal","backupModal","pasteModal","rowActionsModal","syncModal","authModal"].forEach(mid=>{
-    const el = $(mid);
-    if(!el) return;
-    el.addEventListener("click",(e)=>{ if(e.target.id===mid) closeModal(mid); });
-  });
+document.getElementById("clear").onclick=()=>{
+  if(!data.length)return;
+  if(!confirm("حذف الكل؟"))return;
+  snapshot();
+  const c=data.length;
+  data=[];
+  save();render();
+  showToast(`🗑️ تم حذف ${c} سجل`,true,undo);
+};
 
-  document.addEventListener("keydown",(e)=>{ if(e.key==="Escape") closeAllModals(); });
+window.del=(id)=>{
+  snapshot();
+  data=data.filter(x=>x.id!=id);
+  save();render();
+  showToast("🗑️ تم حذف السجل",true,undo);
+};
 
-  $("openAdd").onclick = ()=>{ resetForm(); openModal("formModal"); };
-  $("closeForm").onclick = ()=> closeModal("formModal");
-  $("cancelBtn").onclick = ()=> closeModal("formModal");
-
-  $("quickPlan").onchange = ()=>{ const v=$("quickPlan").value; if(v) $("months").value=v; };
-
-  $("openBackup").onclick = ()=> openModal("backupModal");
-  $("closeBackup").onclick = ()=> closeModal("backupModal");
-  $("closeBackup2").onclick = ()=> closeModal("backupModal");
-
-  $("openSync").onclick = ()=> openModal("syncModal");
-  $("closeSyncX").onclick = ()=> closeModal("syncModal");
-  $("closeSync").onclick  = ()=> closeModal("syncModal");
-
-  $("openAuth").onclick = ()=>{
-    if(!authReady) initAuth();
-    openModal("authModal");
-    updateAuthUI();
-  };
-  $("closeAuth").onclick = ()=> closeModal("authModal");
-
-  $("authLogin").onclick = async ()=>{
-    if(!authReady) initAuth();
-    const email = ($("authEmail").value||"").trim();
-    const pass  = ($("authPass").value||"");
-    if(!email || !pass){ haptic("light"); showToast("أكمل الإيميل وكلمة المرور","","warn"); return; }
-    try{
-      setSyncState("saving");
-      await firebase.auth().signInWithEmailAndPassword(email, pass);
-      lastSyncAt = nowHHMM();
-      setSyncState("ok");
-      haptic("ok");
-      showToast("تم تسجيل الدخول", email, "ok");
-    }catch(e){
-      setSyncState("fail");
-      haptic("fail");
-      showToast("فشل تسجيل الدخول", String(e?.message || e), "err");
-    }
-  };
-
-  $("authRegister").onclick = async ()=>{
-    if(!authReady) initAuth();
-    const email = ($("authEmail").value||"").trim();
-    const pass  = ($("authPass").value||"");
-    if(!email || !pass){ haptic("light"); showToast("أكمل الإيميل وكلمة المرور","","warn"); return; }
-    try{
-      setSyncState("saving");
-      await firebase.auth().createUserWithEmailAndPassword(email, pass);
-      lastSyncAt = nowHHMM();
-      setSyncState("ok");
-      haptic("ok");
-      showToast("تم إنشاء الحساب", email, "ok");
-    }catch(e){
-      setSyncState("fail");
-      haptic("fail");
-      showToast("فشل إنشاء الحساب", String(e?.message || e), "err");
-    }
-  };
-
-  $("authLogout").onclick = async ()=>{
-    if(!authReady) initAuth();
-    try{
-      setSyncState("saving");
-      await firebase.auth().signOut();
-      lastSyncAt = nowHHMM();
-      setSyncState("ok");
-      haptic("ok");
-      showToast("تم تسجيل الخروج","", "ok");
-    }catch(e){
-      setSyncState("fail");
-      haptic("fail");
-      showToast("فشل تسجيل الخروج", String(e?.message || e), "err");
-    }
-  };
-
-  $("openPasteFromBackup").onclick = ()=>{ $("pasteArea").value=""; openModal("pasteModal"); };
-  $("closePaste").onclick = ()=> closeModal("pasteModal");
-  $("cancelPaste").onclick = ()=> closeModal("pasteModal");
-
-  $("search").addEventListener("input", render);
-
-  $("clearBtn").onclick = ()=>{
-    if(!confirm("حذف كل البيانات؟")) return;
-    data=[]; save(); render();
-  };
-
-  function resetForm(){
-    $("name").value="";
-    $("email").value="";
-    $("quickPlan").value="";
-    $("months").value="";
-    $("start").value=todayISO();
-    $("alertDays").value=getStoredAlertDays();
-    editingId=null;
-    $("formTitle").textContent="إضافة اشتراك";
-  }
-  function fillForm(rec){
-    editingId = rec.id;
-    $("formTitle").textContent="تعديل اشتراك";
-    $("name").value = rec.name || "";
-    $("email").value = rec.email || "";
-    $("months").value = rec.months || "";
-    $("start").value = rec.start || todayISO();
-    $("quickPlan").value = ["1","3","6","12"].includes(String(rec.months)) ? String(rec.months) : "";
-    $("alertDays").value = getStoredAlertDays();
-  }
-
-  function handleSaveClick(){
-    const name = $("name").value.trim();
-    const email = normalizeEmail($("email").value);
-    const months = Number($("months").value);
-    const start = $("start").value;
-    const alertDays = getAlertDaysFromForm();
-
-    if(!name) return alert("أدخل الاسم");
-    if(!email || !validateEmail(email)) return alert("الإيميل غير صحيح");
-    if(!start) return alert("اختر تاريخ البداية");
-    if(!months || months<1) return alert("أدخل عدد الأشهر");
-
-    const existsIndex = data.findIndex(r => normalizeEmail(r.email) === email);
-    const isDuplicate = existsIndex >= 0 && (!editingId || data[existsIndex].id !== editingId);
-    if(isDuplicate){
-      haptic("fail");
-      showToast("الايميل مكرر", email, "err");
-      try{ $("email").focus(); }catch{}
-      return;
-    }
-
-    setStoredAlertDays(alertDays);
-    const end = addMonths(start, months);
-    const rec = {
-      id: editingId || (Date.now()+"_"+Math.random().toString(16).slice(2)),
-      name, email, months, start, end
-    };
-
-    upsert(rec);
-    save();
-    render();
-    closeModal("formModal");
-  }
-
-  // Save button (click + touch)
-  const btn = $("saveBtn");
-  const fire = (e)=>{ try{ e.preventDefault(); }catch{} handleSaveClick(); };
-  btn.addEventListener("click", fire);
-  btn.addEventListener("touchend", (e)=> fire(e), {passive:false});
-
-  $("exportJsonBtn").onclick = ()=>{
-    const payload = buildBackupPayload();
-    downloadFile("subscriptions_backup.json", JSON.stringify(payload,null,2), "application/json;charset=utf-8");
-  };
-
-  $("importFileBtn").onclick = ()=> $("fileInput").click();
-  $("fileInput").addEventListener("change", async ()=>{
-    const f=$("fileInput").files[0];
-    $("fileInput").value="";
-    if(!f) return;
-    importFromText(await f.text());
-  });
-
-  $("doPasteImport").onclick = ()=> importFromText($("pasteArea").value);
-
-  function importFromText(text){
-    const raw=(text||"").trim();
-    if(!raw) return alert("لا يوجد JSON");
-
-    let incoming;
-    try{ incoming = JSON.parse(raw); }
-    catch{ alert("JSON غير صالح"); return; }
-
-    const importedData = Array.isArray(incoming) ? incoming : incoming.data;
-    if(!Array.isArray(importedData)){ alert("لا توجد بيانات"); return; }
-
-    if(incoming && typeof incoming.alertDays==="number" && incoming.alertDays>0){
-      setStoredAlertDays(incoming.alertDays);
-    }
-
-    let added=0, updated=0;
-    for(const r of importedData){
-      if(!r || !r.email) continue;
-      const em = normalizeEmail(r.email);
-      if(!em || !validateEmail(em)) continue;
-
-      const months = Number(r.months||1);
-      const start = r.start || todayISO();
-      const end = r.end || addMonths(start, months);
-
-      const rec = {
-        id: r.id || (Date.now()+"_"+Math.random().toString(16).slice(2)),
-        name: (r.name||"").trim(),
-        email: em, months, start, end
-      };
-
-      const idx = data.findIndex(x=>normalizeEmail(x.email)===em);
-      if(idx>=0){ data[idx] = {...data[idx], ...rec, id:data[idx].id}; updated++; }
-      else { data.unshift(rec); added++; }
-    }
-
-    save(); render();
-    closeModal("pasteModal");
-    alert(`تم الاستيراد ✅\nإضافة: ${added}\nتحديث: ${updated}`);
-  }
-
-  $("exportCsvBtn").onclick = ()=>{
-    const header=["name","email","months","start","end"];
-    const lines=[header.join(",")];
-    for(const r of data){
-      lines.push([csvCell(r.name),csvCell(r.email),csvCell(r.months),csvCell(r.start),csvCell(r.end)].join(","));
-    }
-    downloadFile("subscriptions.csv", lines.join("\n"), "text/csv;charset=utf-8");
-  };
-
-  $("closeRowActionsX").onclick = closeRowActions;
-  $("closeRowActions").onclick  = closeRowActions;
-
-  $("actEdit").onclick = ()=>{
-    const rec = data.find(x => x.id === currentRowId);
-    if(!rec) return;
-    closeRowActions();
-    fillForm(rec);
-    openModal("formModal");
-  };
-
-  $("actExtend").onclick = ()=>{
-    const rec = data.find(x => x.id === currentRowId);
-    if(!rec) return;
-    rec.end = addMonths(rec.end, Number(rec.months));
-    save(); render(); closeRowActions();
-  };
-
-  $("actDelete").onclick = ()=>{
-    const rec = data.find(x => x.id === currentRowId);
-    if(!rec) return;
-    if(!confirm("هل تريد حذف هذا السجل؟")) return;
-    data = data.filter(x => x.id !== currentRowId);
-    save(); render(); closeRowActions();
-  };
-
-  $("actCopyEmail").onclick = async ()=>{
-    const rec = data.find(x => x.id === currentRowId);
-    if(!rec) return;
-    const text = rec.email || "";
-    try{
-      await navigator.clipboard.writeText(text);
-      haptic("ok");
-      showToast("تم نسخ الإيميل", text, "ok");
-    }catch{
-      const tmp=document.createElement("textarea");
-      tmp.value=text;
-      document.body.appendChild(tmp);
-      tmp.select();
-      document.execCommand("copy");
-      tmp.remove();
-      haptic("ok");
-      showToast("تم نسخ الإيميل", text, "ok");
-    }
-  };
-
-  $("syncBackupDownload").onclick = ()=> syncPushNow();
-  $("syncRestorePick").onclick = ()=> syncPullNow();
-
-  $("syncBackupShare").onclick = async ()=>{
-    const payload = buildBackupPayload();
-    const text = JSON.stringify(payload, null, 2);
-    const blob = new Blob([text], {type:"application/json"});
-    const file = new File([blob], "backup.json", {type:"application/json"});
-    try{
-      if(navigator.share && navigator.canShare && navigator.canShare({files:[file]})){
-        await navigator.share({title:"Backup", text:"backup.json", files:[file]});
-        haptic("ok");
-        return;
-      }
-    }catch{}
-    downloadFile("backup.json", text, "application/json;charset=utf-8");
-    showToast("تم إنشاء الملف", "backup.json", "ok");
-  };
-
-  $("tbody").addEventListener("click",(e)=>{
-    const btn = e.target.closest("button[data-act]");
-    if(!btn) return;
-    const act = btn.getAttribute("data-act");
-    const id  = btn.getAttribute("data-id");
-    if(act === "actions"){ openRowActions(id); }
-  });
-
-  // Error hooks
-  window.addEventListener('error', (e)=>{
-    showToast('حدث خطأ في الصفحة', (e && e.message) ? e.message : '', 'err');
-  });
-  window.addEventListener('unhandledrejection', (e)=>{
-    showToast('حدث خطأ غير متوقع', (e && e.reason) ? String(e.reason) : '', 'err');
-  });
-
-  await load();
-  render();
-});
+render();
 </script>
 </body>
 </html>

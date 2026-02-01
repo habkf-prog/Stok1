@@ -1483,6 +1483,69 @@ function render(){
 
 <!-- Toast -->
 <div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>
+<!-- ===== DEBUG PANEL (temporary) ===== -->
+<div id="dbg" style="
+  position:fixed; inset:auto 12px 12px 12px;
+  z-index:99999; border:1px solid rgba(255,0,0,.35);
+  background:rgba(20,0,0,.90); color:#fff; padding:10px 12px;
+  border-radius:12px; font: 12px/1.6 system-ui; max-height:40vh; overflow:auto;
+">
+  <b>DEBUG</b> — loading...
+</div>
 
+<script>
+(function(){
+  const box = document.getElementById("dbg");
+  const log = (t)=>{ box.innerHTML += "<div style='margin-top:6px'>"+t+"</div>"; };
+  const esc = (s)=>String(s).replace(/[<>&]/g, m=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[m]));
+
+  // catch errors
+  window.onerror = function(msg, src, line, col, err){
+    log("❌ JS Error: <b>"+esc(msg)+"</b><br>📍 "+esc(src||"")+" : "+line+":"+col);
+  };
+  window.onunhandledrejection = function(e){
+    log("❌ Promise Rejection: <b>"+esc(e.reason?.message || e.reason || e)+"</b>");
+  };
+
+  // after load, inspect table elements
+  window.addEventListener("load", ()=>{
+    box.innerHTML = "<b>DEBUG</b> — page loaded ✅";
+
+    const tables = document.querySelectorAll("table");
+    log("🔎 tables found: <b>"+tables.length+"</b>");
+
+    const tbody = document.querySelector("tbody");
+    log("🔎 tbody found: <b>"+(!!tbody)+"</b>");
+
+    // common ids used for table wrappers
+    const candidates = ["tableWrap","tblWrap","listWrap","tableContainer","subsTable","table","tbl"];
+    let found = null;
+    for(const id of candidates){
+      const el = document.getElementById(id);
+      if(el){ found = el; break; }
+    }
+    log("🔎 wrapper found by id: <b>"+(found ? found.id : "no")+"</b>");
+
+    // show a snippet of body
+    log("📄 body length: <b>"+document.body.innerText.length+"</b>");
+
+    // force show any table if hidden
+    tables.forEach(t=>{
+      t.style.display = "table";
+      t.style.visibility = "visible";
+      t.style.opacity = "1";
+    });
+    if(found){
+      found.style.display = "block";
+      found.style.visibility = "visible";
+      found.style.opacity = "1";
+    }
+
+    // try detect if an overlay is covering the page
+    const topEl = document.elementFromPoint(window.innerWidth/2, window.innerHeight/2);
+    log("🧱 element at center: <b>"+esc(topEl?.tagName || "none")+"</b> #"+esc(topEl?.id||"")+". "+esc(topEl?.className||""));
+  });
+})();
+</script>
 </body>
 </html>

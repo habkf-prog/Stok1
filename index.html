@@ -451,6 +451,8 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
 
       <button class="btn danger" id="clearBtn" type="button">حذف الكل</button>
 
+      <button class="btn soft" id="openTotals" type="button">💰 المجموع</button>
+
       <div class="pills" id="statsBar"></div>
     </div>
 
@@ -977,6 +979,7 @@ const SETTINGS_KEY = "subs_dashboard_actions_modal_settings_v2";
 const CURRENCY_KEY = "subs_currency_v1";
 let data = [];
 let editingId = null;
+let lastFilteredRows = [];
 
 /* ===== Utils ===== */
 function todayISO(){
@@ -1273,6 +1276,106 @@ if(__restoreBtn){
 $("openSync").onclick = ()=> openModal("syncModal");
 $("closeSyncX").onclick = ()=> closeModal("syncModal");
 $("closeSync").onclick  = ()=> closeModal("syncModal");
+/* ===== Totals modal ===== */
+$("openTotals").onclick = ()=>{
+  openTotalsModal();
+};
+$("closeTotalsX").onclick = ()=> closeModal("totalsModal");
+$("closeTotals").onclick  = ()=> closeModal("totalsModal");
+$("copyTotalsBtn").onclick = async ()=>{
+  const text = buildTotalsText();
+  try{
+    await navigator.clipboard.writeText(text);
+    haptic("ok");
+    showToast("✅ تم نسخ المجموع", "", "ok");
+  }catch{
+    haptic("light");
+    showToast("⚠️ لم يتم النسخ", "قد لا يدعم المتصفح النسخ", "warn");
+  }
+};
+
+function money(n){
+  const x = Number(n||0);
+  if(!isFinite(x)) return "0";
+  // بدون تعقيد: تقليم لرقمين فقط عند الحاجة
+  const s = (Math.round(x*100)/100).toString();
+  return s;
+}
+
+function computeTotals(rows){
+  const out = {};
+  for(const r of (rows||[])){
+    const cur = (r.currency || "—").trim() || "—";
+    const price = Number(r.price || 0);
+    if(!isFinite(price)) continue;
+    out[cur] = (out[cur] || 0) + price;
+  }
+  return out;
+}
+
+function formatTotals(tot){
+  const entries = Object.entries(tot);
+  if(entries.length===0) return "— لا يوجد أسعار —";
+  // ترتيب تنازلي حسب المبلغ
+  entries.sort((a,b)=> (b[1]||0)-(a[1]||0));
+  return entries.map(([cur,sum])=> `• ${cur}: ${money(sum)}`).join("\n");
+}
+
+function buildTotalsText(){
+  const all = computeTotals(data);
+  const shown = computeTotals(lastFilteredRows);
+  const lines = [];
+  lines.push("المجموع (المعروض):");
+  lines.push(formatTotals(shown));
+  lines.push("");
+  lines.push("المجموع (الإجمالي):");
+  lines.push(formatTotals(all));
+  return lines.join("\n");
+}
+
+function openTotalsModal(){
+  const el = document.getElementById("totalsContent");
+  if(el){
+    const all = computeTotals(data);
+    const shown = computeTotals(lastFilteredRows);
+
+    const toHtml = (tot)=>{
+      const entries = Object.entries(tot);
+      if(entries.length===0) return "<div style='opacity:.7'>— لا يوجد أسعار —</div>";
+      entries.sort((a,b)=> (b[1]||0)-(a[1]||0));
+      return "<div style='display:grid;gap:8px'>" + entries.map(([cur,sum])=>(
+        `<div style="display:flex;justify-content:space-between;gap:10px">
+          <span style="opacity:.8;font-weight:900">${escapeHtml(cur)}</span>
+          <span style="font-weight:900">${escapeHtml(money(sum))}</span>
+        </div>`
+      )).join("") + "</div>";
+    };
+
+    el.innerHTML = `
+      <div style="display:grid;gap:12px">
+        <div class="backTile" style="border-style:solid;border-color:rgba(255,255,255,.10)">
+          <div class="t" style="margin-bottom:8px">👁️ المجموع (المعروض)</div>
+          ${toHtml(shown)}
+        </div>
+        <div class="backTile" style="border-style:solid;border-color:rgba(255,255,255,.10)">
+          <div class="t" style="margin-bottom:8px">📦 المجموع (الإجمالي)</div>
+          ${toHtml(all)}
+        </div>
+        <div style="font-size:12px;color:rgba(234,240,255,.70);line-height:1.7">
+          * يعتمد على حقل <b>السعر</b> و <b>العملة</b>. إذا كان السعر 0 فلن يؤثر على المجموع.
+        </div>
+      </div>
+    `;
+  }
+  openModal("totalsModal");
+}
+
+/* استبدال التنبيه القديم بزر المجموع */
+function showTotalsDetails(){
+  openTotalsModal();
+}
+
+
 
 /* ===== Auth modal ===== */
 $("openAuth").onclick = ()=>{
@@ -1696,6 +1799,8 @@ function render(){
     return (r.name||"").toLowerCase().includes(q) || normalizeEmail(r.email).includes(q);
   });
 
+  lastFilteredRows = rows;
+
   for(const r of rows){
     const st = status(r.end, alertDays);
     const tr = document.createElement("tr");
@@ -1836,6 +1941,28 @@ $("authLogout").onclick = async ()=>{
   }
 };
 </script>
+
+<!-- Modal: Totals -->
+<div class="modal" id="totalsModal" aria-hidden="true">
+  <div class="box" role="dialog" aria-modal="true" style="width:min(720px, 100%)">
+    <div class="modalHeader">
+      <div>
+        <h2>💰 المجموع</h2>
+        <div class="hint">مجموع الأسعار حسب العملة (المعروض والإجمالي)</div>
+      </div>
+      <button class="btn" id="closeTotalsX" type="button">✕</button>
+    </div>
+
+    <div class="modalBody">
+      <div id="totalsContent" class="note" style="margin-top:0"></div>
+    </div>
+
+    <div class="modalFooter">
+      <button class="btn soft" id="copyTotalsBtn" type="button">📋 نسخ</button>
+      <button class="btn" id="closeTotals" type="button">إغلاق</button>
+    </div>
+  </div>
+</div>
 
 <!-- Toast -->
 <div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>

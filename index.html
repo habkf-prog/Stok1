@@ -415,10 +415,6 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
 .toast .msg{ font-weight: 900; }
 .toast .sub{ color: var(--muted); font-weight: 800; }
 
-
-/* ===== Version badge ===== */
-.ver{display:inline-block;margin-inline-start:8px;padding:3px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.14);color:var(--muted);font-size:11px;font-weight:900}
-
 </style>
 </head>
 
@@ -426,7 +422,7 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
 <div class="container">
   <div class="header">
     <h1>🧾 لوحة تسيير الاشتراكات</h1>
-    <div class="sub">⚡ إجراءات للصف + ☁️ نافذة مزامنة/نسخ احتياطي.<span class="ver">v1.2.5 – Hardened</span></div>
+    <div class="sub">⚡ إجراءات للصف + ☁️ نافذة مزامنة/نسخ احتياطي. <span style="opacity:.7;font-weight:800">(v1.2.5)</span></div>
   </div>
 
   <div class="card">
@@ -671,22 +667,32 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
 const APP_VERSION = 'v1.2.5 – Hardened';
 const DEBUG = false;
 const log = (...a)=>{ if(DEBUG) console.log('[APP]', ...a); };
-const $ = (id)=>document.getElementById(id);
-const FIREBASE_URL  = "https://dattta-6f497-default-rtdb.firebaseio.com";
-const FIREBASE_PATH = "subscriptions"; // مسار التخزين في Firebase
-\1
-/* ===== Network helper ===== */
+
+// Fetch مع مهلة (حتى لا يعلق)
 async function fetchWithTimeout(url, options={}, timeoutMs=12000){
   const controller = new AbortController();
   const t = setTimeout(()=>controller.abort(), timeoutMs);
   try{
-    const res = await fetchWithTimeout(url, {...options, signal: controller.signal});
-    return res;
+    return await fetch(url, {...options, signal: controller.signal, cache: 'no-store'});
   } finally {
     clearTimeout(t);
   }
 }
 
+// إظهار أخطاء الجافاسكربت بدل توقف الصفحة بصمت
+window.addEventListener('error', (e)=>{
+  try{ showToast('حدث خطأ في الصفحة', (e && e.message) ? e.message : '', 'err'); }catch{}
+  log('error', e);
+});
+window.addEventListener('unhandledrejection', (e)=>{
+  try{ showToast('حدث خطأ غير متوقع', (e && e.reason) ? String(e.reason) : '', 'err'); }catch{}
+  log('unhandledrejection', e);
+});
+
+const $ = (id)=>document.getElementById(id);
+const FIREBASE_URL  = "https://dattta-6f497-default-rtdb.firebaseio.com";
+const FIREBASE_PATH = "subscriptions"; // مسار التخزين في Firebase
+const LOCAL_BACKUP_KEY = "subs_local_backup_v3";
 
 let syncState = "idle"; // idle | saving | ok | fail | offline
 let lastSyncAt = null;
@@ -727,7 +733,7 @@ function loadLocalBackup(){
 }
 
 async function firebasePull(){
-  const res = await fetchWithTimeout(`${FIREBASE_URL}/${FIREBASE_PATH}.json`, { cache: "no-store" });
+  const res = await fetchWithTimeout(`${FIREBASE_URL}/${FIREBASE_PATH}.json`, {});
   if(!res.ok) throw new Error("Firebase pull failed");
   const json = await res.json();
   return Array.isArray(json) ? json : (json ? json : []);
@@ -918,16 +924,6 @@ function showToast(message, detail="", kind="warn"){
   t.classList.add("show");
   toastTimer = setTimeout(()=> t.classList.remove("show"), 2200);
 }
-
-/* ===== Global error handlers (to avoid blank screen) ===== */
-window.addEventListener("error", (e)=>{
-  console.error(e.error || e.message || e);
-  try{ haptic("fail"); showToast("حدث خطأ غير متوقع", (e.message||"").slice(0,120), "err"); }catch{}
-});
-window.addEventListener("unhandledrejection", (e)=>{
-  console.error(e.reason || e);
-  try{ haptic("fail"); showToast("خطأ في عملية خلفية", String(e.reason||"").slice(0,120), "err"); }catch{}
-});
 
 /* ===== Form modal ===== */
 function resetForm(){
@@ -1255,7 +1251,6 @@ $("tbody").addEventListener("click",(e)=>{
 
 /* ===== Render ===== */
 function render(){
-  try{
   const q = ($("search").value||"").trim().toLowerCase();
   const tb = $("tbody");
   tb.innerHTML="";
@@ -1308,10 +1303,6 @@ function render(){
     `;
   }
 
-  }catch(err){
-    console.error(err);
-    try{ haptic('fail'); showToast('حدث خطأ أثناء العرض', String(err&&err.message||err).slice(0,120), 'err'); }catch{}
-  }
 }
 
 /* init */

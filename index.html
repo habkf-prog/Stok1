@@ -980,13 +980,23 @@ window.addEventListener("online", ()=>{
 
 
 // RESYNC_WATCHDOG: طبقة أمان إضافية إذا لم يلتقط المتصفح حدث online
-async function canReachFirebase(){
-  // لا نعتمد على navigator.onLine فقط — نجرب قراءة meta صغيرة
+async function checkFirebaseReachability(){
+  // فحص اتصال حقيقي بفايربيس + تمييز (شبكة) vs (صلاحيات)
+  const url = fbUrl(FIREBASE_PATH);
   try{
-    const meta = await firebaseGetRemoteMeta();
-    return meta && typeof meta === "object";
-  }catch{
-    return false;
+    const res = await fetchWithTimeout(url, {}, 9000);
+    if(res.ok){
+      return { ok:true, kind:"ok", status:res.status, message:"" };
+    }
+    let body = "";
+    try{ body = await res.text(); }catch{}
+    const msg = `HTTP ${res.status} ${res.statusText}${body ? " — " + body.slice(0,180) : ""}`;
+    if(res.status === 401 || res.status === 403){
+      return { ok:false, kind:"permission", status:res.status, message: msg };
+    }
+    return { ok:false, kind:"http", status:res.status, message: msg };
+  }catch(e){
+    return { ok:false, kind:"network", status:0, message: String(e?.message || e || "") };
   }
 }
 
@@ -1004,13 +1014,17 @@ async function tryAutoResync(reason){
   if(syncState === "saving") return;
 
   // تحقق اتصال حقيقي بفايربيس
-  const ok = await canReachFirebase();
+  const probe = await checkFirebaseReachability();
+  const ok = probe.ok;
   if(!ok){
     setSyncState("fail");
     // توست خفيف كل 45 ثانية كحد أقصى (بدون إزعاج)
     if(now - __lastResyncToastAt > 45000){
       __lastResyncToastAt = now;
-      try{ showToast("🟡 بانتظار المزامنة", "تعذر الوصول إلى Firebase الآن", "warn"); }catch{}
+      try{
+          const detail = (probe.kind==="permission") ? "صلاحيات Firebase تمنع القراءة/الكتابة (Rules)" : (probe.kind==="network") ? "مشكلة شبكة/حجب/‏VPN" : "استجابة غير متوقعة";
+          showToast("🟡 بانتظار المزامنة", detail, "warn");
+        }catch{}
     }
     return;
   }

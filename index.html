@@ -437,7 +437,7 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
 <div class="container">
   <div class="header">
     <h1>🧾 لوحة تسيير الاشتراكات</h1>
-    <div class="sub">⚡ إجراءات للصف + ☁️ نافذة مزامنة/نسخ احتياطي. <span style="opacity:.7;font-weight:800">(v1.3.5)</span></div>
+    <div class="sub">⚡ إجراءات للصف + ☁️ نافذة مزامنة/نسخ احتياطي. <span style="opacity:.7;font-weight:800">(v1.2.5)</span></div>
   </div>
 
   <div class="card">
@@ -1070,6 +1070,24 @@ function restoreFromUndo(){
 /* ===== Form modal ===== */
 // ===== Mobile input commit helper (cache live values) =====
 const formState = { name:"", email:"", months:"", start:"", alertDays:"" };
+let __formPollTimer = null;
+function startFormPolling(){
+  stopFormPolling();
+  __formPollTimer = setInterval(()=>{
+    try{
+      ["name","email","months","start","alertDays"].forEach(id=>{
+        const el = getFieldEl(id) || document.getElementById(id);
+        if(el && typeof el.value === "string"){
+          formState[id] = el.value;
+        }
+      });
+    }catch{}
+  }, 250);
+}
+function stopFormPolling(){
+  if(__formPollTimer){ clearInterval(__formPollTimer); __formPollTimer = null; }
+}
+
 function bindFormState(){
   const ids = ["name","email","months","start","alertDays"];
   ids.forEach(id=>{
@@ -1134,9 +1152,9 @@ function fillForm(rec){
   $("alertDays").value = getStoredAlertDays();
 }
 
-$("openAdd").onclick = ()=>{ resetForm(); openModal("formModal"); };
-$("closeForm").onclick = ()=> closeModal("formModal");
-$("cancelBtn").onclick = ()=> closeModal("formModal");
+$("openAdd").onclick = ()=>{ resetForm(); openModal("formModal"); startFormPolling(); };
+$("closeForm").onclick = ()=>{ stopFormPolling(); closeModal("formModal"); };
+$("cancelBtn").onclick = ()=>{ stopFormPolling(); closeModal("formModal"); };
 
 $("quickPlan").onchange = ()=>{ const v = $("quickPlan").value; if(v) $("months").value = v; };
 
@@ -1235,6 +1253,15 @@ function handleSaveClick(){
   const months = Number(_monthsRaw);
   const start = _startRaw;
   const alertDays = getAlertDaysFromForm();
+
+  // DEBUG_READ_VALUES: إذا استمرت مشكلة الهاتف، نعرض ما قرأته الصفحة فعلياً
+  try{
+    if(!name || !email || !months){
+      // لا نزعج المستخدم دائماً، فقط في حالة القراءة الفارغة
+      // يمكن حذف هذا لاحقاً بعد التأكد
+      // showToast("قراءة الحقول", `name:${name||"∅"} | email:${email||"∅"} | months:${months||"∅"}`, "warn");
+    }
+  }catch{}
 
   if(!name) haptic("light"); showToast("أدخل الاسم", "", "warn"); return;
   if(!email || !validateEmail(email)) haptic("fail"); showToast("الإيميل غير صحيح", "", "err"); return;
@@ -1440,6 +1467,7 @@ $("actEdit").onclick = ()=>{
   closeRowActions();
   fillForm(rec);
   openModal("formModal");
+  startFormPolling();
 };
 
 $("actExtend").onclick = ()=>{

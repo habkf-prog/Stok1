@@ -225,7 +225,7 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
 
 .formGrid{
   display:grid;
-  grid-template-columns: 1.2fr 1.2fr .9fr .9fr .9fr .9fr .9fr;
+  grid-template-columns: 1.2fr 1.2fr .9fr .9fr .9fr .9fr;
   gap:10px;
 }
 @media (max-width: 980px){
@@ -453,11 +453,11 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
             <th>الاسم</th>
             <th>الإيميل</th>
             <th>المدة</th>
-            <th>السعر</th>
             <th>البداية</th>
             <th>الانتهاء</th>
             <th>المتبقي</th>
             <th>الحالة</th>
+            <th>السعر</th>
             <th>إجراء</th>
           </tr>
         </thead>
@@ -502,19 +502,16 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
           <label>عدد الأشهر (أي رقم)</label>
           <input id="months" type="number" min="1" step="1" placeholder="مثال: 2 / 5 / 18">
         </div>
-
-<div class="field">
-  <label>السعر</label>
-  <input id="price" type="number" min="0" step="0.01" placeholder="مثال: 9.99">
-</div>
+        <div class="field">
+          <label>السعر</label>
+          <input id="price" type="number" min="0" step="0.01" placeholder="مثال: 1500">
+        </div>
         <div class="field">
           <label>العملة</label>
           <select id="currency">
             <option value="DZD">DZD</option>
             <option value="EUR">EUR</option>
             <option value="USD">USD</option>
-            <option value="MAD">MAD</option>
-            <option value="TND">TND</option>
           </select>
         </div>
         <div class="field">
@@ -966,7 +963,6 @@ setInterval(()=>{
 
 const SETTINGS_KEY = "subs_dashboard_actions_modal_settings_v2";
 
-const CURRENCY_KEY = "subs_currency_v1";
 let data = [];
 let editingId = null;
 
@@ -997,21 +993,6 @@ function daysLeft(endISO){
   const now=toDate(todayISO());
   const end=toDate(endISO);
   return Math.round((end-now)/(1000*60*60*24));
-}
-
-
-function getCurrency(){
-  try{
-    const v = localStorage.getItem(CURRENCY_KEY);
-    return v || "DZD";
-  }catch{ return "DZD"; }
-}
-function setCurrency(v){
-  try{ localStorage.setItem(CURRENCY_KEY, v || "DZD"); }catch{}
-}
-function currencyLabel(code){
-  const map = {DZD:"دج", USD:"$", EUR:"€"};
-  return map[code] || code;
 }
 
 function getStoredAlertDays(){
@@ -1172,8 +1153,7 @@ function resetForm(){
   $("quickPlan").value="";
   $("months").value="";
   $("price").value="";
-  $("currency").value=getCurrency();
-  $("price").value="";
+  $("currency").value="DZD";
   $("start").value=todayISO();
   $("alertDays").value=getStoredAlertDays();
   editingId=null;
@@ -1185,9 +1165,8 @@ function fillForm(rec){
   $("name").value = rec.name || "";
   $("email").value = rec.email || "";
   $("months").value = rec.months || "";
-  $("price").value = (rec.price ?? "");
-  $("currency").value = rec.currency || getCurrency();
-  $("price").value = (rec.price ?? "") === 0 ? "" : (rec.price ?? "");
+  $("price").value = (rec.price===0 || rec.price) ? rec.price : "";
+  $("currency").value = rec.currency || "DZD";
   $("start").value = rec.start || todayISO();
   $("quickPlan").value = ["1","3","6","12"].includes(String(rec.months)) ? String(rec.months) : "";
   $("alertDays").value = getStoredAlertDays();
@@ -1287,9 +1266,8 @@ function handleSaveClick(){
   const name = $("name").value.trim();
   const email = normalizeEmail($("email").value);
   const months = Number($("months").value);
-  const price = Number($("price").value);
-  const currency = ($("currency").value || getCurrency());
-  const price = Number(String($("price").value).replace(",", ".") || "0");
+  const price = ($("price").value==="" ? null : Number($("price").value));
+  const currency = ($("currency").value || "DZD");
   const start = $("start").value;
   const alertDays = getAlertDaysFromForm();
 
@@ -1297,10 +1275,7 @@ function handleSaveClick(){
   if(!email || !validateEmail(email)) return alert("الإيميل غير صحيح");
   if(!start) return alert("اختر تاريخ البداية");
   if(!months || months<1) return alert("أدخل عدد الأشهر");
-  if($("price").value.trim()==="") return alert("أدخل السعر");
-  if(Number.isNaN(price) || price<0) return alert("السعر غير صحيح");
-  setCurrency(currency);
-  if(!isFinite(price) || price < 0) return alert("السعر غير صحيح");
+  if(price!==null && (!Number.isFinite(price) || price<0)) return alert("السعر غير صحيح");
 
   const existsIndex = data.findIndex(r => normalizeEmail(r.email) === email);
   const isDuplicate = existsIndex >= 0 && (!editingId || data[existsIndex].id !== editingId);
@@ -1316,7 +1291,7 @@ function handleSaveClick(){
   const end = addMonths(start, months);
   const rec = {
     id: editingId || (Date.now()+"_"+Math.random().toString(16).slice(2)),
-    name, email, months, price, start, end
+    name, email, months, price, currency, start, end
   };
 
   upsert(rec);
@@ -1383,17 +1358,16 @@ function importFromText(text){
     if(!email || !validateEmail(email)) continue;
 
     const months = Number(r.months||1);
-
-    const price = Number(r.price ?? 0);
-    const currency = (r.currency || getCurrency());
-    const price  = Number((r.price ?? 0) || 0);
     const start = r.start || todayISO();
     const end = r.end || addMonths(start, months);
 
     const rec = {
       id: r.id || (Date.now()+"_"+Math.random().toString(16).slice(2)),
       name: (r.name||"").trim(),
-      email, months, price, start, end
+      email, months,
+      price: (r.price===0 || r.price) ? Number(r.price) : null,
+      currency: (r.currency||'DZD'),
+      start, end
     };
 
     const idx = data.findIndex(x=>normalizeEmail(x.email)===email);
@@ -1407,10 +1381,10 @@ function importFromText(text){
 }
 
 $("exportCsvBtn").onclick = ()=>{
-  const header=["name","email","months","price","start","end"];
+  const header=["name","email","months","price","currency","start","end"];
   const lines=[header.join(",")];
   for(const r of data){
-    lines.push([csvCell(r.name),csvCell(r.email),csvCell(r.months),csvCell(r.price ?? 0),csvCell(r.start),csvCell(r.end)].join(","));
+    lines.push([csvCell(r.name),csvCell(r.email),csvCell(r.months),csvCell(r.price),csvCell(r.currency),csvCell(r.start),csvCell(r.end)].join(","));
   }
   downloadFile("subscriptions.csv", lines.join("\n"), "text/csv;charset=utf-8");
 };
@@ -1563,35 +1537,13 @@ function updateStats(filteredCount){
 
   bar.innerHTML = `      <div class="statChip"><span class="ico">👁️</span><span class="k">المعروض</span><span class="v">${rows.length}</span></div>
       <div class="statChip"><span class="ico">📦</span><span class="k">الإجمالي</span><span class="v">${data.length}</span></div>
-      <div class="statChip"><span class="ico">💰</span><span class="k">مجموع</span><span class="v" id="sumAll">—</span></div>
-      <div class="statChip"><span class="ico">🧾</span><span class="k">مجموع المعروض</span><span class="v" id="sumShown">—</span></div>
+      <div class="statChip"><span class="ico">💰</span><span class="k">المجموع</span><span class="v">${totalTxt}</span></div>
       <div class="statChip ok"><span class="ico">✅</span><span class="k">فعّال</span><span class="v">${allCounts.active}</span></div>
       <div class="statChip warn"><span class="ico">⏰</span><span class="k">قريب</span><span class="v">${allCounts.expiring}</span></div>
       <div class="statChip err"><span class="ico">❌</span><span class="k">منتهي</span><span class="v">${allCounts.expired}</span></div>
       <div class="statChip sync" id="syncChip"><span class="ico">☁️</span><span class="k">مزامنة</span><span class="v" id="syncVal">${getSyncText()}</span></div>`;
 }
 
-
-
-function computeTotals(list){
-  const groups = {};
-  for(const r of (list||[])){
-    const c = r.currency || getCurrency();
-    const p = Number(r.price ?? 0);
-    if(!Number.isFinite(p)) continue;
-    groups[c] = (groups[c]||0) + p;
-  }
-  const keys = Object.keys(groups);
-  if(keys.length === 0) return {text:"0", multi:false};
-  if(keys.length === 1){
-    const c = keys[0];
-    const v = groups[c];
-    return {text:`${v.toFixed(2).replace(/\.00$/,"")} ${currencyLabel(c)}`, multi:false};
-  }
-  // multiple currencies
-  const parts = keys.map(k => `${groups[k].toFixed(2).replace(/\.00$/,"")} ${currencyLabel(k)}`);
-  return {text: parts.join(" · "), multi:true};
-}
 
 function render(){
   const q = ($("search").value||"").trim().toLowerCase();
@@ -1605,7 +1557,19 @@ function render(){
     allCounts[status(r.end, alertDays).key]++;
   }
 
-  const rows = data.filter(r=>{
+  const totals = {};
+  for(const r of data){
+    const p = (r.price===0 || r.price) ? Number(r.price) : NaN;
+    const c = (r.currency||'DZD');
+    if(Number.isFinite(p) && p>0){
+      totals[c] = (totals[c]||0) + p;
+    }
+  }
+  const totalTxt = Object.keys(totals).length
+    ? Object.entries(totals).map(([c,v])=>`${Math.round(v*100)/100} ${c}`).join(' + ')
+    : '—';
+
+    const rows = data.filter(r=>{
     if(!q) return true;
     return (r.name||"").toLowerCase().includes(q) || normalizeEmail(r.email).includes(q);
   });
@@ -1617,16 +1581,19 @@ function render(){
     if(st.key==="expiring") tr.classList.add("expiring-row");
 
     const leftTxt = st.left < 0 ? `انتهى منذ ${Math.abs(st.left)} يوم` : `${st.left} يوم`;
+    const priceNum = (r.price===0 || r.price) ? Number(r.price) : NaN;
+    const cur = (r.currency||'DZD');
+    const priceTxt = Number.isFinite(priceNum) ? `${priceNum} ${cur}` : `—`;
 
     tr.innerHTML = `
       <td>${escapeHtml(r.name)}</td>
       <td>${escapeHtml(r.email)}</td>
       <td>${r.months} شهر</td>
-      <td>${(r.price ?? 0).toString()} </td>
       <td>${r.start}</td>
       <td>${r.end}</td>
       <td>${leftTxt}</td>
       <td><span class="badge ${st.cls}">${st.label}</span></td>
+      <td>${priceTxt}</td>
       <td>
         <button class="actionPill" data-act="actions" data-id="${r.id}" type="button">⚡ إجراءات</button>
       </td>

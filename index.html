@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>لوحة تسيير الاشتراكات</title>
 
 <style>
@@ -23,7 +23,6 @@ input,select,textarea{width:100%;padding:11px 12px;border-radius:12px;border:1px
 .btn{padding:11px 14px;border-radius:14px;border:1px solid var(--line);background:#00000040;color:var(--text);font-weight:900;cursor:pointer}
 .btn.primary{border-color:var(--accent);background:linear-gradient(135deg,var(--accent),#4f46e5)}
 .btn.danger{border-color:#ef444466}
-.btn.ok{border-color:#22c55e66}
 .small{color:var(--muted);font-size:12px}
 .badge{padding:4px 10px;border-radius:999px;font-size:12px;font-weight:900;border:1px solid var(--line)}
 .badge.ok{border-color:#22c55e55;color:#c9f7d7}
@@ -31,7 +30,7 @@ input,select,textarea{width:100%;padding:11px 12px;border-radius:12px;border:1px
 .badge.err{border-color:#ef444455;color:#ffd0d0}
 
 table{width:100%;border-collapse:collapse;margin-top:14px}
-th,td{padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th,td{padding:10px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:middle}
 th{color:var(--muted);text-align:right}
 
 /* صف منتهي (أحمر) */
@@ -42,10 +41,56 @@ tr.expired-row td:first-child{box-shadow:inset 4px 0 0 rgba(239,68,68,.75)}
 tr.expiring-row{background:rgba(245,158,11,.10)}
 tr.expiring-row td:first-child{box-shadow:inset 4px 0 0 rgba(245,158,11,.75)}
 
+/* قائمة ⋯ لكل صف */
+.menuWrap{position:relative;display:inline-block}
+.iconBtn{
+  width:42px;height:38px;border-radius:12px;
+  border:1px solid var(--line);
+  background:#00000040;color:var(--text);
+  cursor:pointer;font-weight:900;
+}
+.menu{
+  position:absolute; inset:auto 0 0 auto;
+  transform:translateY(42px);
+  min-width:170px;
+  background:#0b0f17;
+  border:1px solid var(--line);
+  border-radius:14px;
+  padding:6px;
+  display:none;
+  z-index:1000;
+  box-shadow:0 18px 45px rgba(0,0,0,.45);
+}
+.menu button{
+  width:100%;
+  padding:10px 10px;
+  border-radius:12px;
+  border:1px solid transparent;
+  background:transparent;
+  color:var(--text);
+  text-align:right;
+  cursor:pointer;
+  font-weight:800;
+}
+.menu button:hover{
+  background:#ffffff10;
+  border-color:var(--line);
+}
+.menu .danger{color:#ffd0d0}
+
+/* صندوق النسخ الاحتياطي */
+details{
+  margin-top:10px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:#00000026;
+  padding:10px 12px;
+}
+summary{cursor:pointer;font-weight:900}
+details .row{margin-top:10px}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;z-index:9999}
 .modal .box{width:min(680px,92vw);background:#0b0f17;border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
 .modal h2{margin:0 0 10px;font-size:18px}
-.modal .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
 </style>
 </head>
 
@@ -53,7 +98,7 @@ tr.expiring-row td:first-child{box-shadow:inset 4px 0 0 rgba(245,158,11,.75)}
 <div class="container">
   <div class="card">
     <h1>🧾 لوحة تسيير الاشتراكات</h1>
-    <div class="small">✅ حفظ تلقائي (localStorage) + نسخ احتياطي JSON/CSV.</div>
+    <div class="small">✅ حفظ تلقائي (localStorage). تنبيه قبل الانتهاء بالأيام التي تحددها.</div>
 
     <div class="grid">
       <div>
@@ -76,7 +121,7 @@ tr.expiring-row td:first-child{box-shadow:inset 4px 0 0 rgba(245,158,11,.75)}
       </div>
       <div>
         <label>عدد الأشهر (أي رقم)</label>
-        <input id="months" type="number" min="1" step="1" placeholder="اكتب أي عدد أشهر">
+        <input id="months" type="number" min="1" step="1" placeholder="مثال: 2 / 5 / 18">
       </div>
       <div>
         <label>تاريخ البداية</label>
@@ -88,23 +133,30 @@ tr.expiring-row td:first-child{box-shadow:inset 4px 0 0 rgba(245,158,11,.75)}
       </div>
     </div>
 
+    <!-- أزرار قليلة وعملية -->
     <div class="row">
       <button class="btn primary" id="saveBtn">➕ إضافة</button>
-      <button class="btn" id="resetBtn">مسح الحقول</button>
+      <button class="btn" id="resetBtn">مسح</button>
 
       <input id="search" placeholder="بحث بالاسم أو الإيميل..." style="flex:1;min-width:220px">
 
-      <button class="btn" id="exportJsonBtn">⬇️ JSON</button>
-      <button class="btn" id="importFileBtn">⬆️ ملف JSON</button>
-      <button class="btn" id="importPasteBtn">📋 لصق JSON</button>
-      <button class="btn" id="exportCsvBtn">⬇️ CSV</button>
-
-      <button class="btn danger" id="clearBtn">🗑️ حذف الكل</button>
+      <button class="btn danger" id="clearBtn">حذف الكل</button>
 
       <div class="small" id="stats" style="margin-inline-start:auto"></div>
     </div>
 
-    <input id="fileInput" type="file" accept="application/json,.json" style="display:none">
+    <!-- النسخ الاحتياطي داخل تفاصيل (قابل للطي) -->
+    <details id="backupBox">
+      <summary>📦 نسخ احتياطي (تصدير/استيراد)</summary>
+      <div class="row">
+        <button class="btn" id="exportJsonBtn">⬇️ تصدير JSON</button>
+        <button class="btn" id="importFileBtn">⬆️ استيراد ملف JSON</button>
+        <button class="btn" id="importPasteBtn">📋 استيراد باللصق</button>
+        <button class="btn" id="exportCsvBtn">⬇️ تصدير CSV</button>
+        <input id="fileInput" type="file" accept="application/json,.json" style="display:none">
+      </div>
+      <div class="small">نصيحة: صدّر JSON مرة كل فترة حتى لا تضيع البيانات.</div>
+    </details>
 
     <table>
       <thead>
@@ -116,7 +168,7 @@ tr.expiring-row td:first-child{box-shadow:inset 4px 0 0 rgba(245,158,11,.75)}
           <th>الانتهاء</th>
           <th>المتبقي</th>
           <th>الحالة</th>
-          <th>إجراءات</th>
+          <th>⋯</th>
         </tr>
       </thead>
       <tbody id="tbody"></tbody>
@@ -131,7 +183,7 @@ tr.expiring-row td:first-child{box-shadow:inset 4px 0 0 rgba(245,158,11,.75)}
     <div class="small">الصق JSON هنا ثم اضغط استيراد. يتم الدمج حسب الإيميل.</div>
     <label style="margin-top:10px">JSON</label>
     <textarea id="pasteArea" rows="10" style="min-height:200px"></textarea>
-    <div class="actions">
+    <div class="row">
       <button class="btn primary" id="doPasteImport">استيراد</button>
       <button class="btn" id="closePaste">إغلاق</button>
     </div>
@@ -141,8 +193,9 @@ tr.expiring-row td:first-child{box-shadow:inset 4px 0 0 rgba(245,158,11,.75)}
 <script>
 const $ = id => document.getElementById(id);
 
-const STORAGE_KEY = "subs_dashboard_data_v4";
-const SETTINGS_KEY = "subs_dashboard_settings_v4";
+const STORAGE_KEY = "subs_dashboard_data_v5";
+const SETTINGS_KEY = "subs_dashboard_settings_v5";
+
 let data = [];
 let editingId = null;
 
@@ -151,12 +204,12 @@ function todayISO(){
   return d.toISOString().slice(0,10);
 }
 function toDate(iso){
-  const d=new Date(iso+"T00:00:00"); d.setHours(0,0,0,0);
+  const d = new Date(iso+"T00:00:00"); d.setHours(0,0,0,0);
   return d;
 }
 function addMonths(dateISO, m){
-  const d=toDate(dateISO);
-  const day=d.getDate();
+  const d = toDate(dateISO);
+  const day = d.getDate();
   d.setMonth(d.getMonth()+m);
   if(d.getDate() < day) d.setDate(0);
   return d.toISOString().slice(0,10);
@@ -171,39 +224,37 @@ function escapeHtml(s){
 
 function load(){
   try{
-    const raw=localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY);
     data = raw ? JSON.parse(raw) : [];
     if(!Array.isArray(data)) data = [];
   }catch{ data = []; }
 }
-function save(){
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
+function save(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
 
 function loadSettings(){
   try{
-    const s=JSON.parse(localStorage.getItem(SETTINGS_KEY)||"{}");
-    const alertDays=Number(s.alertDays);
+    const s = JSON.parse(localStorage.getItem(SETTINGS_KEY)||"{}");
+    const alertDays = Number(s.alertDays);
     $("alertDays").value = (alertDays && alertDays>0) ? alertDays : 7;
   }catch{ $("alertDays").value = 7; }
 }
 function saveSettings(){
-  const alertDays=Number($("alertDays").value)||7;
+  const alertDays = Number($("alertDays").value)||7;
   localStorage.setItem(SETTINGS_KEY, JSON.stringify({alertDays}));
 }
 function getAlertDays(){
-  const n=Number($("alertDays").value);
+  const n = Number($("alertDays").value);
   return (n && n>0) ? n : 7;
 }
 
 function daysLeft(endISO){
-  const now=toDate(todayISO());
-  const end=toDate(endISO);
+  const now = toDate(todayISO());
+  const end = toDate(endISO);
   return Math.round((end-now)/(1000*60*60*24));
 }
 function status(endISO){
-  const left=daysLeft(endISO);
-  const alertDays=getAlertDays();
+  const left = daysLeft(endISO);
+  const alertDays = getAlertDays();
   if(left < 0) return {key:"expired", label:"منتهي", cls:"err", left};
   if(left <= alertDays) return {key:"expiring", label:"قريب ينتهي", cls:"warn", left};
   return {key:"active", label:"فعّال", cls:"ok", left};
@@ -225,49 +276,46 @@ function clearForm(){
 $("resetBtn").onclick = clearForm;
 
 $("clearBtn").onclick = ()=>{
-  if(!confirm("حذف كل البيانات من هذا المتصفح؟")) return;
+  if(!confirm("حذف كل البيانات؟")) return;
   data=[]; save(); render(); clearForm();
 };
 
 function upsert(rec){
-  // دمج حسب الإيميل (إذا لم يكن تعديل بالـ id)
   const idxByEmail = data.findIndex(r=>normalizeEmail(r.email)===normalizeEmail(rec.email));
 
   if(editingId){
     const idxById = data.findIndex(r=>r.id===editingId);
     if(idxById>=0){
-      // إذا غيّر الإيميل إلى إيميل موجود عند شخص آخر → ندمج عليه بدل التكرار
       if(idxByEmail>=0 && idxByEmail!==idxById){
-        data[idxByEmail] = {...data[idxByEmail], ...rec, id: data[idxByEmail].id};
+        data[idxByEmail] = {...data[idxByEmail], ...rec, id:data[idxByEmail].id};
         data.splice(idxById,1);
       }else{
-        data[idxById] = {...data[idxById], ...rec, id: editingId};
+        data[idxById] = {...data[idxById], ...rec, id:editingId};
       }
       return;
     }
   }
 
   if(idxByEmail>=0){
-    data[idxByEmail] = {...data[idxByEmail], ...rec, id: data[idxByEmail].id};
+    data[idxByEmail] = {...data[idxByEmail], ...rec, id:data[idxByEmail].id};
   }else{
     data.unshift(rec);
   }
 }
 
 $("saveBtn").onclick = ()=>{
-  const name=$("name").value.trim();
-  const email=normalizeEmail($("email").value);
-  const start=$("start").value;
-  const months=Number($("months").value);
+  const name = $("name").value.trim();
+  const email = normalizeEmail($("email").value);
+  const start = $("start").value;
+  const months = Number($("months").value);
 
   if(!name) return alert("أدخل الاسم");
   if(!email || !validateEmail(email)) return alert("الإيميل غير صحيح");
   if(!start) return alert("اختر تاريخ البداية");
   if(!months || months<1) return alert("أدخل عدد الأشهر");
 
-  const end=addMonths(start, months);
-
-  const rec={
+  const end = addMonths(start, months);
+  const rec = {
     id: editingId || (Date.now()+"_"+Math.random().toString(16).slice(2)),
     name, email, months, start, end
   };
@@ -278,17 +326,40 @@ $("saveBtn").onclick = ()=>{
   clearForm();
 };
 
+/* ===== قائمة ⋯ ===== */
+function closeAllMenus(){
+  document.querySelectorAll(".menu").forEach(m=>m.style.display="none");
+}
+document.addEventListener("click", (e)=>{
+  if(!e.target.closest(".menuWrap")) closeAllMenus();
+});
+
+/* التعامل مع أزرار القائمة */
 $("tbody").addEventListener("click", (e)=>{
-  const btn=e.target.closest("button");
+  const icon = e.target.closest("[data-act='menu']");
+  if(icon){
+    const wrap = icon.closest(".menuWrap");
+    const menu = wrap.querySelector(".menu");
+    const isOpen = menu.style.display==="block";
+    closeAllMenus();
+    menu.style.display = isOpen ? "none" : "block";
+    return;
+  }
+
+  const btn = e.target.closest("button[data-act]");
   if(!btn) return;
-  const id=btn.getAttribute("data-id");
-  const act=btn.getAttribute("data-act");
-  const rec=data.find(x=>x.id===id);
+
+  const act = btn.getAttribute("data-act");
+  const id = btn.getAttribute("data-id");
+  const rec = data.find(x=>x.id===id);
   if(!rec) return;
+
+  closeAllMenus();
 
   if(act==="del"){
     if(!confirm("حذف هذا السجل؟")) return;
-    data=data.filter(x=>x.id!==id); save(); render(); clearForm(); return;
+    data = data.filter(x=>x.id!==id);
+    save(); render(); clearForm(); return;
   }
   if(act==="extend"){
     rec.end = addMonths(rec.end, Number(rec.months));
@@ -296,17 +367,18 @@ $("tbody").addEventListener("click", (e)=>{
   }
   if(act==="edit"){
     editingId = rec.id;
-    $("name").value = rec.name || "";
-    $("email").value = rec.email || "";
-    $("months").value = rec.months || "";
-    $("start").value = rec.start || todayISO();
+    $("name").value = rec.name||"";
+    $("email").value = rec.email||"";
+    $("months").value = rec.months||"";
+    $("start").value = rec.start||todayISO();
     $("quickPlan").value = ["1","3","6","12"].includes(String(rec.months)) ? String(rec.months) : "";
-    $("saveBtn").textContent = "💾 حفظ التعديل";
+    $("saveBtn").textContent = "💾 حفظ";
     window.scrollTo({top:0, behavior:"smooth"});
     return;
   }
 });
 
+/* ===== نسخ احتياطي ===== */
 function downloadFile(filename, content, mime){
   const blob=new Blob([content],{type:mime});
   const url=URL.createObjectURL(blob);
@@ -316,24 +388,18 @@ function downloadFile(filename, content, mime){
   URL.revokeObjectURL(url);
 }
 
-/* JSON export */
 $("exportJsonBtn").onclick = ()=>{
-  const payload = { version:1, exportedAt:new Date().toISOString(), alertDays:getAlertDays(), data };
-  downloadFile("subscriptions_backup.json", JSON.stringify(payload, null, 2), "application/json;charset=utf-8");
+  const payload = {version:1, exportedAt:new Date().toISOString(), alertDays:getAlertDays(), data};
+  downloadFile("subscriptions_backup.json", JSON.stringify(payload,null,2), "application/json;charset=utf-8");
 };
 
-/* JSON import file */
 $("importFileBtn").onclick = ()=> $("fileInput").click();
 $("fileInput").addEventListener("change", async ()=>{
-  const file=$("fileInput").files[0];
-  $("fileInput").value="";
-  if(!file) return;
-  let text="";
-  try{ text=await file.text(); }catch{ alert("تعذر قراءة الملف"); return; }
-  importFromText(text);
+  const f=$("fileInput").files[0]; $("fileInput").value="";
+  if(!f) return;
+  importFromText(await f.text());
 });
 
-/* JSON paste */
 $("importPasteBtn").onclick = ()=>{
   $("pasteArea").value="";
   $("pasteModal").style.display="flex";
@@ -346,7 +412,7 @@ function importFromText(text){
   if(!raw) return alert("لا يوجد JSON");
 
   let incoming;
-  try{ incoming=JSON.parse(raw); }
+  try{ incoming = JSON.parse(raw); }
   catch{ alert("JSON غير صالح"); return; }
 
   const importedData = Array.isArray(incoming) ? incoming : incoming.data;
@@ -370,10 +436,7 @@ function importFromText(text){
     const rec={
       id: r.id || (Date.now()+"_"+Math.random().toString(16).slice(2)),
       name: (r.name||"").trim(),
-      email,
-      months,
-      start,
-      end
+      email, months, start, end
     };
 
     const idx = data.findIndex(x=>normalizeEmail(x.email)===email);
@@ -381,16 +444,14 @@ function importFromText(text){
     else { data.unshift(rec); added++; }
   }
 
-  save();
-  render();
+  save(); render();
   $("pasteModal").style.display="none";
   alert(`تم الاستيراد ✅\nإضافة: ${added}\nتحديث: ${updated}`);
 }
 
-/* CSV export */
 $("exportCsvBtn").onclick = ()=>{
-  const header = ["name","email","months","start","end"];
-  const lines = [header.join(",")];
+  const header=["name","email","months","start","end"];
+  const lines=[header.join(",")];
   for(const r of data){
     lines.push([csvCell(r.name),csvCell(r.email),csvCell(r.months),csvCell(r.start),csvCell(r.end)].join(","));
   }
@@ -402,22 +463,25 @@ function csvCell(v){
   return s;
 }
 
+/* ===== Render ===== */
 function render(){
   const q = ($("search").value||"").trim().toLowerCase();
-  const tb=$("tbody");
-  tb.innerHTML="";
+  const tb = $("tbody");
+  tb.innerHTML = "";
 
-  const counts={active:0, expiring:0, expired:0};
+  const allCounts={active:0, expiring:0, expired:0};
+  for(const r of data){
+    allCounts[status(r.end).key]++;
+  }
+
   const rows = data.filter(r=>{
     if(!q) return true;
     return (r.name||"").toLowerCase().includes(q) || normalizeEmail(r.email).includes(q);
   });
 
   for(const r of rows){
-    const st=status(r.end);
-    counts[st.key]++;
-
-    const tr=document.createElement("tr");
+    const st = status(r.end);
+    const tr = document.createElement("tr");
     if(st.key==="expired") tr.classList.add("expired-row");
     if(st.key==="expiring") tr.classList.add("expiring-row");
 
@@ -432,32 +496,27 @@ function render(){
       <td>${leftTxt}</td>
       <td><span class="badge ${st.cls}">${st.label}</span></td>
       <td>
-        <button class="btn ok" data-act="edit" data-id="${r.id}">تعديل</button>
-        <button class="btn" data-act="extend" data-id="${r.id}">تمديد</button>
-        <button class="btn danger" data-act="del" data-id="${r.id}">حذف</button>
+        <span class="menuWrap">
+          <button class="iconBtn" data-act="menu" title="خيارات">⋯</button>
+          <div class="menu">
+            <button data-act="edit" data-id="${r.id}">✏️ تعديل</button>
+            <button data-act="extend" data-id="${r.id}">➕ تمديد نفس المدة</button>
+            <button class="danger" data-act="del" data-id="${r.id}">🗑️ حذف</button>
+          </div>
+        </span>
       </td>
     `;
     tb.appendChild(tr);
   }
 
-  // الإحصائيات تُحسب على الكل، والظاهر (بحث)
-  const totalAll = data.length;
-  const visible = rows.length;
-
-  // حساب الحالات على الكل
-  const allCounts = {active:0, expiring:0, expired:0};
-  for(const r of data){
-    allCounts[status(r.end).key]++;
-  }
-
   $("stats").textContent =
-    `المعروض: ${visible} | الإجمالي: ${totalAll} | فعّال: ${allCounts.active} | قريب: ${allCounts.expiring} | منتهي: ${allCounts.expired}`;
+    `المعروض: ${rows.length} | الإجمالي: ${data.length} | فعّال: ${allCounts.active} | قريب: ${allCounts.expiring} | منتهي: ${allCounts.expired}`;
 }
 
-// init
+/* init */
 load();
 loadSettings();
-$("start").value=todayISO();
+$("start").value = todayISO();
 render();
 </script>
 </body>

@@ -1144,10 +1144,10 @@ function save(){
 function openModal(id){ $(id).setAttribute("aria-hidden","false"); }
 function closeModal(id){ $(id).setAttribute("aria-hidden","true"); }
 function closeAllModals(){
-  ["formModal","backupModal","pasteModal","rowActionsModal","syncModal","authModal","shareModal"].forEach((m)=>{ try{ closeModal(m); }catch{} });
+  ["formModal","backupModal","pasteModal","rowActionsModal","syncModal","authModal"].forEach((m)=>{ try{ closeModal(m); }catch{} });
 }
 
-["formModal","backupModal","pasteModal","rowActionsModal","syncModal","authModal","shareModal"].forEach(mid=>{
+["formModal","backupModal","pasteModal","rowActionsModal","syncModal","authModal"].forEach(mid=>{
   const el = $(mid);
   if(!el) return;
   el.addEventListener("click",(e)=>{ if(e.target.id===mid) closeModal(mid); });
@@ -1378,9 +1378,9 @@ $("closeSync").onclick  = ()=> closeModal("syncModal");
   const csx = 
 
   // اغلاق عند الضغط خارج النافذة
-  const sm = $("shareModal");
+  const sm = $();
   if(sm){
-    sm.addEventListener("click",(e)=>{ if(e.target && e.target.id==="shareModal") closeModal("shareModal"); });
+    sm.addEventListener("click",(e)=>{ if(e.target && e.target.id===) closeModal(); });
   }
 })();
 
@@ -1413,7 +1413,7 @@ function openShareModal(text){
     if(em) em.href = `mailto:?subject=${subject}&body=${enc}`;
     const note = document.getElementById("shareNote");
     if(note) note.textContent = "✅ جاهز للمشاركة. يمكنك أيضًا النسخ.";
-    openModal("shareModal");
+    openModal();
   }catch(e){
     try{ showToast("تعذر فتح نافذة المشاركة", String(e?.message||e), "err"); }catch{}
   }
@@ -1703,7 +1703,7 @@ $("exportCsvBtn").onclick = ()=>{
 };
 function csvCell(v){
   const s=String(v??"");
-  if(/[,"\n]/.test(s)) return `"${s.replace(/"/g,'""')}"`;
+  if(/["\n]/.test(s)) return `"${s.replace(/"/g,'""')}"`;
   return s;
 }
 

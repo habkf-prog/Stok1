@@ -1260,7 +1260,7 @@ function formatNumber(n){
     return new Intl.NumberFormat('ar-DZ', {maximumFractionDigits: 2}).format(n);
   }catch{ return String(n); }
 }
-function computeTotals(){
+function computeTotalsModal(){
   const totals = Object.create(null);
   let sumAll = 0;
   let countNonZero = 0;
@@ -1277,7 +1277,7 @@ function computeTotals(){
 function renderTotals(){
   const box = document.getElementById("totalsBody");
   if(!box) return;
-  const {totals, sumAll, countNonZero} = computeTotals();
+  const {totals, sumAll, countNonZero} = computeTotalsModal();
   const entries = Object.entries(totals).sort((a,b)=>b[1]-a[1]);
 
   if(entries.length === 0){
@@ -1663,7 +1663,7 @@ function updateStats(filteredCount){
 
 
 
-function computeTotals(list){
+function computeTotalsText(list){
   const groups = {};
   for(const r of (list||[])){
     const c = r.currency || getCurrency();

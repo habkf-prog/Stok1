@@ -131,6 +131,14 @@ body{
   border-color: rgba(124,92,255,.45);
   background: rgba(124,92,255,.10);
 }
+
+.statChip.money{
+  border-color: rgba(245,158,11,.45);
+  background: rgba(245,158,11,.10);
+}
+.statChip.money .ico{ color:#f59e0b; }
+.statChip.clickable{ cursor:pointer; user-select:none; }
+.statChip.clickable:active{ transform: scale(.99); }
 .statChip .ico{ font-size:14px; line-height:1; }
 .statChip.ok .ico{ color:#22c55e; }
 .statChip.warn .ico{ color:#f59e0b; }
@@ -1035,6 +1043,46 @@ function status(endISO, alertDays){
   return {key:"active", label:"فعّال", cls:"ok", left};
 }
 
+
+/* ===== Money totals (by currency) ===== */
+function parseMoney(v){
+  const n = Number(String(v ?? "").replace(",", ".").replace(/[^\d.\-]/g,""));
+  return Number.isFinite(n) ? n : 0;
+}
+function fmtMoney(n){
+  // keep simple: no locale dependencies that might vary on mobile
+  const x = Math.round((n + Number.EPSILON)*100)/100;
+  return (Math.abs(x) >= 1000) ? x.toString() : String(x);
+}
+function currencyTotals(arr){
+  const map = new Map();
+  for(const r of (arr||[])){
+    const cur = (r.currency || "—").toUpperCase().trim();
+    const val = parseMoney(r.price);
+    if(!val) continue;
+    map.set(cur, (map.get(cur)||0) + val);
+  }
+  return map;
+}
+function totalsSummary(map){
+  const parts = [];
+  for(const [cur,sum] of map.entries()){
+    parts.push(`${cur} ${fmtMoney(sum)}`);
+  }
+  return parts.join(" | ");
+}
+function showTotalsDetails(map){
+  if(!map || map.size===0){
+    showToast("لا توجد مبالغ مسجلة بعد", "", "warn");
+    return;
+  }
+  const lines = [];
+  for(const [cur,sum] of map.entries()){
+    lines.push(`• ${cur}: ${fmtMoney(sum)}`);
+  }
+  alert("💰 المجموع حسب العملة\n\n" + lines.join("\n"));
+}
+
 /* ===== Storage ===== */
 async function load(){
   await initialLoad();
@@ -1567,14 +1615,42 @@ function updateStats(filteredCount){
 
   const shown = (typeof filteredCount==="number") ? filteredCount : (data||[]).length;
 
-  bar.innerHTML = `      <div class="statChip"><span class="ico">👁️</span><span class="k">المعروض</span><span class="v">${rows.length}</span></div>
+  bar.innerHTML = `
+      <div class="statChip"><span class="ico">👁️</span><span class="k">المعروض</span><span class="v">${rows.length}</span></div>
       <div class="statChip"><span class="ico">📦</span><span class="k">الإجمالي</span><span class="v">${data.length}</span></div>
-      <div class="statChip"><span class="ico">💰</span><span class="k">مجموع</span><span class="v" id="sumAll">—</span></div>
-      <div class="statChip"><span class="ico">🧾</span><span class="k">مجموع المعروض</span><span class="v" id="sumShown">—</span></div>
       <div class="statChip ok"><span class="ico">✅</span><span class="k">فعّال</span><span class="v">${allCounts.active}</span></div>
       <div class="statChip warn"><span class="ico">⏰</span><span class="k">قريب</span><span class="v">${allCounts.expiring}</span></div>
       <div class="statChip err"><span class="ico">❌</span><span class="k">منتهي</span><span class="v">${allCounts.expired}</span></div>
+      <div class="statChip money clickable" id="sumShownChip" title="اضغط لعرض تفاصيل المجموع للمعروض"><span class="ico">💰</span><span class="k">مجموع المعروض</span><span class="v" id="sumShownVal">—</span></div>
+      <div class="statChip money clickable" id="sumAllChip" title="اضغط لعرض تفاصيل المجموع لكل البيانات"><span class="ico">🧾</span><span class="k">مجموع الكل</span><span class="v" id="sumAllVal">—</span></div>
       <div class="statChip sync" id="syncChip"><span class="ico">☁️</span><span class="k">مزامنة</span><span class="v" id="syncVal">${getSyncText()}</span></div>`;
+    // totals
+    const totalsShown = computeTotals(rows);
+    const totalsAll   = computeTotals(data);
+    const sumShownVal = document.getElementById("sumShownVal");
+    const sumAllVal   = document.getElementById("sumAllVal");
+    if(sumShownVal) sumShownVal.textContent = totalsShown.text;
+    if(sumAllVal)   sumAllVal.textContent   = totalsAll.text;
+
+    const sumAllChip = document.getElementById("sumAllChip");
+    // إذا لا يوجد بحث/فلترة، لا داعي لعرض "مجموع الكل" لأنه يساوي المعروض
+    if(sumAllChip){
+      sumAllChip.style.display = (q ? "inline-flex" : "none");
+    }
+
+    // click handlers (one-time safe binding via dataset flag)
+    const sumShownChip = document.getElementById("sumShownChip");
+    if(sumShownChip && !sumShownChip.dataset.bound){
+      sumShownChip.dataset.bound="1";
+      sumShownChip.addEventListener("click", ()=> showTotalsDetails(totalsShown.groups));
+      sumShownChip.addEventListener("touchend", (e)=>{ e.preventDefault(); showTotalsDetails(totalsShown.groups); }, {passive:false});
+    }
+    if(sumAllChip && !sumAllChip.dataset.bound){
+      sumAllChip.dataset.bound="1";
+      sumAllChip.addEventListener("click", ()=> showTotalsDetails(totalsAll.groups));
+      sumAllChip.addEventListener("touchend", (e)=>{ e.preventDefault(); showTotalsDetails(totalsAll.groups); }, {passive:false});
+    }
+
 }
 
 
@@ -1582,23 +1658,27 @@ function updateStats(filteredCount){
 function computeTotals(list){
   const groups = {};
   for(const r of (list||[])){
-    const c = r.currency || getCurrency();
+    const c = (r.currency || getCurrency()).toUpperCase();
     const p = Number(r.price ?? 0);
-    if(!Number.isFinite(p)) continue;
+    if(!Number.isFinite(p) || p===0) continue;
     groups[c] = (groups[c]||0) + p;
   }
   const keys = Object.keys(groups);
-  if(keys.length === 0) return {text:"0", multi:false};
+  if(keys.length === 0) return {text:"0", multi:false, groups};
   if(keys.length === 1){
     const c = keys[0];
     const v = groups[c];
-    return {text:`${v.toFixed(2).replace(/\.00$/,"")} ${currencyLabel(c)}`, multi:false};
+    return {text:`${v.toFixed(2).replace(/\.00$/,"")} ${currencyLabel(c)}`, multi:false, groups};
   }
-  // multiple currencies
   const parts = keys.map(k => `${groups[k].toFixed(2).replace(/\.00$/,"")} ${currencyLabel(k)}`);
-  return {text: parts.join(" · "), multi:true};
+  return {text: parts.join(" · "), multi:true, groups};
 }
 
+function totalsToLines(groups){
+  const keys = Object.keys(groups||{});
+  keys.sort();
+  return keys.map(k => `• ${k}: ${groups[k].toFixed(2).replace(/\.00$/,"")}`);
+}
 function render(){
   const q = ($("search").value||"").trim().toLowerCase();
   const tb = $("tbody");

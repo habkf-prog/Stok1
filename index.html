@@ -110,6 +110,51 @@ body{
   color: var(--muted);
 }
 
+/* ===== Stats Bar (better UI) ===== */
+#statsBar{
+  margin-inline-start:auto;
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+.statChip{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 10px;
+  border-radius:999px;
+  border:1px solid var(--line);
+  background: rgba(0,0,0,.18);
+  font-size:12px;
+  font-weight:900;
+  color: var(--text);
+  white-space:nowrap;
+}
+.statChip .k{ color: var(--muted); font-weight:900; }
+.statChip .v{ font-weight:900; }
+.statChip.ok{ border-color: rgba(34,197,94,.40); }
+.statChip.warn{ border-color: rgba(245,158,11,.40); }
+.statChip.err{ border-color: rgba(239,68,68,.40); }
+.statChip.sync{
+  border-color: rgba(124,92,255,.45);
+  background: rgba(124,92,255,.10);
+}
+/* Stat icons */
+.statChip .ico{
+  font-size:14px;
+  line-height:1;
+}
+.statChip.ok .ico{ color:#22c55e; }
+.statChip.warn .ico{ color:#f59e0b; }
+.statChip.err .ico{ color:#ef4444; }
+.statChip.sync .ico{ color:#7c5cff; }
+
+@media (max-width: 650px){
+  #statsBar{ width:100%; margin-inline-start:0; }
+  .statChip{ flex: 1 1 auto; justify-content:center; }
+}
+
 /* ======= Table ======= */
 .tableWrap{ overflow:auto; }
 table{
@@ -357,9 +402,7 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
 
       <button class="btn danger" id="clearBtn" type="button">حذف الكل</button>
 
-      <div class="pills">
-        <div class="pill" id="statsPill">—</div>
-      </div>
+      <div class="pills" id="statsBar"></div>
     </div>
 
     <div class="tableWrap">
@@ -592,30 +635,23 @@ const LOCAL_BACKUP_KEY = "subs_local_backup_v3";
 
 let syncState = "idle"; // idle | saving | ok | fail | offline
 let lastSyncAt = null;
-let statsBaseText = "—";
 
 /* مؤشر بصري للمزامنة داخل الشريط العلوي */
+
+function getSyncText(){
+  if(!navigator.onLine) return "📴 أوفلاين";
+  if(syncState === "saving") return "⏳ جارٍ الحفظ...";
+  if(syncState === "ok") return `✅ تم (${lastSyncAt || ""})`;
+  if(syncState === "fail") return "🔴 فشل";
+  return "—";
+}
+
 function setSyncState(state){
   syncState = state;
-
-  const pill = $("statsPill");
-  if(!pill) return;
-
-  let s = "";
-  if(!navigator.onLine){
-    s = " | 📴 أوفلاين";
-  }else if(state === "saving"){
-    s = " | ⏳ جارٍ الحفظ...";
-  }else if(state === "ok"){
-    s = ` | ✅ تم (${lastSyncAt || ""})`;
-  }else if(state === "fail"){
-    s = " | 🔴 فشل";
-  }else{
-    s = "";
-  }
-
-  pill.textContent = statsBaseText + s;
+  const el = document.getElementById("syncVal");
+  if(el) el.textContent = getSyncText();
 }
+
 
 function nowHHMM(){
   const d = new Date();
@@ -1149,9 +1185,20 @@ function render(){
     `;
     tb.appendChild(tr);
   }
-
-  statsBaseText = `المعروض: ${rows.length} | الإجمالي: ${data.length} | فعّال: ${allCounts.active} | قريب: ${allCounts.expiring} | منتهي: ${allCounts.expired}`;
   setSyncState(syncState);
+  // تحديث شريط الإحصائيات
+  const bar = document.getElementById("statsBar");
+  if(bar){
+    bar.innerHTML = `
+      <div class="statChip"><span class="ico">👁️</span><span class="k">المعروض</span><span class="v">${rows.length}</span></div>
+      <div class="statChip"><span class="ico">📦</span><span class="k">الإجمالي</span><span class="v">${data.length}</span></div>
+      <div class="statChip ok"><span class="ico">✅</span><span class="k">فعّال</span><span class="v">${allCounts.active}</span></div>
+      <div class="statChip warn"><span class="ico">⏰</span><span class="k">قريب</span><span class="v">${allCounts.expiring}</span></div>
+      <div class="statChip err"><span class="ico">❌</span><span class="k">منتهي</span><span class="v">${allCounts.expired}</span></div>
+      <div class="statChip sync"><span class="ico">☁️</span><span class="k">مزامنة</span><span class="v" id="syncVal">${getSyncText()}</span></div>
+    `;
+  }
+
 }
 
 /* init */

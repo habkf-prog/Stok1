@@ -1,895 +1,189 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>إدارة الاشتراكات</title>
-  <style>
-    :root{
-      --bg:#0b1220; --card:#0f172a; --muted:#94a3b8; --txt:#e5e7eb;
-      --line:rgba(255,255,255,.12); --pri:#3b82f6; --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444;
-      --r:16px;
-    }
-    *{box-sizing:border-box}
-    body{margin:0;background:linear-gradient(180deg,#07101d, #0b1220 40%, #0b1220);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Tahoma,Arial}
-    a{color:inherit}
-    .wrap{max-width:1100px;margin:0 auto;padding:18px}
-    .topbar{display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:14px}
-    .brand{display:flex;gap:10px;align-items:center}
-    .logo{width:38px;height:38px;border-radius:12px;background:rgba(59,130,246,.18);display:grid;place-items:center;border:1px solid var(--line)}
-    .title{font-size:18px;font-weight:700}
-    .sub{font-size:12px;color:var(--muted);margin-top:2px}
-    .actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .btn{border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--txt);padding:9px 12px;border-radius:12px;cursor:pointer}
-    .btn:hover{background:rgba(255,255,255,.09)}
-    .btn.pri{background:rgba(59,130,246,.95);border-color:rgba(59,130,246,.95)}
-    .btn.pri:hover{filter:brightness(1.05)}
-    .btn.ok{background:rgba(34,197,94,.92);border-color:rgba(34,197,94,.92);color:#08111f}
-    .btn.bad{background:rgba(239,68,68,.92);border-color:rgba(239,68,68,.92)}
-    .btn.ghost{background:transparent}
-    .card{background:rgba(15,23,42,.72);border:1px solid var(--line);border-radius:var(--r);padding:14px}
-    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:12px}
-    @media (max-width:900px){.grid{grid-template-columns:1fr}}
-    .field{display:flex;flex-direction:column;gap:6px}
-    label{font-size:12px;color:var(--muted)}
-    input,select,textarea{width:100%;padding:10px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:rgba(0,0,0,.28);color:var(--txt);outline:none}
-    textarea{min-height:40px;resize:vertical}
-    .row{display:flex;gap:10px;flex-wrap:wrap}
-    .row > *{flex:1;min-width:160px}
-    .hr{height:1px;background:var(--line);margin:12px 0}
-    .kpis{display:flex;gap:10px;flex-wrap:wrap}
-    .kpi{flex:1;min-width:200px}
-    .kpi .num{font-size:20px;font-weight:800}
-    .kpi .lbl{font-size:12px;color:var(--muted)}
-    .badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.05);font-size:12px;color:var(--muted)}
-    .dot{width:8px;height:8px;border-radius:50%}
-    .dot.ok{background:var(--ok)} .dot.warn{background:var(--warn)} .dot.bad{background:var(--bad)}
-    .tableWrap{border:1px solid var(--line);border-radius:var(--r);overflow:hidden;background:rgba(15,23,42,.55)}
-    .scrollX{overflow-x:auto;-webkit-overflow-scrolling:touch}
-    table{width:100%;border-collapse:collapse;min-width:980px}
-    th,td{padding:10px 10px;border-bottom:1px solid rgba(255,255,255,.08);text-align:right;vertical-align:middle}
-    th{font-size:12px;color:var(--muted);background:rgba(255,255,255,.04);position:sticky;top:0;z-index:1}
-    td{font-size:13px}
-    .pill{padding:4px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.12);font-size:12px;color:var(--muted);display:inline-block}
-    .tBtns{display:flex;gap:6px;justify-content:flex-start}
-    .mini{padding:6px 10px;border-radius:10px;font-size:12px}
-    .muted{color:var(--muted)}
-    .right{margin-inline-start:auto}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لوحة تسيير الاشتراكات</title>
 
-    /* Modal */
-    .back{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center;padding:14px}
-    .modal{width:min(560px,96vw);background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px}
-    .modalHeader{display:flex;align-items:center;justify-content:space-between;gap:10px}
-    .modalHeader h3{margin:0;font-size:16px}
-    .x{background:transparent;border:0;color:var(--txt);font-size:20px;cursor:pointer}
+<style>
+:root{
+  --bg:#0b0f17; --card:#ffffff10; --line:#ffffff20; --text:#e9eef7; --muted:#b7bfd0;
+  --accent:#7c5cff; --ok:#22c55e; --warn:#f59e0b; --err:#ef4444; --radius:16px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial;
+  background:var(--bg);
+  color:var(--text);
+  padding:18px;
+}
+.container{max-width:1100px;margin:auto}
+.card{
+  background:var(--card);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:16px;
+}
+h1{margin:0 0 8px;font-size:20px}
+.muted{color:var(--muted);font-size:13px}
 
-    /* Firebase login overlay */
-    #loginBack{display:flex;position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.7);align-items:center;justify-content:center;padding:14px}
-    #loginCard{width:min(420px,96vw);background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px}
-    #loginCard h2{margin:0 0 6px;font-size:18px;text-align:center}
-    #loginCard p{margin:0 0 10px;color:var(--muted);font-size:12px;text-align:center}
-    #loginMsg{min-height:18px;color:#fca5a5;font-size:13px;text-align:center}
-  </style>
+.grid{
+  display:grid;
+  grid-template-columns: 1.2fr 1.2fr .8fr .8fr .8fr;
+  gap:10px;
+  margin-top:14px;
+}
+@media (max-width: 900px){
+  .grid{grid-template-columns:1fr 1fr}
+}
+label{display:block;font-weight:800;margin:10px 0 6px}
+input, select{
+  width:100%;
+  padding:11px 12px;
+  border-radius:12px;
+  border:1px solid var(--line);
+  background:#00000040;
+  color:var(--text);
+}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.btn{
+  padding:11px 14px;
+  border-radius:14px;
+  border:1px solid var(--line);
+  background:#00000040;
+  color:var(--text);
+  font-weight:900;
+  cursor:pointer;
+}
+.btn.primary{
+  border-color: var(--accent);
+  background: linear-gradient(135deg, var(--accent), #4f46e5);
+}
+
+.hidden{display:none}
+
+/* تنبيه أحمر للسجلات المنتهية */
+tr.expired-row{background:rgba(239,68,68,.12)}
+tr.expired-row td:first-child{box-shadow:inset 4px 0 0 rgba(239,68,68,.75)}
+
+table{width:100%;border-collapse:collapse;margin-top:14px}
+th,td{padding:10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{color:var(--muted)}
+.badge{padding:4px 10px;border-radius:999px;font-size:12px;font-weight:800}
+.badge.ok{color:#22c55e}
+.badge.warn{color:#f59e0b}
+.badge.err{color:#ef4444}
+</style>
 </head>
+
 <body>
-  <!-- Firebase Login -->
-  <div id="loginBack">
-    <div id="loginCard">
-      <h2>تسجيل الدخول</h2>
-      <p>دخول Firebase فقط</p>
-      <div class="field">
-        <label>البريد الإلكتروني</label>
-        <input id="loginEmail" type="email" placeholder="email@example.com" autocomplete="username" />
+<div class="container">
+  <div class="card">
+    <h1>🧾 لوحة تسيير الاشتراكات</h1>
+
+    <div class="grid">
+      <div>
+        <label>الاسم</label>
+        <input id="name">
       </div>
-      <div class="field" style="margin-top:10px">
-        <label>كلمة المرور</label>
-        <input id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password" />
+      <div>
+        <label>الإيميل</label>
+        <input id="email">
       </div>
-      <div class="row" style="margin-top:12px">
-        <button class="btn pri" id="btnLogin" type="button">دخول</button>
-        <button class="btn" id="btnCreate" type="button" title="اختياري">إنشاء حساب</button>
+      <div>
+        <label>الخطة</label>
+        <select id="plan">
+          <option value="3">3 أشهر</option>
+          <option value="6">6 أشهر</option>
+          <option value="12">12 شهر</option>
+          <option value="custom">يدوي</option>
+        </select>
       </div>
-      <div id="loginMsg"></div>
-    </div>
-  </div>
-
-  <div id="app" style="display:none">
-    <div class="wrap">
-      <div class="topbar">
-        <div class="brand">
-          <div class="logo">📦</div>
-          <div>
-            <div class="title">لوحة إدارة الاشتراكات</div>
-            <div class="sub">ملف واحد • LocalStorage • GitHub Pages</div>
-          </div>
-        </div>
-        <div class="actions">
-          <span class="badge" id="userBadge"><span class="dot ok"></span><span class="muted">—</span></span>
-          <button class="btn" id="btnImportCSV" type="button">استيراد CSV</button>
-          <button class="btn" id="btnExportCSV" type="button">تصدير CSV</button>
-          <button class="btn" id="btnBackup" type="button">Backup JSON</button>
-          <button class="btn" id="btnRestore" type="button">Restore JSON</button>
-          <button class="btn bad" id="btnLogout" type="button">خروج</button>
-        </div>
+      <div id="customBox" class="hidden">
+        <label>عدد الأشهر (يدوي)</label>
+        <input id="customMonths" type="number" min="1" placeholder="مثال: 2">
       </div>
-
-      <div class="grid">
-        <div class="card">
-          <div class="row">
-            <div class="field">
-              <label>البريد الإلكتروني</label>
-              <input id="fEmail" type="email" placeholder="customer@email.com">
-            </div>
-            <div class="field">
-              <label>اسم العميل</label>
-              <input id="fName" type="text" placeholder="اسم العميل">
-            </div>
-          </div>
-
-          <div class="row" style="margin-top:10px">
-            <div class="field">
-              <label>تاريخ التسجيل</label>
-              <input id="fStart" type="date">
-            </div>
-            <div class="field">
-              <label>مدة الاشتراك</label>
-              <select id="fDur">
-                <option value="1">1 شهر</option>
-                <option value="3" selected>3 أشهر</option>
-                <option value="6">6 أشهر</option>
-                <option value="12">12 شهر</option>
-                <option value="custom">يدوي…</option>
-              </select>
-            </div>
-            <div class="field" id="fDurCustomWrap" style="display:none">
-              <label>عدد الأشهر (يدوي)</label>
-              <input id="fDurCustom" type="number" min="1" step="1" value="3">
-            </div>
-          </div>
-
-          <div class="row" style="margin-top:10px">
-            <div class="field">
-              <label>نوع الخطة</label>
-              <select id="fPlan">
-                <option value="Basic">Basic</option>
-                <option value="Pro" selected>Pro</option>
-                <option value="Premium">Premium</option>
-                <option value="Other">أخرى…</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>السعر</label>
-              <input id="fPrice" type="number" min="0" step="0.01" placeholder="0">
-            </div>
-            <div class="field">
-              <label>التجديد</label>
-              <select id="fRenew">
-                <option value="manual" selected>يدوي</option>
-                <option value="auto">تلقائي</option>
-                <option value="stop">إيقاف</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="field" style="margin-top:10px">
-            <label>ملاحظات</label>
-            <textarea id="fNotes" placeholder="..."></textarea>
-          </div>
-
-          <div class="row" style="margin-top:12px">
-            <button class="btn ok" id="btnAdd" type="button">➕ إضافة اشتراك</button>
-            <button class="btn" id="btnClearForm" type="button">مسح</button>
-            <span class="right muted" id="saveHint">يتم الحفظ تلقائيًا</span>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="kpis">
-            <div class="kpi card">
-              <div class="num" id="kTotal">0</div>
-              <div class="lbl">عدد الاشتراكات</div>
-            </div>
-            <div class="kpi card">
-              <div class="num" id="kActive">0</div>
-              <div class="lbl">نشط الآن</div>
-            </div>
-            <div class="kpi card">
-              <div class="num" id="kMonthIncome">0</div>
-              <div class="lbl">الدخل الشهري (تقديري)</div>
-            </div>
-          </div>
-          <div class="hr"></div>
-          <div class="field">
-            <label>بحث سريع</label>
-            <input id="q" type="text" placeholder="اكتب بريد/اسم/خطة...">
-          </div>
-          <div class="row" style="margin-top:10px">
-            <div class="field">
-              <label>فلتر</label>
-              <select id="filter">
-                <option value="all" selected>الكل</option>
-                <option value="active">نشط</option>
-                <option value="expired">منتهي</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>ترتيب</label>
-              <select id="sort">
-                <option value="endAsc" selected>الأقرب انتهاءً</option>
-                <option value="endDesc">الأبعد انتهاءً</option>
-                <option value="priceDesc">السعر (أعلى)</option>
-                <option value="priceAsc">السعر (أقل)</option>
-                <option value="nameAsc">الاسم A→Z</option>
-              </select>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card" style="margin-top:12px">
-        <div class="tableWrap">
-          <div class="scrollX" id="emailsTableScroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>الحالة</th>
-                  <th>البريد</th>
-                  <th>العميل</th>
-                  <th>الخطة</th>
-                  <th>السعر</th>
-                  <th>التسجيل</th>
-                  <th>المدة</th>
-                  <th>الانتهاء</th>
-                  <th>التجديد</th>
-                  <th>ملاحظات</th>
-                  <th>إجراءات</th>
-                </tr>
-              </thead>
-              <tbody id="tbody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <div class="muted" style="margin-top:10px;font-size:12px">
-        نصيحة: افتح الرابط مع <span class="pill">?v=رقم</span> بعد كل تحديث لتجنب الكاش في الهاتف.
+      <div>
+        <label>تاريخ البداية</label>
+        <input id="start" type="date">
       </div>
     </div>
-  </div>
 
-  <!-- Actions Modal -->
-  <div class="back" id="actionsBack">
-    <div class="modal">
-      <div class="modalHeader">
-        <h3 id="actionsTitle">إجراءات</h3>
-        <button class="x" onclick="closeActions()" type="button">✕</button>
-      </div>
-      <div class="hr"></div>
-      <div class="row">
-        <button class="btn pri" id="btnEditRow" type="button">تعديل</button>
-        <button class="btn bad" id="btnDeleteRow" type="button">حذف</button>
-      </div>
-      <div class="row" style="margin-top:8px">
-        <button class="btn" id="btnCopyEmail" type="button">نسخ البريد</button>
-        <button class="btn" id="btnRenew3" type="button">تجديد 3 أشهر</button>
-        <button class="btn" id="btnRenew6" type="button">تجديد 6 أشهر</button>
-      </div>
+    <div class="row">
+      <button class="btn primary" id="addBtn">➕ إضافة</button>
     </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>الاسم</th>
+          <th>الإيميل</th>
+          <th>المدة</th>
+          <th>البداية</th>
+          <th>الانتهاء</th>
+          <th>الحالة</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
   </div>
+</div>
 
-  <!-- Hidden file inputs -->
-  <input id="fileCSV" type="file" accept=".csv,text/csv" style="display:none">
-  <input id="fileJSON" type="file" accept="application/json,.json" style="display:none">
+<script>
+const $ = id => document.getElementById(id);
+let data = [];
 
-  <!-- Firebase (compat) -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script>
-    // 🔧 ضع إعدادات Firebase الخاصة بك هنا
-    const firebaseConfig = {
-      apiKey: "AIzaSyCTFWu05DqfkiSN_0vGSb6CpAwGJ5lMoC0",
-      authDomain: "stok-ef86f.firebaseapp.com",
-      projectId: "stok-ef86f",
-      storageBucket: "stok-ef86f.firebasestorage.app",
-      messagingSenderId: "845285269041",
-      appId: "1:845285269041:web:4bdb61a61aa114d600ff10",
-      measurementId: "G-EBF3TC1QWT"
-    };
+$("plan").onchange = () => {
+  $("customBox").classList.toggle("hidden", $("plan").value !== "custom");
+};
 
-    if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
+function addMonths(date, m){
+  const d = new Date(date);
+  d.setMonth(d.getMonth() + m);
+  return d.toISOString().slice(0,10);
+}
 
-    // ===== Firestore Allowlist (مشتركة بين كل الأجهزة) =====
-    const db = firebase.firestore();
-    const ALLOW_DOC = db.collection("admin").doc("allowlist"); // admin/allowlist
-    let ALLOW_CACHE = [];  // array of lowercased emails
-    let allowUnsub = null;
+$("addBtn").onclick = () => {
+  const name = $("name").value.trim();
+  const email = $("email").value.trim();
+  const start = $("start").value;
+  if(!name || !email || !start) return alert("أكمل الحقول");
 
-    const normEmail = (x)=>String(x||"").trim().toLowerCase();
-    const isAllowedEmail = (email)=>{
-      if(!ALLOW_CACHE.length) return true;   // فارغة = السماح للجميع
-      return ALLOW_CACHE.includes(normEmail(email));
-    };
+  let months;
+  if($("plan").value === "custom"){
+    months = Number($("customMonths").value);
+    if(!months || months < 1) return alert("أدخل عدد الأشهر");
+  }else{
+    months = Number($("plan").value);
+  }
 
-    async function loadAllowlistOnce(){
-      const snap = await ALLOW_DOC.get();
-      const data = snap.exists ? (snap.data()||{}) : {};
-      const arr = Array.isArray(data.emails) ? data.emails : [];
-      ALLOW_CACHE = arr.map(normEmail).filter(Boolean);
-      return ALLOW_CACHE;
-    }
+  const end = addMonths(start, months);
+  data.push({name,email,months,start,end});
+  render();
+};
 
-    function subscribeAllowlist(){
-      return ALLOW_DOC.onSnapshot((snap)=>{
-        const data = snap.exists ? (snap.data()||{}) : {};
-        const arr = Array.isArray(data.emails) ? data.emails : [];
-        ALLOW_CACHE = arr.map(normEmail).filter(Boolean);
-        try{ renderAllowlistUI(); }catch(e){}
-      }, (err)=>{
-        console.error("allowlist snapshot error", err);
-      });
-    }
+function render(){
+  const tb = $("tbody");
+  tb.innerHTML = "";
+  const today = new Date();
 
-    async function saveAllowlist(arr){
-      const clean = Array.from(new Set(arr.map(normEmail).filter(Boolean)));
-      await ALLOW_DOC.set({ emails: clean, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }, { merge:true });
-    }
-
-    // ===== Allowlist UI =====
-    const allowBack = document.getElementById("allowBack");
-    const btnAllowlist = document.getElementById("btnAllowlist");
-    const allowEmail = document.getElementById("allowEmail");
-    const btnAllowAdd = document.getElementById("btnAllowAdd");
-    const allowList = document.getElementById("allowList");
-
-    function openAllow(){ if(allowBack) allowBack.style.display="flex"; try{ renderAllowlistUI(); }catch(e){} }
-    function closeAllow(){ if(allowBack) allowBack.style.display="none"; }
-    window.closeAllow = closeAllow;
-
-    function renderAllowlistUI(){
-      if(!allowList) return;
-      if(!ALLOW_CACHE.length){
-        allowList.innerHTML = "<div>— لا يوجد أي إيميل (السماح للجميع) —</div>";
-        return;
-      }
-      allowList.innerHTML = ALLOW_CACHE.map(em=>{
-        const safe = em.replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
-        return `<div style="display:flex;gap:8px;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.08);padding:6px 0">
-          <span>${safe}</span>
-          <button class="btn mini" type="button" data-del="${safe}">حذف</button>
-        </div>`;
-      }).join("");
-      // bind delete buttons
-      allowList.querySelectorAll("button[data-del]").forEach(b=>{
-        b.onclick = async ()=>{
-          const em = normEmail(b.getAttribute("data-del"));
-          try{
-            await saveAllowlist(ALLOW_CACHE.filter(x=>x!==em));
-          }catch(e){
-            alert("تعذر الحذف");
-          }
-        };
-      });
-    }
-
-    if(btnAllowlist){
-      btnAllowlist.addEventListener("click", openAllow);
-    }
-    if(btnAllowAdd){
-      btnAllowAdd.addEventListener("click", async ()=>{
-        const em = normEmail(allowEmail.value);
-        if(!em) return;
-        try{
-          await saveAllowlist([...(ALLOW_CACHE||[]), em]);
-          allowEmail.value = "";
-        }catch(e){
-          alert("تعذر الإضافة");
-        }
-      });
-    }
-
-
-    // ---------- UI helpers ----------
-    const $ = (id)=>document.getElementById(id);
-    const loginBack = $("loginBack");
-    const loginEmail = $("loginEmail");
-    const loginPass  = $("loginPass");
-    const loginMsg   = $("loginMsg");
-    const app        = $("app");
-    const userBadge  = $("userBadge");
-
-    function showLogin(show){
-      loginBack.style.display = show ? "flex" : "none";
-      if(show && !loginMsg.textContent) loginMsg.textContent = "";
-    }
-    function setUserBadge(text){
-      userBadge.querySelector(".muted").textContent = text || "—";
-    }
-    function friendlyErr(e){
-      const c = (e && e.code) ? e.code : "";
-      if(c.includes("auth/invalid-credential")) return "بيانات الدخول غير صحيحة.";
-      if(c.includes("auth/user-not-found")) return "الحساب غير موجود.";
-      if(c.includes("auth/wrong-password")) return "كلمة المرور غير صحيحة.";
-      if(c.includes("auth/email-already-in-use")) return "هذا البريد مسجل مسبقًا.";
-      if(c.includes("auth/weak-password")) return "كلمة المرور ضعيفة.";
-      if(c.includes("auth/invalid-email")) return "البريد غير صالح.";
-      if(c.includes("auth/network-request-failed")) return "تحقق من اتصال الإنترنت.";
-      return (e && e.message) ? e.message : "حدث خطأ.";
-    }
-
-    $("btnLogin").addEventListener("click", async ()=>{
-      try{
-        loginMsg.textContent = "جاري التحقق...";
-        await auth.signInWithEmailAndPassword(loginEmail.value.trim(), loginPass.value);
-      }catch(e){
-        loginMsg.textContent = friendlyErr(e);
-      }
-    });
-
-    $("btnCreate").addEventListener("click", async ()=>{
-      try{
-        loginMsg.textContent = "جاري إنشاء الحساب...";
-        await auth.createUserWithEmailAndPassword(loginEmail.value.trim(), loginPass.value);
-      }catch(e){
-        loginMsg.textContent = friendlyErr(e);
-      }
-    });
-
-    $("btnLogout").addEventListener("click", async ()=>{
-      await auth.signOut();
-    });
-
-    // Guard: app only after auth
-    auth.onAuthStateChanged(async (user)=>{
-      // تحميل/اشتراك allowlist بعد تسجيل الدخول + التحقق من الإيميل
-      if(user){
-        if(!allowUnsub){
-          try{ await loadAllowlistOnce(); }catch(e){}
-          allowUnsub = subscribeAllowlist();
-        }
-        if(!isAllowedEmail(user.email)){
-          try{ loginMsg.textContent = "هذا الحساب غير مسموح له بالدخول."; }catch(e){}
-          await auth.signOut();
-          app.style.display = "none";
-          setUserBadge("—");
-          showLogin(true);
-          return;
-        }
-      }else{
-        if(allowUnsub){ try{ allowUnsub(); }catch(e){} allowUnsub = null; }
-        ALLOW_CACHE = [];
-      }
-
-      if(user){
-        showLogin(false);
-        if(btnAllowlist) btnAllowlist.style.display = 'inline-flex';
-        app.style.display = "block";
-        setUserBadge(user.email);
-      }else{
-        if(btnAllowlist) btnAllowlist.style.display = 'none';
-        app.style.display = "none";
-        setUserBadge("—");
-        loginMsg.textContent = "";
-        showLogin(true);
-      }
-    });
-
-    // ----------------- APP LOGIC (LocalStorage) -----------------
-    const KEY = "subs_data_v1";
-    function load(){
-      try{ return JSON.parse(localStorage.getItem(KEY)) || []; }catch(e){ return []; }
-    }
-    function save(arr){
-      localStorage.setItem(KEY, JSON.stringify(arr));
-    }
-
-    function uid(){
-      return Math.random().toString(16).slice(2)+Date.now().toString(16);
-    }
-    function monthsToMs(m){ return 1000*60*60*24*30*m; } // approximate for display only
-
-    function addMonths(dateStr, m){
-      const d = new Date(dateStr+"T00:00:00");
-      const day = d.getDate();
-      d.setMonth(d.getMonth()+m);
-      // prevent month overflow issues
-      if(d.getDate() < day) d.setDate(0);
-      return d.toISOString().slice(0,10);
-    }
-
-    function statusFor(endStr){
-      const now = new Date();
-      const end = new Date(endStr+"T23:59:59");
-      const diff = end - now;
-      if(diff >= 0) return {k:"active", label:"نشط", dot:"ok"};
-      return {k:"expired", label:"منتهي", dot:"bad"};
-    }
-
-    // Form bindings
-    const fEmail=$("fEmail"), fName=$("fName"), fStart=$("fStart"), fDur=$("fDur"),
-          fDurCustomWrap=$("fDurCustomWrap"), fDurCustom=$("fDurCustom"), fPlan=$("fPlan"),
-          fPrice=$("fPrice"), fNotes=$("fNotes"), fRenew=$("fRenew");
-
-    // Defaults
-    (function initDefaults(){
-      const today = new Date().toISOString().slice(0,10);
-      fStart.value = today;
-      fPrice.value = "";
-    })();
-
-    fDur.addEventListener("change", ()=>{
-      fDurCustomWrap.style.display = (fDur.value==="custom") ? "block" : "none";
-    });
-
-    function getDurMonths(){
-      return (fDur.value==="custom") ? Math.max(1, parseInt(fDurCustom.value||"1",10)) : parseInt(fDur.value,10);
-    }
-
-    function clearForm(){
-      fEmail.value=""; fName.value=""; fPlan.value="Pro"; fPrice.value=""; fNotes.value=""; fRenew.value="manual";
-      fDur.value="3"; fDurCustomWrap.style.display="none";
-      fStart.value = new Date().toISOString().slice(0,10);
-      editingId = null;
-      $("btnAdd").textContent = "➕ إضافة اشتراك";
-    }
-
-    $("btnClearForm").addEventListener("click", clearForm);
-
-    // Table rendering
-    const tbody = $("tbody");
-    const q = $("q"), filterSel=$("filter"), sortSel=$("sort");
-    const kTotal=$("kTotal"), kActive=$("kActive"), kMonthIncome=$("kMonthIncome");
-
-    function money(x){
-      const n = Number(x||0);
-      if(!isFinite(n)) return "0";
-      return n.toFixed(2);
-    }
-
-    function calcMonthIncome(items){
-      // estimate: price / durationMonths summed
-      let sum = 0;
-      items.forEach(it=>{
-        const m = Math.max(1, Number(it.durationMonths||1));
-        const p = Number(it.price||0);
-        if(isFinite(p)) sum += (p / m);
-      });
-      return sum;
-    }
-
-    function applyQuery(items){
-      const term = (q.value||"").trim().toLowerCase();
-      let out = items.slice();
-      if(term){
-        out = out.filter(it=>{
-          return (it.email||"").toLowerCase().includes(term) ||
-                 (it.name||"").toLowerCase().includes(term) ||
-                 (it.plan||"").toLowerCase().includes(term) ||
-                 (it.notes||"").toLowerCase().includes(term);
-        });
-      }
-      const f = filterSel.value;
-      if(f!=="all"){
-        out = out.filter(it=>statusFor(it.endDate).k===f);
-      }
-      const s = sortSel.value;
-      out.sort((a,b)=>{
-        if(s==="endAsc") return a.endDate.localeCompare(b.endDate);
-        if(s==="endDesc") return b.endDate.localeCompare(a.endDate);
-        if(s==="priceDesc") return Number(b.price||0)-Number(a.price||0);
-        if(s==="priceAsc") return Number(a.price||0)-Number(b.price||0);
-        if(s==="nameAsc") return (a.name||"").localeCompare(b.name||"");
-        return 0;
-      });
-      return out;
-    }
-
-    function render(){
-      const all = load();
-      const view = applyQuery(all);
-
-      // KPIs (based on all)
-      kTotal.textContent = String(all.length);
-      kActive.textContent = String(all.filter(it=>statusFor(it.endDate).k==="active").length);
-      kMonthIncome.textContent = money(calcMonthIncome(all));
-
-      tbody.innerHTML = "";
-      view.forEach(it=>{
-        const st = statusFor(it.endDate);
-        const tr = document.createElement("tr");
-
-        tr.innerHTML = `
-          <td><span class="badge"><span class="dot ${st.dot}"></span>${st.label}</span></td>
-          <td>${escapeHtml(it.email||"")}</td>
-          <td>${escapeHtml(it.name||"")}</td>
-          <td><span class="pill">${escapeHtml(it.plan||"")}</span></td>
-          <td>${money(it.price)}</td>
-          <td>${it.startDate}</td>
-          <td>${it.durationMonths} شهر</td>
-          <td>${it.endDate}</td>
-          <td><span class="pill">${it.renew||"manual"}</span></td>
-          <td class="muted" title="${escapeHtml(it.notes||"")}">${escapeHtml((it.notes||"").slice(0,24))}${(it.notes||"").length>24?"…":""}</td>
-          <td>
-            <div class="tBtns">
-              <button class="btn mini" data-act="actions" data-id="${it.id}">إجراءات</button>
-            </div>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function escapeHtml(s){
-      return String(s||"").replace(/[&<>"']/g, (c)=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
-    }
-
-    // Add / edit
-    let editingId = null;
-
-    $("btnAdd").addEventListener("click", ()=>{
-      const email = fEmail.value.trim();
-      if(!email) return;
-
-      const start = fStart.value;
-      const dur = getDurMonths();
-      const end = addMonths(start, dur);
-
-      const item = {
-        id: editingId || uid(),
-        email,
-        name: fName.value.trim(),
-        plan: fPlan.value,
-        price: Number(fPrice.value||0),
-        notes: fNotes.value.trim(),
-        renew: fRenew.value,
-        startDate: start,
-        durationMonths: dur,
-        endDate: end,
-        updatedAt: Date.now()
-      };
-
-      const all = load();
-      const idx = all.findIndex(x=>x.id===item.id);
-      if(idx>=0) all[idx]=item;
-      else all.push(item);
-      save(all);
-      clearForm();
-      render();
-    });
-
-    // Table actions (event delegation)
-    tbody.addEventListener("click", (e)=>{
-      const btn = e.target.closest("button[data-act]");
-      if(!btn) return;
-      const id = btn.getAttribute("data-id");
-      if(btn.getAttribute("data-act")==="actions") openActions(id);
-    });
-
-    // Actions modal
-    const actionsBack=$("actionsBack");
-    const actionsTitle=$("actionsTitle");
-    const btnEditRow=$("btnEditRow");
-    const btnDeleteRow=$("btnDeleteRow");
-    const btnCopyEmail=$("btnCopyEmail");
-    const btnRenew3=$("btnRenew3");
-    const btnRenew6=$("btnRenew6");
-    let actionsId=null;
-
-    function openActions(id){
-      actionsId=id;
-      const it = load().find(x=>x.id===id);
-      actionsTitle.textContent = it ? `إجراءات: ${it.email}` : "إجراءات";
-      actionsBack.style.display="flex";
-    }
-    function closeActions(){ actionsBack.style.display="none"; actionsId=null; }
-    window.closeActions = closeActions;
-
-    btnEditRow.addEventListener("click", ()=>{
-      const it = load().find(x=>x.id===actionsId);
-      if(!it) return;
-      editingId = it.id;
-      fEmail.value = it.email || "";
-      fName.value = it.name || "";
-      fPlan.value = it.plan || "Pro";
-      fPrice.value = String(it.price||0);
-      fNotes.value = it.notes || "";
-      fRenew.value = it.renew || "manual";
-      fStart.value = it.startDate;
-      fDur.value = ["1","3","6","12"].includes(String(it.durationMonths)) ? String(it.durationMonths) : "custom";
-      fDurCustomWrap.style.display = (fDur.value==="custom") ? "block" : "none";
-      fDurCustom.value = String(it.durationMonths||3);
-      $("btnAdd").textContent = "💾 حفظ التعديل";
-      closeActions();
-      window.scrollTo({top:0,behavior:"smooth"});
-    });
-
-    btnDeleteRow.addEventListener("click", ()=>{
-      if(!actionsId) return;
-      const all = load().filter(x=>x.id!==actionsId);
-      save(all);
-      closeActions();
-      render();
-    });
-
-    btnCopyEmail.addEventListener("click", async ()=>{
-      const it = load().find(x=>x.id===actionsId);
-      if(!it) return;
-      try{
-        await navigator.clipboard.writeText(it.email);
-      }catch(e){}
-      closeActions();
-    });
-
-    function renewByMonths(m){
-      const all = load();
-      const idx = all.findIndex(x=>x.id===actionsId);
-      if(idx<0) return;
-      const it = all[idx];
-      const newStart = new Date().toISOString().slice(0,10);
-      it.startDate = newStart;
-      it.durationMonths = m;
-      it.endDate = addMonths(newStart, m);
-      it.updatedAt = Date.now();
-      all[idx]=it;
-      save(all);
-      closeActions();
-      render();
-    }
-    btnRenew3.addEventListener("click", ()=>renewByMonths(3));
-    btnRenew6.addEventListener("click", ()=>renewByMonths(6));
-
-    // Search controls
-    [q, filterSel, sortSel].forEach(el=>el.addEventListener("input", render));
-    [filterSel, sortSel].forEach(el=>el.addEventListener("change", render));
-
-    // CSV import/export
-    const fileCSV = $("fileCSV");
-    $("btnImportCSV").addEventListener("click", ()=>fileCSV.click());
-    $("btnExportCSV").addEventListener("click", exportCSV);
-
-    fileCSV.addEventListener("change", async (e)=>{
-      const f = e.target.files && e.target.files[0];
-      if(!f) return;
-      const text = await f.text();
-      const rows = parseCSV(text);
-      // expected headers: email,name,plan,price,startDate,durationMonths,renew,notes
-      const items = [];
-      rows.forEach(r=>{
-        const email = (r.email||"").trim();
-        if(!email) return;
-        const start = (r.startDate||new Date().toISOString().slice(0,10)).slice(0,10);
-        const dur = Math.max(1, parseInt(r.durationMonths||"3",10));
-        items.push({
-          id: uid(),
-          email,
-          name: (r.name||"").trim(),
-          plan: (r.plan||"Pro").trim(),
-          price: Number(r.price||0),
-          notes: (r.notes||"").trim(),
-          renew: (r.renew||"manual").trim(),
-          startDate: start,
-          durationMonths: dur,
-          endDate: addMonths(start, dur),
-          updatedAt: Date.now()
-        });
-      });
-      const merged = load().concat(items);
-      save(merged);
-      fileCSV.value="";
-      render();
-    });
-
-    function exportCSV(){
-      const items = load();
-      const header = ["email","name","plan","price","startDate","durationMonths","endDate","renew","notes"];
-      const lines = [header.join(",")];
-      items.forEach(it=>{
-        lines.push([
-          it.email, it.name, it.plan, it.price, it.startDate, it.durationMonths, it.endDate, it.renew, (it.notes||"").replace(/\n/g," ")
-        ].map(csvEscape).join(","));
-      });
-      const blob = new Blob([lines.join("\n")], {type:"text/csv;charset=utf-8"});
-      downloadBlob(blob, "subscriptions.csv");
-    }
-    function csvEscape(v){
-      const s = String(v ?? "");
-      if(/[",\n]/.test(s)) return `"${s.replace(/"/g,'""')}"`;
-      return s;
-    }
-    function parseCSV(text){
-      // simple CSV parser with header row
-      const rows = [];
-      const lines = text.replace(/\r/g,"").split("\n").filter(l=>l.trim().length);
-      if(!lines.length) return rows;
-      const header = splitCSVLine(lines[0]).map(h=>h.trim());
-      for(let i=1;i<lines.length;i++){
-        const cols = splitCSVLine(lines[i]);
-        const obj = {};
-        header.forEach((h,idx)=>obj[h]=cols[idx] ?? "");
-        rows.push(obj);
-      }
-      return rows;
-    }
-    function splitCSVLine(line){
-      const out=[]; let cur=""; let q=false;
-      for(let i=0;i<line.length;i++){
-        const c=line[i];
-        if(q){
-          if(c === '"' && line[i+1] === '"'){ cur+='"'; i++; }
-          else if(c === '"'){ q=false; }
-          else cur+=c;
-        }else{
-          if(c === ','){ out.push(cur); cur=""; }
-          else if(c === '"'){ q=true; }
-          else cur+=c;
-        }
-      }
-      out.push(cur);
-      return out;
-    }
-
-    // Backup/Restore JSON
-    const fileJSON = $("fileJSON");
-    $("btnBackup").addEventListener("click", backupJSON);
-    $("btnRestore").addEventListener("click", ()=>fileJSON.click());
-    fileJSON.addEventListener("change", restoreJSON);
-
-    function backupJSON(){
-      const payload = { exportedAt: new Date().toISOString(), data: load() };
-      const blob = new Blob([JSON.stringify(payload,null,2)], {type:"application/json;charset=utf-8"});
-      downloadBlob(blob, "backup.json");
-    }
-    async function restoreJSON(e){
-      const f = e.target.files && e.target.files[0];
-      if(!f) return;
-      try{
-        const text = await f.text();
-        const obj = JSON.parse(text);
-        if(!obj || !Array.isArray(obj.data)) throw new Error("bad");
-        save(obj.data);
-        fileJSON.value="";
-        render();
-      }catch(_){
-        fileJSON.value="";
-      }
-    }
-
-    function downloadBlob(blob, name){
-      const url = URL.createObjectURL(blob);
-      const a=document.createElement("a");
-      a.href=url; a.download=name;
-      document.body.appendChild(a); a.click(); a.remove();
-      URL.revokeObjectURL(url);
-    }
-
-    // initial render
-    render();
-  </script>
-
-  <!-- Allowlist (Firestore) -->
-  <div class="back" id="allowBack">
-    <div class="modal">
-      <div class="modalHeader">
-        <h3>الإيميلات المسموح لها</h3>
-        <button class="x" type="button" onclick="closeAllow()">✕</button>
-      </div>
-      <div class="hr"></div>
-      <p class="muted" style="margin:0 0 10px;font-size:12px">
-        إذا كانت القائمة فارغة: يسمح للجميع. عند إضافة أول إيميل: يصبح الدخول مقيدًا.
-      </p>
-      <div class="row">
-        <input id="allowEmail" type="email" placeholder="email@example.com">
-        <button class="btn ok" id="btnAllowAdd" type="button">إضافة</button>
-      </div>
-      <div class="hr"></div>
-      <div id="allowList" class="muted" style="font-size:13px"></div>
-    </div>
-  </div>
-
-  <button class="btn" id="btnAllowlist" type="button" style="display:none;position:fixed;bottom:14px;left:14px;z-index:9998">
-    إدارة الإيميلات
-  </button>
-
+  data.forEach(r=>{
+    const endDate = new Date(r.end);
+    const tr = document.createElement("tr");
+    let status = "فعّال", cls="ok";
+    if(endDate < today){ status="منتهي"; cls="err"; tr.classList.add("expired-row"); }
+    tr.innerHTML = `
+      <td>${r.name}</td>
+      <td>${r.email}</td>
+      <td>${r.months} شهر</td>
+      <td>${r.start}</td>
+      <td>${r.end}</td>
+      <td><span class="badge ${cls}">${status}</span></td>
+    `;
+    tb.appendChild(tr);
+  });
+}
+</script>
 </body>
 </html>

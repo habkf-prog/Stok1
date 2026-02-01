@@ -439,6 +439,46 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
 }
 .printHeader .t{ font-weight:900; font-size:16px; }
 .printHeader .m{ font-size:12px; opacity:.75; margin-top:4px; }
+/* ===== Share Modal ===== */
+.shareGrid{
+  display:grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap:12px;
+  margin-top: 10px;
+}
+@media (max-width: 560px){
+  .shareGrid{ grid-template-columns: 1fr; }
+}
+.shareBtn{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  padding:14px 12px;
+  border-radius:18px;
+  border:1px solid rgba(255,255,255,.12);
+  background: rgba(255,255,255,.04);
+  color: var(--text);
+  font-weight: 900;
+  cursor:pointer;
+  text-decoration:none;
+  min-height: 52px;
+}
+.shareBtn:hover{ background: rgba(255,255,255,.08); }
+.shareBtn:active{ transform: scale(.99); }
+.shareBtn.primary{
+  border-color: rgba(124,92,255,.45);
+  background: rgba(124,92,255,.10);
+}
+.shareMini{
+  margin-top:10px;
+  color: var(--muted);
+  font-size:12px;
+  line-height:1.7;
+  word-break: break-word;
+}
+
 </style>
 
 <!-- Firebase (Compat) for Auth UI -->
@@ -1283,6 +1323,25 @@ if(__restoreBtn){
 $("openSync").onclick = ()=> openModal("syncModal");
 $("closeSyncX").onclick = ()=> closeModal("syncModal");
 $("closeSync").onclick  = ()=> closeModal("syncModal");
+// ===== Share modal =====
+$("closeShareX").onclick = ()=> closeModal("shareModal");
+$("closeShare").onclick  = ()=> closeModal("shareModal");
+$("shareCopy").onclick = async ()=>{
+  try{
+    const q = ($("search").value||"").trim().toLowerCase();
+    const list = (data||[]).filter(r=>{
+      if(!q) return true;
+      return (r.name||"").toLowerCase().includes(q) || (r.email||"").toLowerCase().includes(q);
+    });
+    if(!list.length){ showToast("لا توجد بيانات للنسخ", "", "warn"); return; }
+    const text = buildShareText(list);
+    await navigator.clipboard.writeText(text);
+    showToast("تم النسخ ✅", "انسخ والصقه في أي تطبيق", "ok");
+  }catch(e){
+    showToast("فشل النسخ", String(e?.message||e), "err");
+  }
+};
+
 
 /* ===== Totals modal ===== */
 function formatNumber(n){
@@ -1356,6 +1415,25 @@ $("cancelPaste").onclick = ()=> closeModal("pasteModal");
 $("search").addEventListener("input", render);
 
 /* ✅ حذف الكل: الآن مع Undo */
+function openShareModal(text){
+  try{
+    const enc = encodeURIComponent(text || "");
+    const wa = document.getElementById("shareWhatsApp");
+    const tg = document.getElementById("shareTelegram");
+    const em = document.getElementById("shareEmail");
+    if(wa) wa.href = `https://wa.me/?text=${enc}`;
+    if(tg) tg.href = `https://t.me/share/url?text=${enc}`;
+    // Gmail/Email: use mailto (Gmail will handle it if installed / user selects)
+    const subject = encodeURIComponent("تقرير الاشتراكات");
+    if(em) em.href = `mailto:?subject=${subject}&body=${enc}`;
+    const note = document.getElementById("shareNote");
+    if(note) note.textContent = "✅ جاهز للمشاركة. يمكنك أيضًا النسخ.";
+    openModal("shareModal");
+  }catch(e){
+    try{ showToast("تعذر فتح نافذة المشاركة", String(e?.message||e), "err"); }catch{}
+  }
+}
+
 // ===== Print + Share =====
 function formatMoney(r){
   const p = (r && r.price != null) ? Number(r.price) : 0;
@@ -1403,18 +1481,23 @@ async function doShare(){
     const text = buildShareText(list);
     const title = "تقرير الاشتراكات";
 
-    // Web Share (أفضل على الهاتف)
-    if(navigator.share){
-      try{
-        await navigator.share({ title, text });
-        showToast("تمت المشاركة ✅", "", "ok");
-        return;
-      }catch(e){
-        // المستخدم ألغى المشاركة أو فشل
-      }
-    }
+    
+// Web Share (أفضل على الهاتف)
+if(navigator.share){
+  try{
+    await navigator.share({ title, text });
+    showToast("تمت المشاركة ✅", "", "ok");
+    return;
+  }catch(e){
+    // المستخدم ألغى أو المتصفح رفض -> نعرض نافذة بدائل
+  }
+}
 
-    // fallback: نسخ للحافظة
+// بدائل مشاركة داخلية (واتساب/تيليجرام/إيميل/نسخ)
+openShareModal(text);
+return;
+
+// fallback: نسخ للحافظة
     try{
       await navigator.clipboard.writeText(text);
       showToast("تم النسخ ✅", "تم نسخ التقرير إلى الحافظة", "ok");
@@ -1969,6 +2052,36 @@ $("authLogout").onclick = async ()=>{
   }
 };
 </script>
+
+<!-- Modal: Share -->
+<div class="modal" id="shareModal" aria-hidden="true">
+  <div class="box" role="dialog" aria-modal="true" style="width:min(760px, 100%)">
+    <div class="modalHeader">
+      <div>
+        <h2>📤 مشاركة</h2>
+        <div class="hint">اختر التطبيق أو انسخ التقرير</div>
+      </div>
+      <button class="btn" id="closeShareX" type="button">✕</button>
+    </div>
+
+    <div class="modalBody">
+      <div class="shareGrid">
+        <a class="shareBtn" id="shareWhatsApp" target="_blank" rel="noopener">🟢 WhatsApp</a>
+        <a class="shareBtn" id="shareTelegram" target="_blank" rel="noopener">🔵 Telegram</a>
+        <a class="shareBtn" id="shareEmail" target="_blank" rel="noopener">✉️ Email (Gmail)</a>
+        <button class="shareBtn primary" id="shareCopy" type="button">📋 نسخ التقرير</button>
+      </div>
+
+      <div class="shareMini" id="shareNote">
+        إذا لم تظهر نافذة المشاركة الأصلية، استخدم الأزرار أعلاه.
+      </div>
+    </div>
+
+    <div class="modalFooter">
+      <button class="btn" id="closeShare" type="button">إغلاق</button>
+    </div>
+  </div>
+</div>
 
 <!-- Toast -->
 <div id="toast" class="toast" aria-live="polite" aria-atomic="true"></div>

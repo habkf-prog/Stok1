@@ -437,7 +437,7 @@ tr.expiring-row td:first-child{ box-shadow: inset 4px 0 0 rgba(245,158,11,.85); 
 <div class="container">
   <div class="header">
     <h1>🧾 لوحة تسيير الاشتراكات</h1>
-    <div class="sub">⚡ إجراءات للصف + ☁️ نافذة مزامنة/نسخ احتياطي. <span style="opacity:.7;font-weight:800">(v1.2.5)</span></div>
+    <div class="sub">⚡ إجراءات للصف + ☁️ نافذة مزامنة/نسخ احتياطي. <span style="opacity:.7;font-weight:800">(v1.3.5)</span></div>
   </div>
 
   <div class="card">
@@ -770,6 +770,23 @@ window.addEventListener('unhandledrejection', (e)=>{
 });
 
 const $ = (id)=>document.getElementById(id);
+
+// قراءة قوية لحقول النموذج (مهم إذا وُجدت عناصر مكررة بالـ id أو المتصفح يتصرف بغرابة)
+function getFieldEl(id){
+  // الأفضل: العنصر داخل نافذة النموذج
+  const inModal = document.querySelector(`#formModal input#${id}, #formModal select#${id}, #formModal textarea#${id}`);
+  if(inModal) return inModal;
+  // احتياط: أي عنصر مطابق
+  const any = document.querySelector(`input#${id}, select#${id}, textarea#${id}`);
+  if(any) return any;
+  return $(id);
+}
+function getFieldValue(id){
+  const el = getFieldEl(id);
+  if(!el) return "";
+  return (typeof el.value === "string") ? el.value : "";
+}
+
 const FIREBASE_URL  = "https://dattta-6f497-default-rtdb.firebaseio.com";
 const FIREBASE_PATH = "subscriptions";
 const LOCAL_BACKUP_KEY = "subs_local_backup_v3";
@@ -899,7 +916,7 @@ function setStoredAlertDays(n){
   localStorage.setItem(SETTINGS_KEY, JSON.stringify({alertDays:n}));
 }
 function getAlertDaysFromForm(){
-  const n = Number($("alertDays").value || formState.alertDays);
+  const n = Number(getFieldValue("alertDays") || formState.alertDays);
   return (n && n>0) ? n : 7;
 }
 function status(endISO, alertDays){
@@ -1208,10 +1225,10 @@ function upsert(rec){
 }
 
 function handleSaveClick(){
-  const _nameRaw = ($("name").value || formState.name || "").trim();
-  const _emailRaw = ($("email").value || formState.email || "");
-  const _monthsRaw = ($("months").value || formState.months || "");
-  const _startRaw = ($("start").value || formState.start || "");
+  const _nameRaw = (getFieldValue("name") || formState.name || "").trim();
+  const _emailRaw = (getFieldValue("email") || formState.email || "");
+  const _monthsRaw = (getFieldValue("months") || formState.months || "");
+  const _startRaw = (getFieldValue("start") || formState.start || "");
 
   const name = _nameRaw;
   const email = normalizeEmail(_emailRaw);
@@ -1260,6 +1277,7 @@ function handleSaveClick(){
 
     // التقط القيم فوراً (حتى لو لم تُثبت لوحة المفاتيح)
     try{ syncFormStateNow(); }catch{}
+    try{ formState.name = getFieldValue("name"); formState.email = getFieldValue("email"); formState.months = getFieldValue("months"); formState.start = getFieldValue("start"); formState.alertDays = getFieldValue("alertDays"); }catch{}
 
     // على الهاتف أحياناً قيمة الحقول لا "تُثبت" إلا بعد فقدان التركيز
     try{ document.activeElement && document.activeElement.blur && document.activeElement.blur(); }catch{}
